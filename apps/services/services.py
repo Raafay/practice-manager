@@ -15,6 +15,7 @@ from django.utils import timezone
 from apps import events
 from apps.clients.models import Client
 from apps.clients.services import client_updated, require
+from apps.events.services import changes, snapshot
 
 from . import deadlines
 from .catalogue import DEFAULT_DUE_DAYS
@@ -222,11 +223,11 @@ def update_service(
 
 def update_client_fields(actor, client: Client, values: dict, *, section: str) -> Client:
     """Set client fields from a settings form (VAT, payroll) and log what changed."""
-    before = events.snapshot(client, list(values))
+    before = snapshot(client, list(values))
     for name, value in values.items():
         setattr(client, name, value)
     client.save(update_fields=[*values, "updated_at"])
-    diff = events.changes(before, events.snapshot(client, list(values)))
+    diff = changes(before, snapshot(client, list(values)))
     if diff:
         events.record(
             actor,
