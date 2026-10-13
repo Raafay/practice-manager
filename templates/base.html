@@ -6,6 +6,7 @@
   {# 422 means "the form has errors": HTMX swaps it in like a success. #}
   <meta name="htmx-config" content='{"allowEval": false, "allowScriptTags": false, "includeIndicatorStyles": false, "selfRequestsOnly": true, "responseHandling": [{"code": "204", "swap": false}, {"code": "[23]..", "swap": true}, {"code": "422", "swap": true}, {"code": "[45]..", "swap": false, "error": true}]}'>
   <title>{% block title %}{% block head_title %}{% endblock head_title %}{% endblock title %} · {{ practice.practice_name|default:"Practice Manager" }}</title>
+  <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
   {% tailwind_css %}
   <script src="{% static 'vendor/htmx/htmx.min.js' %}" defer></script>
   <script src="{% static 'js/app.js' %}" defer></script>

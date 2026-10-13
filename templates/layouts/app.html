@@ -19,7 +19,7 @@
                class="w-56 rounded-md border border-white/20 bg-white/10 px-2.5 py-1 text-sm text-white placeholder:text-slate-400 disabled:cursor-not-allowed">
       </div>
       <div class="relative" x-data="dropdown" @keydown.escape="close" @click.outside="close">
-        <button type="button" class="btn btn-sm border-white/20 bg-white/10 text-white shadow-none hover:bg-white/20" @click="toggle" aria-haspopup="true">
+        <button type="button" class="btn btn-sm border-white/20 bg-white/10 text-white shadow-none hover:bg-white/20" @click="toggle" :aria-expanded="open" aria-haspopup="true">
           {% icon "plus" "size-4" %} New {% icon "chevron-down" "size-3" %}
         </button>
         <div class="menu" x-show="open" x-cloak>
@@ -35,7 +35,7 @@
     <div class="ml-auto flex items-center gap-2">
     {% endif %}
       <div class="relative" x-data="dropdown" @keydown.escape="close" @click.outside="close">
-        <button type="button" class="flex items-center gap-1.5 rounded-md p-1 text-slate-200 hover:bg-white/10" @click="toggle" aria-haspopup="true" aria-label="Your account">
+        <button type="button" class="flex items-center gap-1.5 rounded-md p-1 text-slate-200 hover:bg-white/10" @click="toggle" :aria-expanded="open" aria-haspopup="true" aria-label="Your account">
           {% include "components/_avatar.html" with person=user %}
           {% icon "chevron-down" "size-3" %}
         </button>

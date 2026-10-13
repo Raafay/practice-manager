@@ -10,7 +10,7 @@ class AuditFilterForm(StyledFormMixin, forms.Form):
     person = forms.ModelChoiceField(
         queryset=User.objects.staff(), required=False, empty_label="Anyone"
     )
-    verb = forms.ChoiceField(required=False)
+    verb = forms.ChoiceField(required=False, label="Action")
     date_from = forms.DateField(
         required=False, label="From", widget=forms.DateInput(attrs={"type": "date"})
     )
