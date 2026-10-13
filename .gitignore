@@ -27,3 +27,7 @@ CLAUDE.local.md
 
 # Node, only if it is ever used
 node_modules/
+
+# Built CSS (made by `make css`)
+/static/css/tailwind.css
+/media_test/
