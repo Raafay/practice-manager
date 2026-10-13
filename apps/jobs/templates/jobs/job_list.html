@@ -1,0 +1,66 @@
+{% extends "layouts/app.html" %}
+{% block title %}Background jobs{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Background jobs" subtitle="Work the app does on a timetable. A job that fails tells the owner and is tried again at its next time." %}
+  <a href="{% url 'core:settings' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Settings</a>
+</div>
+
+{% if worker_seen %}
+<p class="muted mb-4">The worker last checked for due jobs at {{ worker_seen|date:"d/m/Y H:i" }}.</p>
+{% else %}
+<div class="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+  No worker has checked in yet, so nothing runs on its timetable and “Run now” waits. Start one with <code>manage.py worker</code>.
+</div>
+{% endif %}
+
+<div class="table-wrap mb-8">
+  <table class="table">
+    <thead><tr><th scope="col">Job</th><th scope="col">When it runs</th><th scope="col">Last run</th><th scope="col">Result</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td><span class="font-medium">{{ row.job.label }}</span>{% if row.job.description %}<span class="muted block text-xs">{{ row.job.description }}</span>{% endif %}</td>
+        <td class="whitespace-nowrap">{{ row.job.schedule.describe }}</td>
+        <td class="whitespace-nowrap tabular-nums">{% if row.last %}{{ row.last.started_at|date:"d/m/Y H:i" }}{% else %}<span class="muted">Not run yet</span>{% endif %}</td>
+        <td>
+          {% if row.running %}{% include "components/_badge.html" with text="Running" tone="accent" %}
+          {% elif row.last %}{% include "components/_badge.html" with text=row.last.get_state_display tone=row.last.state_tone %} <span class="text-xs">{{ row.last.message }}</span>
+          {% endif %}
+        </td>
+        <td class="text-right">
+          {% if row.requested %}<span class="muted text-xs">Starts within a minute</span>
+          {% else %}
+          <form method="post" action="{% url 'jobs:run_now' row.job.name %}">{% csrf_token %}<button type="submit" class="btn btn-secondary btn-sm">{% icon "arrow-path" "size-4" %} Run now</button></form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2 class="mb-2 text-base font-semibold">Recent runs</h2>
+{% if page.object_list %}
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th scope="col">Job</th><th scope="col">Started</th><th scope="col">Took</th><th scope="col">How</th><th scope="col">Result</th><th scope="col">Counts</th></tr></thead>
+    <tbody>
+      {% for run in page.object_list %}
+      <tr>
+        <td>{{ run.label }}</td>
+        <td class="whitespace-nowrap tabular-nums">{{ run.started_at|date:"d/m/Y H:i:s" }}</td>
+        <td class="tabular-nums">{% if run.duration_seconds is not None %}{{ run.duration_seconds }} s{% endif %}</td>
+        <td>{{ run.get_trigger_display }}{% if run.started_by %} by {{ run.started_by }}{% endif %}</td>
+        <td>{% include "components/_badge.html" with text=run.get_state_display tone=run.state_tone %} <span class="text-xs">{{ run.message }}</span></td>
+        <td class="text-xs">{% for key, value in run.counts.items %}{{ key }} {{ value }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "components/_pagination.html" %}
+{% else %}
+  {% include "components/_empty.html" with title="No runs yet" message="Start the worker with manage.py worker, or press Run now above." icon_name="clock" %}
+{% endif %}
+{% endblock %}

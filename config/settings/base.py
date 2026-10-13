@@ -33,6 +33,8 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.events",
     "apps.clients",
+    "apps.jobs",
+    "apps.companieshouse",
 ]
 
 MIDDLEWARE = [
@@ -192,6 +194,13 @@ EMAIL_BACKEND = env("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBac
 
 INVITATION_VALID_HOURS = 72
 ALLOW_DEMO_DATA = env_bool("ALLOW_DEMO_DATA", False)
+
+# Companies House. The key is never shown, logged or put in a page.
+COMPANIES_HOUSE_API_KEY = env("COMPANIES_HOUSE_API_KEY")
+# "live" calls the real service. "fake" serves the saved samples (tests and CI).
+COMPANIES_HOUSE_TRANSPORT = env("COMPANIES_HOUSE_TRANSPORT", "live")
+# Read refreshed bank holidays from the database as well as the bundled list.
+BANK_HOLIDAYS_FROM_DATABASE = True
 
 # Logs carry no personal data. Request warnings include the path, which can
 # hold a token, so django.request only logs errors.
