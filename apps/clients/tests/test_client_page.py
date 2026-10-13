@@ -88,10 +88,10 @@ def test_panels_follow_the_client_type(client):
     assert client.get(reverse("clients:panel_edit", args=[sole.pk, "company"])).status_code == 404
     # Making Tax Digital fields are for individuals and sole traders only.
     assert (
-        b"Making tax digital" in client.get(reverse("clients:panel", args=[sole.pk, "tax"])).content
+        b"Making Tax Digital" in client.get(reverse("clients:panel", args=[sole.pk, "tax"])).content
     )
     assert (
-        b"Making tax digital"
+        b"Making Tax Digital"
         not in client.get(reverse("clients:panel", args=[company.pk, "tax"])).content
     )
 

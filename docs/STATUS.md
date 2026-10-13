@@ -4,13 +4,13 @@ Keep this file under 150 lines. When it grows, shorten older stages to two lines
 
 ## Where things stand
 
-Next stage to build: 2 (Clients and contacts), once Stage 1 is merged.
+Next stage to build: 3 (Companies House and jobs).
 
 | Stage | State | Merged on |
 |---|---|---|
 | 0 Project pack | Done | 12/10/2026 |
-| 1 Foundation | Built, in review | |
-| 2 Clients and contacts | Not started | |
+| 1 Foundation | Done | 13/10/2026 |
+| 2 Clients and contacts | Built, in review | |
 | 3 Companies House and jobs | Not started | |
 | 4 Services and deadlines | Not started | |
 | 5 Tasks, part one | Not started | |
@@ -47,6 +47,17 @@ Checked in a cloud session on 12/10/2026:
 - Layout and `/styleguide/` with every component from spec 00 section 5. Vendored with `npm pack` on 13/10/2026: htmx.org 2.0.11, @alpinejs/csp 3.17.4, sortablejs 1.15.7, trix 2.1.19; Heroicons 2.2.0 SVGs in `apps/core/icons/`. Tailwind CLI 4.1.3 via django-tailwind-cli.
 - Dockerfile, docker-compose (web and db), `.github/workflows/ci.yml` (ruff, pytest on PostgreSQL, SQLite smoke). 318 tests. Screens in `docs/screens/stage-01/`.
 
+## Stage 2: clients and contacts (built 13/10/2026)
+
+- `apps/clients`: Client, Contact, ClientContact (one main contact per client, enforced by a database constraint), ClientLink, Note (notes and calls), Tag, CustomFieldDefinition, Document, SavedView. Encrypted: company UTR, Companies House code, NI number, personal UTR, personal CH code. Edit forms never put a saved secret in the page; blank keeps it, a tick box removes it.
+- Client list: column chooser, sort, filters, search, saved views (private or shared), CSV export (`data.export`, password re-entry, logged, formula-safe). Top-bar search with drop-down, `/` key, full results page.
+- Client page: Info (folding panels edited in place, fold state kept in the browser), Timeline (notes, calls, type filter), Contacts, Links, Documents. Tabs load with HTMX and have their own addresses.
+- Documents: private storage, type, size and first-bytes checks, permission-checked download and preview, sensitive access logged, soft delete, owner-only removal for good.
+- Status moves by hand (`clients.status`), archive with a reason, delete for good (owner, typed name, blocked while retention runs). Retention years are practice settings; `retain_until` and `aml_retain_until` are set when a client becomes former.
+- Events now carry a `client` link and a label that survives deletion. Deactivating a user asks who takes over their clients.
+- Settings: Tags, Custom fields. `seed_demo` adds 33 clients, 50 people, links, notes and sample documents.
+- Added 11 outline and 2 mini Heroicons (MIT). No new dependency.
+
 ## Assumptions
 
 Add one line each time a stage makes a choice that the specs and `docs/DECISIONS.md` did not cover. Give the stage number.
@@ -61,6 +72,15 @@ Add one line each time a stage makes a choice that the specs and `docs/DECISIONS
 - 1: `seed_demo` runs only with DEBUG or `ALLOW_DEMO_DATA=true`. Demo password `demo-password-2026`, dev two-factor code `000000`.
 - 1: Notifications live in the `events` app. The bell links to a list page; the triggers come in Stage 8.
 
+- 2: Branch is `claude/sharp-knuth-96f9y3` (the session's required branch), not `stage-02-clients`.
+- 2: New clients default to `active`. Prospects and onboarding come from Stages 7 and 9.
+- 2: Notes are plain text, shown with line breaks (no rich text, so nothing to clean). Pinned notes show on the Info tab.
+- 2: Status moves: prospect to onboarding or lost; onboarding to active, paused or former; active and paused to each other or former; former to active; lost to prospect.
+- 2: Delete for good is blocked only by the retention dates. A live client with no dates is not blocked, so owner-only and the typed name are the guard.
+- 2: Sensitive documents need `documents.sensitive`; only sensitive views and downloads are logged, plain ones are not.
+- 2: Filing dates are read-only once a company number is set, so until Stage 3 they can only be set by the demo seed.
+- 2: Contact changes are logged once on each linked client's timeline.
+
 ## Known gaps
 
 Things a stage left unfinished or found broken, with the stage number. Remove a line when it is fixed.
@@ -68,3 +88,6 @@ Things a stage left unfinished or found broken, with the stage number. Remove a 
 - 1: The Docker image was not built in the cloud session: Docker Hub refused the base image pull (429). Build with `docker build -t practice-manager .` or `docker compose up`.
 - 1: Lockout, rate limits and the audit log use `REMOTE_ADDR`. Behind the production proxy, Stage 13 must take the client address from the trusted proxy header.
 - 1: Date filter boxes use the browser's own date picker, which shows the browser's date order (dd/mm/yyyy on a UK computer).
+- 2: Portal share switch on documents and portal access on contacts are stored but do nothing until Stage 10.
+- 2: No quick switches on the Contacts tab; flags are edited in the Edit drawer.
+- 2: Django 6 deprecation warning for URL form fields (assume https) shows in tests.

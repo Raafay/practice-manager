@@ -16,6 +16,7 @@ from .forms import (
     NewContactForm,
 )
 from .models import Client, ClientContact, ClientLink, Contact
+from .panels import pretty_label
 from .views_base import done, get_client, render_form
 
 CONTACT_SENSITIVE = ("ni_number", "personal_utr", "ch_personal_code")
@@ -141,7 +142,7 @@ class ContactDetailView(StaffRequiredMixin, View):
         sensitive = [
             {
                 "name": name,
-                "label": str(contact._meta.get_field(name).verbose_name).capitalize(),
+                "label": pretty_label(contact._meta.get_field(name).verbose_name),
                 "masked": mask(getattr(contact, name)) if getattr(contact, name) else "",
             }
             for name in CONTACT_SENSITIVE

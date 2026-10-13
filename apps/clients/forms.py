@@ -56,7 +56,7 @@ class TrackedModelForm(StyledFormMixin, forms.ModelForm):
             model_field = self._meta.model._meta.get_field(name)
             self.initial[name] = ""  # the saved value must never be written into the page
             self.fields[name] = forms.CharField(
-                label=str(model_field.verbose_name).capitalize(),
+                label=panels.pretty_label(model_field.verbose_name),
                 required=False,
                 widget=forms.TextInput(
                     attrs={
@@ -74,6 +74,9 @@ class TrackedModelForm(StyledFormMixin, forms.ModelForm):
                     label=f"Remove the saved {str(model_field.verbose_name).lower()}",
                     widget=forms.CheckboxInput(attrs={"class": "checkbox"}),
                 )
+        for field in self.fields.values():
+            if field.label:
+                field.label = panels.pretty_label(field.label)
         self.before = snapshot(self.instance, self._tracked()) if self.instance.pk else {}
 
     def _tracked(self) -> list[str]:

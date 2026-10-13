@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from django.db import models
@@ -90,6 +91,19 @@ PANELS = {
 }
 
 
+_WORDS = {"vat": "VAT", "utr": "UTR", "paye": "PAYE", "sic": "SIC", "cis": "CIS", "aml": "AML"}
+
+
+def pretty_label(label) -> str:
+    """Sentence case that keeps acronyms and Companies House in capitals."""
+    text = str(label)
+    text = text[:1].upper() + text[1:]
+    text = re.sub(
+        r"\b(vat|utr|paye|sic|cis|aml)\b", lambda m: _WORDS[m.group(1).lower()], text, flags=re.I
+    )
+    return re.sub(r"companies house", "Companies House", text, flags=re.I)
+
+
 def visible_panels(client: Client) -> list[Panel]:
     """Panels that apply to this client's type. A sole trader has no Company details."""
     return [p for p in PANELS.values() if p.key != "company" or client.is_company]
@@ -147,7 +161,7 @@ def rows_for(client: Client, key: str, user) -> list[dict]:
     rows = []
     for name in names:
         field = client._meta.get_field(name)
-        label = str(field.verbose_name).capitalize()
+        label = pretty_label(field.verbose_name)
         row = {"label": label, "name": name, "kind": "text", "value": getattr(client, name, None)}
         if isinstance(field, EncryptedTextField):
             value = getattr(client, name)

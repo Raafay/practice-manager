@@ -118,11 +118,9 @@ def update_client(actor, client: Client, form, *, section: str) -> Client:
         if name.startswith("cf_"):
             labels.append(form.fields[name].label)
         elif name.startswith("clear_"):
-            labels.append(
-                str(form.fields[name].label).replace("Remove the saved ", "").capitalize()
-            )
+            labels.append(str(form.fields[name].label).replace("Remove the saved ", ""))
         else:
-            labels.append(str(form.fields[name].label or name).capitalize())
+            labels.append(str(form.fields[name].label or name))
     with transaction.atomic():
         client = form.save()
     diff = changes(form.before, form.after())
@@ -316,7 +314,7 @@ def update_contact(actor, contact: Contact, form) -> Contact:
     names = [n for n in form.changed_data if n in form.fields]
     if not names:
         return contact
-    labels = sorted({str(form.fields[n].label or n).capitalize() for n in names})
+    labels = sorted({str(form.fields[n].label or n) for n in names})
     contact = form.save()
     _record_for_clients(
         actor,
@@ -362,7 +360,7 @@ def save_client_contact(actor, link: ClientContact, form) -> ClientContact:
             ).update(is_main=False)
         link = form.save()
     if names:
-        labels = sorted({str(form.fields[n].label or n).capitalize() for n in names})
+        labels = sorted({str(form.fields[n].label or n) for n in names})
         events.record(
             actor,
             "contact.link_changed",
