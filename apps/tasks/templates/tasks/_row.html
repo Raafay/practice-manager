@@ -15,7 +15,7 @@
   </td>
   {% if not fixed_client %}<td>{% if task.client %}<a href="{% url 'clients:detail' task.client_id %}">{{ task.client.name }}</a>{% else %}<span class="muted">Internal</span>{% endif %}</td>{% endif %}
   <td>{% if task.category %}<span class="inline-flex items-center gap-1.5 whitespace-nowrap"><span class="inline-block size-2.5 rounded-full" style="background-color: {{ task.category.colour }}" aria-hidden="true"></span>{{ task.category.name }}</span>{% endif %}</td>
-  <td class="whitespace-nowrap">
+  <td class="w-24">
     <div class="flex items-center gap-1.5">
       {% if task.owner %}{% include "components/_avatar.html" with person=task.owner %}{% else %}<span class="avatar bg-slate-200 text-slate-600" title="Unassigned" role="img" aria-label="Unassigned">?</span>{% endif %}
       <label class="sr-only" for="owner-{{ task.pk }}">Owner of {{ task.title }}</label>
@@ -25,7 +25,7 @@
       </select>
     </div>
   </td>
-  <td>
+  <td class="w-44">
     <label class="sr-only" for="step-{{ task.pk }}">Latest action for {{ task.title }}</label>
     {% if task.step_list %}
     <select id="step-{{ task.pk }}" name="step" class="cell-input" hx-post="{% url 'tasks:step_pick' task.pk %}" hx-trigger="change" hx-target="#task-row-{{ task.pk }}" hx-swap="outerHTML" title="Choose the next step to tick">
@@ -34,14 +34,14 @@
     </select>
     {% else %}<span class="muted">No action yet</span>{% endif %}
   </td>
-  <td>
+  <td class="w-44">
     <label class="sr-only" for="status-{{ task.pk }}">Status of {{ task.title }}</label>
     <select id="status-{{ task.pk }}" name="value" class="cell-input font-medium" style="background-color: {{ task.status.colour }}1f; border-color: {{ task.status.colour }}66" hx-post="{% url 'tasks:field' task.pk 'status' %}" hx-trigger="change" hx-target="#task-row-{{ task.pk }}" hx-swap="outerHTML">
       {% for status in statuses %}<option value="{{ status.pk }}" {% if status.pk == task.status_id %}selected{% endif %}>{{ status.name }}</option>{% endfor %}
       {% if task.status not in statuses %}<option value="{{ task.status_id }}" selected>{{ task.status.name }}</option>{% endif %}
     </select>
   </td>
-  <td>
+  <td class="w-36">
     <label class="sr-only" for="target-{{ task.pk }}">Target date of {{ task.title }}</label>
     <input id="target-{{ task.pk }}" type="date" name="value" value="{{ task.target_date|date:'Y-m-d' }}" class="cell-input" hx-post="{% url 'tasks:field' task.pk 'target_date' %}" hx-trigger="change" hx-target="#task-row-{{ task.pk }}" hx-swap="outerHTML">
   </td>

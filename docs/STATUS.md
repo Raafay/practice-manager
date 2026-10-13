@@ -4,7 +4,7 @@ Keep this file under 150 lines. When it grows, shorten older stages to two lines
 
 ## Where things stand
 
-Next stage to build: 5 (Tasks, part one).
+Next stage to build: 6 (Communications).
 
 | Stage | State | Merged on |
 |---|---|---|
@@ -12,8 +12,8 @@ Next stage to build: 5 (Tasks, part one).
 | 1 Foundation | Done | 13/10/2026 |
 | 2 Clients and contacts | Done | 13/10/2026 |
 | 3 Companies House and jobs | Built, in review | |
-| 4 Services and deadlines | Built, in review | |
-| 5 Tasks, part one | Not started | |
+| 4 Services and deadlines | Done | 13/10/2026 |
+| 5 Tasks, part one | Built, in review | |
 | 6 Communications | Not started | |
 | 7 Onboarding and AML | Not started | |
 | 8 Tasks, part two | Not started | |
@@ -74,6 +74,13 @@ Checked in a cloud session on 12/10/2026:
 - `generate_for_client` is safe to run twice. It runs nightly at 03:00 (job `deadlines`), after a client's details or status change, and at the end of a Companies House sync. Companies House dates update in place and a filing marks the deadline done and creates the next.
 - Mark done, not required, reopen, change date (reason, original kept). Client Deadlines tab, Reports, Deadlines (filters, CSV with `data.export`), list columns (next deadline, monthly fee) and filters (service, overdue). 18 services, demo clients get fees and deadlines. Screens in `docs/screens/stage-04/`. No new dependency.
 
+## Stage 5: tasks, part one (built 13/10/2026)
+
+- `apps/tasks`: Task, TaskStatus, TaskCategory, TaskTemplate and steps, TaskStep, TaskComment, TaskStar, TaskDocument. Statuses, 21 categories and the 16 templates are seeded by migration. Project, section and repeating-task links are plain nullable numbers for Stage 8.
+- Deadlines make tasks through signals from `apps/services/deadlines.py` (services never imports tasks). Due dates follow the deadline. Ticking the filing step marks the deadline done ("Marked filed by {name}"). A deadline done elsewhere shows a banner offering to complete its tasks. Job `tasks_catch_up` runs at 03:30.
+- Tasks page: table with in-place owner, status, target date and next step; chips, filter panel, grouping with Add task rows, sort, bulk actions, Load more, state in the address. Saved views reuse the client `SavedView` model (new `is_default` field, one per user per list). Drawer at `/tasks/<id>/`, New task (top bar, `n`), My work as the home page, client Tasks tab. Settings: Task statuses, Task categories, a Tasks button per service for templates and steps.
+- Rich text cleaned with nh3 (`apps/core/html.py`); Trix loads on every page and refuses files. No new dependency. Screens in `docs/screens/stage-05/`.
+
 ## Assumptions
 
 Add one line each time a stage makes a choice that the specs and `docs/DECISIONS.md` did not cover. Give the stage number.
@@ -124,3 +131,10 @@ Things a stage left unfinished or found broken, with the stage number. Remove a 
 - 4: Spec 03 section 6 lists "sa_payment, second payment on account for 2026/27: 31/07/2027". 31 July 2027 is the second payment for 2025/26. Kept as a strict expected failure; the rule follows HMRC (31 July after the tax year).
 - 4: Rules marked "(Confirm ...)" for the practice owner: long-period CT600 return date (rule 2), P11D and payrolling from 2027/28 (rule 9), auto-enrolment re-declaration day (rule 16).
 - 4: The rule choice for a service can be edited in Settings, Services; there is no check that a rule suits the service.
+
+- 5: A fourth target rule, "working days before the due date", exists for Payroll (2 working days before pay date); the spec names three kinds.
+- 5: "Fixed day before the due date" means the latest such day strictly before the due date, moved back to a working day.
+- 5: Manager default owner falls back to partner, then an owner. Documents attach only to tasks that have a client, as plain form posts.
+- 5: The project filter works from the address (`project=`) but has no box in the panel until Stage 8. "Week due" groups by deadline, else target date.
+- 5: Unticking a filing step does not reopen the deadline. My work sections use the target date, else the deadline; "waiting" status takes precedence.
+- 5: Mention notices use the existing bell; the other notification triggers are Stage 8. Core's placeholder Overview page was removed; the home page is My work.

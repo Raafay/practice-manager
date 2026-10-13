@@ -8,6 +8,7 @@ from apps.clients import demo as clients_demo
 from apps.companieshouse import demo as companieshouse_demo
 from apps.core.models import PracticeSettings
 from apps.services import demo as services_demo
+from apps.tasks import demo as tasks_demo
 
 
 class Command(BaseCommand):
@@ -32,6 +33,7 @@ class Command(BaseCommand):
             counts = clients_demo.seed(staff)
             counts.update(companieshouse_demo.seed())
             counts.update(services_demo.seed())
+            counts.update(tasks_demo.seed())
 
         self.stdout.write(self.style.SUCCESS("Demo data loaded. Everything here is made up."))
         self.stdout.write(
@@ -39,7 +41,8 @@ class Command(BaseCommand):
             f"{counts['documents']} documents, "
             f"{counts['snapshots']} new Companies House snapshots, "
             f"{counts['client_services']} new client services, "
-            f"{counts['deadlines']} new deadlines."
+            f"{counts['deadlines']} new deadlines, "
+            f"{counts['tasks']} tasks in all ({counts['advisory_tasks']} new fractional)."
         )
         self.stdout.write("")
         self.stdout.write("Sign in at /login/ with any of these:")

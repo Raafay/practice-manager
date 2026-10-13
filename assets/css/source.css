@@ -231,7 +231,7 @@
   }
   /* A select or date box small enough to live inside a table row. */
   .cell-input {
-    @apply block w-full min-w-24 rounded-md border border-transparent bg-transparent px-1.5 py-1 text-sm text-slate-800 hover:border-slate-300 focus:border-accent focus:bg-white focus:ring-2 focus:ring-accent/30 focus:outline-none;
+    @apply block w-full min-w-0 rounded-md border border-transparent bg-transparent px-1.5 py-1 text-sm text-slate-800 hover:border-slate-300 focus:border-accent focus:bg-white focus:ring-2 focus:ring-accent/30 focus:outline-none;
   }
   /* Rich text from Trix. Files are never accepted, so the file buttons are hidden. */
   trix-toolbar .trix-button-group--file-tools {
