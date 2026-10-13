@@ -82,6 +82,29 @@ def main_contact(client):
 # ---------------------------------------------------------------- building
 
 
+def deadline_for_template(client, template):
+    """The open deadline a template is about: the one its reminder schedule watches, else the
+    client's nearest open one. None when the client has none."""
+    open_deadlines = client.deadlines.filter(status="open").order_by("due_date")
+    rules = list(template.schedules.exclude(rule="").values_list("rule", flat=True))
+    if rules:
+        found = open_deadlines.filter(rule__in=rules).first()
+        if found:
+            return found
+    return open_deadlines.first()
+
+
+def blanks_warning(template, deadline) -> str:
+    """Words for the compose window when a template needs a deadline the client lacks."""
+    uses = merge.find_fields(template.subject) + merge.find_fields(template.body)
+    if deadline is None and any(name.startswith("deadline.") for name in uses):
+        return (
+            "This template mentions a deadline, but the client has no open one. "
+            "Fill in the blanks by hand before sending."
+        )
+    return ""
+
+
 def build_context(client, *, user=None, contact=None, deadline=None, task=None) -> merge.Context:
     return merge.Context(
         client=client,

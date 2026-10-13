@@ -473,3 +473,22 @@ def test_practice_settings_hold_the_sending_address_and_copy_switch(client, worl
     sign_in(client, owner())
     response = client.get(reverse("core:practice_settings"))
     assert "sending_address" in response.content.decode()
+
+
+def test_compose_from_a_template_uses_the_clients_open_deadline(client, world):
+    from .factories import make_deadline
+
+    make_deadline(world["client"])
+    sign_in(client, manager())
+    page = client.get(
+        reverse("comms:compose", args=[world["client"].pk]), {"template": world["template"].pk}
+    ).content.decode()
+    assert "30/09/2026" in page and "07/11/2026" in page
+
+
+def test_compose_warns_when_a_template_needs_a_deadline_the_client_lacks(client, world):
+    sign_in(client, manager())
+    page = client.get(
+        reverse("comms:compose", args=[world["client"].pk]), {"template": world["template"].pk}
+    ).content.decode()
+    assert "has no open one" in page

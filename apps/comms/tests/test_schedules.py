@@ -205,7 +205,8 @@ def test_an_automatic_template_with_a_blocking_problem_still_waits_for_a_person(
     vat_deadline(client)
     row = schedule()
     row.template.send_mode = "auto"
-    row.template.save()  # the starter wording uses {{ upload_link }}, which is not built yet
+    row.template.body += "<p>{{ portal_link }}</p>"  # the page is not built yet: blocks sending
+    row.template.save()
     schedules.run_all(date(2026, 10, 5))
     assert QueuedMessage.objects.get().state == "needs_approval"
 
@@ -250,3 +251,18 @@ def test_step_ticked_trigger_fires_once():
     row.save()
     assert schedules.run_all(date(2026, 10, 5))["created"] == 1
     assert schedules.run_all(date(2026, 10, 6))["created"] == 0
+
+
+def test_demo_data_fills_the_queue_in_every_state_and_is_safe_to_run_twice():
+    import io
+
+    from django.core.management import call_command
+
+    call_command("seed_demo", stdout=io.StringIO())
+    first = QueuedMessage.objects.count()
+    call_command("seed_demo", stdout=io.StringIO())
+    assert first == QueuedMessage.objects.count() >= 10
+    states = set(QueuedMessage.objects.values_list("state", flat=True))
+    assert {"needs_approval", "approved", "sent", "failed", "cancelled"} <= states
+    assert QueuedMessage.objects.filter(to="").exists()
+    assert ReminderSchedule.objects.filter(active=True).count() == 2

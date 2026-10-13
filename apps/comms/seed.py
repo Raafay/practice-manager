@@ -17,8 +17,7 @@ TEMPLATES = [
         "To prepare the "
         "accounts we need your bank statements, sales and purchase records, and any loan or "
         "asset paperwork for the year.</p><p>The accounts are due at Companies House by "
-        "{{ deadline.due_date }}. You can send everything through the link below.</p>"
-        "<p>{{ upload_link }}</p>" + BYE,
+        "{{ deadline.due_date }}. Please reply to this email with everything attached.</p>" + BYE,
     },
     {
         "key": "confirmation_statement",
@@ -38,7 +37,7 @@ TEMPLATES = [
         "body": HELLO
         + "<p>The VAT period for {{ client.name }} ended on {{ deadline.period_end }}. Please send "
         "your sales invoices, purchase invoices and bank statements for the period. The return "
-        "is due by {{ deadline.due_date }}.</p><p>{{ upload_link }}</p>" + BYE,
+        "is due by {{ deadline.due_date }}. Reply to this email with them attached.</p>" + BYE,
     },
     {
         "key": "sa_records",
@@ -49,7 +48,7 @@ TEMPLATES = [
         + "<p>The tax year has ended, so it is time to gather what is needed for your self "
         "assessment return. Please send your income details, bank interest, dividends, pension "
         "contributions and anything else that changed this year. The return is due by "
-        "{{ deadline.due_date }}.</p><p>{{ upload_link }}</p>" + BYE,
+        "{{ deadline.due_date }}. Reply to this email with them attached.</p>" + BYE,
     },
     {
         "key": "payroll_changes",

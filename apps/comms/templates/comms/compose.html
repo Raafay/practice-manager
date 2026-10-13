@@ -1,6 +1,7 @@
 {# The compose window, shown in the drawer. #}
 <h2 class="mb-3">Email {{ client.name }}</h2>
 {% if warning %}<div class="mb-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">{{ warning }}</div>{% endif %}
+{% if blanks %}<div class="mb-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">{{ blanks }}</div>{% endif %}
 <form method="post" action="{% url 'comms:compose' client.pk %}" hx-post="{% url 'comms:compose' client.pk %}" hx-target="#drawer-body" hx-encoding="multipart/form-data" enctype="multipart/form-data" class="space-y-4" novalidate>
   {% csrf_token %}
   {% if form.non_field_errors %}<div class="form-errors" role="alert">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}

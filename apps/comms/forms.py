@@ -206,6 +206,7 @@ class ComposeForm(MessageEditForm):
         ]
         docs = client.documents.filter(deleted_at__isnull=True, sensitive=False)
         self.fields["attachments"].choices = [(str(d.pk), d.title) for d in docs]
+        self.fields["subject"].required = True
         self.fields["to"].label = "Other addresses"
         self.fields["to"].widget.attrs["placeholder"] = "name@example.com, another@example.com"
 

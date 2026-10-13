@@ -20,7 +20,7 @@
       {{ form.body }}
       <trix-editor input="{{ form.body.id_for_label }}" id="template_body_editor" class="textarea min-h-56 rich-text" aria-label="Message"></trix-editor>
       {% for e in form.body.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
-      <p class="help">Texts are plain: formatting is removed when you save.</p>
+      <p class="help">A text message template is plain: formatting is removed when you save it.</p>
     </div>
     <div class="grid gap-4 sm:grid-cols-2">
       {% include "components/_field.html" with field=form.send_mode %}

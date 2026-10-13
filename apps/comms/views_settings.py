@@ -1,14 +1,18 @@
 """Settings: message templates and reminder schedules."""
 
+from datetime import timedelta
+
 from django.contrib import messages
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views import View
 
 from apps import events
 from apps.clients.models import Client
 from apps.core.permissions import CapabilityRequiredMixin
+from apps.services.models import Deadline
 
 from . import merge, services
 from .forms import ScheduleForm, TemplateForm
@@ -52,13 +56,20 @@ class TemplateEditView(SettingsMixin, View):
         }
         return render(request, "comms/template_form.html", context, status=status)
 
-    def _preview(self, instance, client_id):
+    def _preview(self, instance, client_id, user=None):
         client = Client.objects.filter(pk=client_id).first() if str(client_id).isdigit() else None
         if client is None:
             client = Client.objects.not_archived().order_by("name").first()
         if client is None or not instance.pk:
             return None
-        ctx = services.build_context(client)
+        # A real open deadline if the client has one, else a labelled sample.
+        deadline = client.deadlines.filter(status="open").order_by("due_date").first()
+        if deadline is None:
+            today = timezone.localdate()
+            deadline = Deadline(
+                label="Sample deadline", due_date=today + timedelta(days=14), period_end=today
+            )
+        ctx = services.build_context(client, user=user, deadline=deadline)
         subject, html, text, problems = services.render_template(instance, ctx)
         return {
             "client": client,
@@ -72,7 +83,10 @@ class TemplateEditView(SettingsMixin, View):
         instance = get_object_or_404(MessageTemplate, pk=pk) if pk else MessageTemplate()
         form = TemplateForm(instance=instance, can_set_auto=request.user.is_owner)
         return self._render(
-            request, form, instance, preview=self._preview(instance, request.GET.get("client"))
+            request,
+            form,
+            instance,
+            preview=self._preview(instance, request.GET.get("client"), request.user),
         )
 
     def post(self, request, pk=None):

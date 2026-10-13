@@ -11,7 +11,7 @@ from django.views import View
 from apps.accounts.models import User
 from apps.clients import services as client_services
 from apps.clients.models import Document
-from apps.clients.views_base import done, get_client, render_form
+from apps.clients.views_base import done, get_client, render_form, respond
 from apps.core.pagination import paginate
 from apps.core.permissions import StaffRequiredMixin
 
@@ -228,25 +228,29 @@ class ComposeView(StaffRequiredMixin, View):
     def _form(self, request, client, data=None, files=None, template=None):
         initial = {}
         if template is not None and data is None:
-            ctx = services.build_context(client, user=request.user)
+            deadline = services.deadline_for_template(client, template)
+            ctx = services.build_context(client, user=request.user, deadline=deadline)
             subject, html, _, _ = services.render_template(template, ctx)
             initial.update({"subject": subject, "body": html, "template": template.pk})
+            self.blanks = services.blanks_warning(template, deadline)
         main = services.main_contact(client)
         if main is not None and main.email and data is None:
             initial["contacts"] = [main.email]
         return ComposeForm(data, files, initial=initial, client=client)
 
     def _render(self, request, client, form, status=200):
-        return render(
+        return respond(
             request,
+            "comms/compose_page.html",
             "comms/compose.html",
             {
                 "client": client,
                 "form": form,
                 "warning": services.warning_for(client),
+                "blanks": getattr(self, "blanks", ""),
                 "sms": sms_enabled(),
             },
-            status=status,
+            status,
         )
 
     def get(self, request, pk):
@@ -393,7 +397,13 @@ class SmsView(StaffRequiredMixin, View):
     """Send SMS. Hidden, and a 404, unless a provider is configured."""
 
     def _render(self, request, client, status=200, error=""):
-        return render(request, "comms/sms.html", {"client": client, "error": error}, status=status)
+        return respond(
+            request,
+            "comms/sms_page.html",
+            "comms/sms.html",
+            {"client": client, "error": error},
+            status,
+        )
 
     def has_access(self, request) -> bool:
         if not sms_enabled():
