@@ -164,3 +164,30 @@ def add_working_days(d: date, n: int) -> date:
 
 def last_working_day_of_month(year: int, month: int) -> date:
     return previous_working_day(month_end(year, month))
+
+
+def monthly_pay_date(year: int, month: int, rule_name: str, pay_day: int | None) -> date | None:
+    """The pay date for a month, moved to the working day before when it is not one.
+
+    A day the month does not have means its last day (CORRECTIONS 12).
+    """
+    if rule_name == "last_working_day":
+        return last_working_day_of_month(year, month)
+    if rule_name == "last_friday":
+        d = month_end(year, month)
+        while d.weekday() != 4:
+            d -= timedelta(days=1)
+        return previous_working_day(d)
+    if rule_name == "day_of_month" and pay_day:
+        return previous_working_day(date(year, month, min(pay_day, days_in_month(year, month))))
+    return None
+
+
+def step_pay_dates(first: date, step: int, until: date, since: date):
+    """Pay dates stepping from the first one, each moved to the working day before."""
+    d = first
+    while d <= until:
+        adjusted = previous_working_day(d)
+        if adjusted >= since:
+            yield adjusted
+        d += timedelta(days=step)

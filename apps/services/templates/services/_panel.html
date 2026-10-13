@@ -1,0 +1,56 @@
+<details class="panel" id="services-panel" data-panel="services" open>
+  <summary>Services {% icon "chevron-right" "panel-chevron size-4 text-slate-400 transition-transform" %}</summary>
+  <div class="panel-body">
+    {% if fee_error %}<div class="form-errors" role="alert"><p>{{ fee_error }}</p></div>{% endif %}
+    <ul class="divide-y divide-slate-100">
+      {% for row in service_rows %}
+      {% with cs=row.cs service=row.service %}
+      <li class="py-2.5">
+        <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+          <div class="flex flex-wrap items-center gap-2">
+            {% if cs %}
+              {% url 'services:switch_off' client.pk cs.pk as off_url %}
+              {% include "components/_switch_button.html" with label=service.name on=True url=off_url %}
+              {% if cs.state == "proposed" %}{% include "components/_badge.html" with text="Proposed" tone="accent" %}{% endif %}
+            {% else %}
+              {% url 'services:switch_on' client.pk service.pk as on_url %}
+              {% if can_add %}{% include "components/_switch_button.html" with label=service.name on=False url=on_url %}{% else %}{% include "components/_switch_button.html" with label=service.name on=False disabled=True %}{% endif %}
+            {% endif %}
+          </div>
+          {% if cs %}
+          <div class="flex flex-wrap items-center gap-2">
+            {% if can_fees %}
+            <form method="post" action="{% url 'services:fee' client.pk cs.pk %}" hx-post="{% url 'services:fee' client.pk cs.pk %}" hx-target="#services-panel" hx-swap="outerHTML" class="flex items-center gap-1.5">
+              {% csrf_token %}
+              <label class="sr-only" for="fee-{{ cs.pk }}">Fee for {{ service.name }}, in pounds excluding VAT</label>
+              <span class="text-sm text-slate-500" aria-hidden="true">£</span>
+              <input id="fee-{{ cs.pk }}" name="fee_amount" class="input w-24" inputmode="decimal" value="{{ cs.fee_amount|default_if_none:''|stringformat:'s' }}" placeholder="0.00">
+              <label class="sr-only" for="freq-{{ cs.pk }}">How often {{ service.name }} is charged</label>
+              <select id="freq-{{ cs.pk }}" name="fee_frequency" class="select w-28">
+                {% for value, text in cs.Frequency.choices %}<option value="{{ value }}" {% if value == cs.fee_frequency %}selected{% endif %}>{{ text }}</option>{% endfor %}
+              </select>
+              <button type="submit" class="btn btn-secondary btn-sm">Save</button>
+            </form>
+            {% endif %}
+            <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'services:settings' client.pk cs.pk %}" hx-target="#modal-body" aria-label="Edit {{ service.name }}">{% if row.has_settings %}Settings{% else %}Edit{% endif %}</button>
+          </div>
+          {% endif %}
+        </div>
+        {% if cs and can_fees and cs.fee_frequency != "monthly" and cs.fee_amount is not None %}
+        <p class="muted mt-1 pl-1">{% if cs.fee_frequency == "one_off" %}One-off, not counted in the monthly total.{% else %}About £{{ row.monthly }} a month.{% endif %}</p>
+        {% endif %}
+      </li>
+      {% endwith %}
+      {% empty %}
+      <li class="py-3">{% include "components/_empty.html" with title="No services apply" message="Switch services on in Settings, Services, or change the client type." icon_name="rectangle-stack" %}</li>
+      {% endfor %}
+    </ul>
+    {% if can_fees %}
+    <dl class="mt-3 space-y-1 border-t border-slate-200 pt-3 text-sm">
+      <div class="flex justify-between"><dt class="font-medium text-slate-700">Monthly total</dt><dd class="font-semibold text-slate-900">£{{ monthly_total }}</dd></div>
+      {% if one_off_total %}<div class="flex justify-between"><dt class="text-slate-600">One-off fees (separate)</dt><dd>£{{ one_off_total }}</dd></div>{% endif %}
+      {% if proposed_monthly or proposed_one_off %}<div class="flex justify-between"><dt class="text-slate-600">Proposed, not live yet</dt><dd>£{{ proposed_monthly }} a month{% if proposed_one_off %} and £{{ proposed_one_off }} one-off{% endif %}</dd></div>{% endif %}
+    </dl>
+    {% endif %}
+  </div>
+</details>

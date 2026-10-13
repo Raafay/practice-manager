@@ -13,5 +13,5 @@
   <div class="space-y-3 lg:col-span-2">
     {% for item in panels %}{% include "clients/_panel.html" with client=item.client panel=item.panel rows=item.rows form=item.form main_contact=item.main_contact has_individual_client=item.has_individual_client %}{% endfor %}
   </div>
-  <div aria-label="Services" class="lg:col-span-1"></div>
+  <div class="lg:col-span-1" aria-label="Services">{% include "services/_panel.html" %}</div>
 </div>

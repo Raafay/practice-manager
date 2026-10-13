@@ -20,6 +20,7 @@ urlpatterns = [
     path("", include("apps.clients.urls")),
     path("", include("apps.jobs.urls")),
     path("", include("apps.companieshouse.urls")),
+    path("", include("apps.services.urls")),
 ]
 
 handler403 = "apps.core.views.permission_denied"

@@ -1,0 +1,6 @@
+{# A switch that opens a dialog instead of changing at once. Pass label, on, and url (the dialog's address). #}
+<button type="button" role="switch" class="switch-button" aria-checked="{% if on %}true{% else %}false{% endif %}" {% if disabled %}disabled{% else %}hx-get="{{ url }}" hx-target="#modal-body"{% endif %}>
+  <span class="switch-track" aria-hidden="true"></span>
+  <span>{{ label }}</span>
+  <span class="text-xs font-medium {% if on %}text-green-700{% else %}text-slate-500{% endif %}">{% if on %}On{% else %}Off{% endif %}</span>
+</button>

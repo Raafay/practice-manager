@@ -457,6 +457,10 @@ class ClientFilterForm(StyledFormMixin, forms.Form):
         queryset=Team.objects.all(), required=False, empty_label="Any team"
     )
     tag = forms.ModelChoiceField(queryset=Tag.objects.all(), required=False, empty_label="Any tag")
+    service = forms.ModelChoiceField(
+        queryset=None, required=False, empty_label="Any service", label="Has service"
+    )
+    overdue = forms.BooleanField(required=False, label="Has an overdue deadline")
     archived = forms.ChoiceField(
         required=False,
         label="Archived",
@@ -468,6 +472,9 @@ class ClientFilterForm(StyledFormMixin, forms.Form):
         people = User.objects.staff().order_by("name")
         self.fields["manager"].queryset = people
         self.fields["partner"].queryset = people
+        from apps.services.models import Service
+
+        self.fields["service"].queryset = Service.objects.all()
 
     def chosen_statuses(self) -> list[str]:
         from .models import DEFAULT_LIST_STATUSES

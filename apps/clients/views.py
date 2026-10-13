@@ -31,7 +31,18 @@ from .forms import (
 from .models import Client, Note, SavedView
 from .views_base import done, get_client, render_form, respond
 
-FILTER_KEYS = ("q", "status", "client_type", "manager", "partner", "team", "tag", "archived")
+FILTER_KEYS = (
+    "q",
+    "status",
+    "client_type",
+    "manager",
+    "partner",
+    "team",
+    "tag",
+    "archived",
+    "service",
+    "overdue",
+)
 
 
 # ------------------------------------------------------------------ list
@@ -63,6 +74,13 @@ def filtered_clients(form: ClientFilterForm):
     only_archived = data.get("archived") == "only"
     queryset = queryset.archived() if only_archived else queryset.not_archived()
     queryset = queryset.filter(status__in=form.chosen_statuses())
+    queryset = _with_deadlines_and_fees(queryset)
+    if data.get("service"):
+        queryset = queryset.filter(
+            pk__in=data["service"].client_services.exclude(state="ended").values("client_id")
+        )
+    if data.get("overdue"):
+        queryset = queryset.filter(has_overdue=True)
     if data.get("q"):
         queryset = queryset.filter(pk__in=services.search_clients(data["q"]).values("pk"))
     for field, lookup in (
@@ -77,11 +95,46 @@ def filtered_clients(form: ClientFilterForm):
     return queryset.distinct()
 
 
+def _with_deadlines_and_fees(queryset):
+    """Annotate the next open deadline, whether any is overdue, and the monthly fee."""
+    from django.db.models import Case, DecimalField, Exists, F, OuterRef, Subquery, Sum, Value, When
+    from django.db.models.functions import Coalesce, Round
+    from django.utils import timezone
+
+    from apps.services.models import ClientService, Deadline
+
+    open_deadlines = Deadline.objects.filter(client=OuterRef("pk"), status="open")
+    pence = DecimalField(max_digits=12, decimal_places=2)
+    monthly = Case(
+        When(fee_frequency="monthly", then=F("fee_amount")),
+        When(fee_frequency="quarterly", then=Round(F("fee_amount") / 3, 2)),
+        When(fee_frequency="annual", then=Round(F("fee_amount") / 12, 2)),
+        default=Value(0),
+        output_field=pence,
+    )
+    fees = (
+        ClientService.objects.filter(
+            client=OuterRef("pk"), state="active", fee_amount__isnull=False
+        )
+        .order_by()
+        .values("client")
+        .annotate(total=Sum(monthly))
+        .values("total")
+    )
+    return queryset.annotate(
+        next_deadline=Subquery(open_deadlines.order_by("due_date").values("due_date")[:1]),
+        has_overdue=Exists(open_deadlines.filter(due_date__lt=timezone.localdate())),
+        monthly_fee=Coalesce(Subquery(fees, output_field=pence), Value(0), output_field=pence),
+    )
+
+
 class ClientListView(StaffRequiredMixin, View):
     def get(self, request):
         params, active_view = _list_params(request)
         form = ClientFilterForm(params)
-        chosen_columns = cols.clean_columns(params.getlist("cols") or cols.DEFAULT_COLUMNS)
+        chosen_columns = cols.clean_columns(
+            params.getlist("cols") or cols.DEFAULT_COLUMNS, request.user
+        )
         sort = cols.valid_sort(params.get("sort", ""))
         queryset = filtered_clients(form).order_by(*cols.ordering_for(sort))
         page = paginate(request, queryset, per_page=50)
@@ -93,7 +146,10 @@ class ClientListView(StaffRequiredMixin, View):
             "form": form,
             "page": page,
             "columns": [(k, cols.COLUMNS[k][0]) for k in chosen_columns],
-            "all_columns": [(k, v[0], k in chosen_columns) for k, v in cols.COLUMNS.items()],
+            "all_columns": [
+                (k, v[0], k in chosen_columns)
+                for k, v in cols.available_columns(request.user).items()
+            ],
             "sort": sort,
             "keep_query": keep.urlencode(),
             "export_query": _export_query(form, chosen_columns, sort),
@@ -126,7 +182,7 @@ class ClientExportView(CapabilityRequiredMixin, View):
     def get(self, request):
         params = request.GET
         form = ClientFilterForm(params)
-        keys = cols.clean_columns(params.getlist("cols") or cols.DEFAULT_COLUMNS)
+        keys = cols.clean_columns(params.getlist("cols") or cols.DEFAULT_COLUMNS, request.user)
         queryset = filtered_clients(form).order_by(
             *cols.ordering_for(cols.valid_sort(params.get("sort", "")))
         )
@@ -166,7 +222,9 @@ class SavedViewCreateView(StaffRequiredMixin, View):
         saved = form.save(commit=False)
         saved.owner = request.user
         saved.filters = filters
-        saved.columns = cols.clean_columns(source.getlist("cols") or cols.DEFAULT_COLUMNS)
+        saved.columns = cols.clean_columns(
+            source.getlist("cols") or cols.DEFAULT_COLUMNS, request.user
+        )
         saved.sort = cols.valid_sort(source.get("sort", ""))
         saved.save()
         events.record(
@@ -268,6 +326,7 @@ TABS = [
     ("contacts", "Contacts", "clients:contacts"),
     ("links", "Links", "clients:links"),
     ("documents", "Documents", "clients:documents"),
+    ("deadlines", "Deadlines", "services:client_deadlines"),
 ]
 
 
@@ -305,7 +364,13 @@ class ClientTabView(StaffRequiredMixin, View):
         shown = []
         for panel in panels.visible_panels(client):
             shown.append(panel_context(request, client, panel.key))
-        return {"pinned_notes": pinned, "panels": shown}
+        from apps.services.panel import panel_context as services_panel_context
+
+        return {
+            "pinned_notes": pinned,
+            "panels": shown,
+            **services_panel_context(client, request.user),
+        }
 
     def context_timeline(self, request, client):
         queryset = ActivityEvent.objects.filter(client=client).select_related("actor")

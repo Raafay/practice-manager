@@ -11,6 +11,7 @@
     <nav aria-label="Main" class="flex items-center gap-1">
       <a href="{% url 'overview' %}" class="nav-link" {% if nav == "overview" %}aria-current="page"{% endif %}>Overview</a>
       <a href="{% url 'clients:list' %}" class="nav-link" {% if request.path|slice:":9" == "/clients/" or request.path|slice:":10" == "/contacts/" or request.path == "/search/" %}aria-current="page"{% endif %}>Clients</a>
+      <a href="{% url 'services:reports' %}" class="nav-link" {% if request.path|slice:":9" == "/reports/" %}aria-current="page"{% endif %}>Reports</a>
       <a href="{% url 'core:settings' %}" class="nav-link" {% if request.path|slice:":10" == "/settings/" %}aria-current="page"{% endif %}>Settings</a>
     </nav>
     <div class="ml-auto flex items-center gap-2">
