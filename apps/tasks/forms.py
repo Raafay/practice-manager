@@ -115,6 +115,11 @@ class StatusForm(StyledFormMixin, forms.ModelForm):
         widgets = {"colour": forms.TextInput(attrs={"type": "color"})}
         labels = {"is_done": "Counts as done", "active": "In use"}
 
+    def _get_validation_exclusions(self):
+        # Saving moves the default over from the old status, so the one-default
+        # constraint is not checked against the old row here.
+        return super()._get_validation_exclusions() | {"is_default"}
+
     def clean_name(self):
         name = self.cleaned_data["name"].strip()
         if TaskStatus.objects.filter(name__iexact=name).exclude(pk=self.instance.pk).exists():

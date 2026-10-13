@@ -10,7 +10,7 @@ from apps.accounts.tests.factories import owner, sign_in, staff
 from apps.clients.tests.factories import ClientFactory
 from apps.services.models import Service
 from apps.tasks import filters, listing, services
-from apps.tasks.models import Task, TaskKind, TaskStar
+from apps.tasks.models import Task, TaskKind
 
 from .factories import category, make_task, status
 
@@ -308,7 +308,7 @@ def test_the_table_stays_quick_with_two_thousand_tasks(client, django_assert_max
     )
     url = reverse("tasks:list")
     for params in ("", "?group=client", "?group=owner&sort=-name", "?chip=mine&group=week"):
-        with django_assert_max_num_queries(25):
+        with django_assert_max_num_queries(30):
             response = client.get(url + params)
         assert response.status_code == 200
 

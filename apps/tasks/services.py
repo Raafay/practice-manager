@@ -282,7 +282,7 @@ def mentioned_users(body: str, *, exclude=None) -> list[User]:
     for user in staff:
         first_names.setdefault(user.name.split(" ")[0].lower(), []).append(user)
     for match in MENTION.finditer(body):
-        first = match.group(1).split(" ")[0].lower()
+        first = match.group(1).split(" ")[0].lower().rstrip(".-'’")
         people = first_names.get(first, [])
         if len(people) == 1:
             found[people[0].pk] = people[0]
