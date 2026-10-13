@@ -1,0 +1,16 @@
+{% extends "layouts/app.html" %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Overview" %}
+</div>
+<div class="card">
+  <div class="card-body flex items-center gap-4">
+    {% include "components/_avatar.html" with person=user size="lg" %}
+    <div>
+      <p class="text-lg font-semibold text-slate-900">Welcome, {{ user.name }}.</p>
+      <p class="muted">Your work, deadlines and things waiting on you will appear here once clients and tasks are added.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

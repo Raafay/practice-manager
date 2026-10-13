@@ -223,11 +223,7 @@ class TeamDeleteView(ManageUsersMixin, View):
 
 class RolesView(ManageUsersMixin, View):
     template_name = "accounts/roles.html"
-
-    def dispatch(self, request, *args, **kwargs):
-        # Viewing the ticks needs no password. Saving them does.
-        self.require_reauth = request.method == "POST"
-        return super().dispatch(request, *args, **kwargs)
+    require_reauth = True
 
     def context(self, form, roles):
         rows = []

@@ -1,0 +1,76 @@
+{% extends "layouts/app.html" %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Users" subtitle="Everyone who can sign in to the main app." %}
+  <div class="flex gap-2">
+    <a href="{% url 'accounts:teams' %}" class="btn btn-secondary">{% icon "user-group" "size-4" %} Teams</a>
+    <a href="{% url 'accounts:roles' %}" class="btn btn-secondary">{% icon "shield-check" "size-4" %} Roles</a>
+    <a href="{% url 'accounts:invite' %}" class="btn btn-primary" hx-get="{% url 'accounts:invite' %}" hx-target="#drawer-body">{% icon "user-plus" "size-4" %} Invite someone</a>
+  </div>
+</div>
+
+{% url 'accounts:users' as users_url %}
+<div class="mb-3 flex items-center gap-3 text-sm">
+  <a href="{{ users_url }}" class="tab" {% if show != "inactive" %}aria-current="page"{% endif %}>Active</a>
+  <a href="{{ users_url }}?show=inactive" class="tab" {% if show == "inactive" %}aria-current="page"{% endif %}>Deactivated ({{ inactive_count }})</a>
+</div>
+
+{% if users %}
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Teams</th><th scope="col">Two-factor</th><th scope="col">Last sign-in</th></tr>
+    </thead>
+    <tbody>
+      {% for person in users %}
+      <tr>
+        <td><a href="{% url 'accounts:user_detail' person.pk %}" class="flex items-center gap-2 font-medium text-slate-900">{% include "components/_avatar.html" with person=person %} {{ person.name }}</a>{% if person.job_title %}<span class="muted ml-9 block">{{ person.job_title }}</span>{% endif %}</td>
+        <td>{{ person.email }}</td>
+        <td>{% if person.role.is_owner_role %}{% include "components/_badge.html" with text=person.role.name tone="accent" %}{% else %}{{ person.role|default:"None" }}{% endif %}</td>
+        <td>{% for team in person.teams.all %}{% include "components/_badge.html" with text=team.name %} {% empty %}<span class="muted">None</span>{% endfor %}</td>
+        <td>{% if person.has_mfa %}{% include "components/_badge.html" with text="Set up" tone="green" icon_name="check" %}{% else %}{% include "components/_badge.html" with text="Not set up" tone="amber" icon_name="exclamation-triangle" %}{% endif %}</td>
+        <td class="whitespace-nowrap">{{ person.last_login|date:"d/m/Y H:i"|default:"Never" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  {% if show == "inactive" %}
+    {% include "components/_empty.html" with title="Nobody is deactivated" message="Deactivated people appear here and can be reactivated." icon_name="users" %}
+  {% else %}
+    {% url 'accounts:invite' as invite_url %}
+    {% include "components/_empty.html" with title="No users yet" message="Invite the first member of staff." action_url=invite_url action_label="Invite someone" icon_name="users" %}
+  {% endif %}
+{% endif %}
+
+<section class="mt-8" aria-labelledby="h-invitations">
+  <h2 id="h-invitations" class="mb-2">Waiting invitations</h2>
+  {% if invitations %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Role</th><th scope="col">Invited by</th><th scope="col">Link expires</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+      <tbody>
+        {% for invitation in invitations %}
+        <tr>
+          <td class="font-medium text-slate-900">{{ invitation.name }}</td>
+          <td>{{ invitation.email }}</td>
+          <td>{{ invitation.role }}</td>
+          <td>{{ invitation.invited_by|default:"" }}</td>
+          <td class="whitespace-nowrap">{{ invitation.expires_at|date:"d/m/Y H:i" }}</td>
+          <td class="text-right">
+            <form method="post" action="{% url 'accounts:cancel_invitation' invitation.pk %}" data-confirm="Cancel the invitation for {{ invitation.email }}? The link will stop working.">{% csrf_token %}
+              <button type="submit" class="btn btn-ghost btn-sm">Cancel invitation</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">No invitations are waiting. Use “Invite someone” to add a member of staff.</p>
+  {% endif %}
+</section>
+{% endblock %}

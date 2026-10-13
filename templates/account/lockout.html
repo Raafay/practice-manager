@@ -1,0 +1,7 @@
+{% extends "layouts/auth.html" %}
+{% block title %}Account locked{% endblock %}
+{% block content %}
+<h1>Too many failed sign-ins</h1>
+<p class="text-sm text-slate-600">After five wrong passwords, this account is locked from this address for 15 minutes. Wait, then try again, or reset your password.</p>
+<p><a class="btn btn-secondary" href="{% url 'account_reset_password' %}">Reset password</a></p>
+{% endblock %}

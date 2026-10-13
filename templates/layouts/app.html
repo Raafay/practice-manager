@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block body %}
+{% with nav=request.resolver_match.url_name %}
+<header class="bg-slate-900 text-white">
+  <div class="mx-auto flex max-w-screen-2xl items-center gap-3 px-4 py-2">
+    <a href="{% url 'overview' %}" class="flex items-center gap-2 font-semibold text-white no-underline hover:no-underline">
+      {% icon "building-office" "size-5" %}
+      <span class="hidden sm:inline">{{ practice.practice_name }}</span>
+    </a>
+    {% if user.mfa_done %}
+    <nav aria-label="Main" class="flex items-center gap-1">
+      <a href="{% url 'overview' %}" class="nav-link" {% if nav == "overview" %}aria-current="page"{% endif %}>Overview</a>
+      <a href="{% url 'core:settings' %}" class="nav-link" {% if request.path|slice:":10" == "/settings/" %}aria-current="page"{% endif %}>Settings</a>
+    </nav>
+    <div class="ml-auto flex items-center gap-2">
+      <div role="search" class="hidden md:block">
+        <label for="global-search" class="sr-only">Search</label>
+        <input id="global-search" type="search" disabled placeholder="Search arrives with clients" title="Search arrives with clients"
+               class="w-56 rounded-md border border-white/20 bg-white/10 px-2.5 py-1 text-sm text-white placeholder:text-slate-400 disabled:cursor-not-allowed">
+      </div>
+      <div class="relative" x-data="dropdown" @keydown.escape="close" @click.outside="close">
+        <button type="button" class="btn btn-sm border-white/20 bg-white/10 text-white shadow-none hover:bg-white/20" @click="toggle" aria-haspopup="true">
+          {% icon "plus" "size-4" %} New {% icon "chevron-down" "size-3" %}
+        </button>
+        <div class="menu" x-show="open" x-cloak>
+          <p class="px-3 py-2 text-slate-500">Nothing to create yet. Clients and tasks arrive in later stages.</p>
+        </div>
+      </div>
+      <a href="{% url 'events:notifications' %}" class="relative rounded-md p-1.5 text-slate-200 hover:bg-white/10 hover:text-white"
+         aria-label="Notifications{% if unread_notifications %}, {{ unread_notifications }} unread{% endif %}">
+        {% icon "bell" "size-5" %}
+        {% if unread_notifications %}<span class="absolute -top-0.5 -right-0.5 rounded-full bg-red-600 px-1.5 text-[10px] font-semibold leading-4 text-white">{{ unread_notifications }}</span>{% endif %}
+      </a>
+    {% else %}
+    <div class="ml-auto flex items-center gap-2">
+    {% endif %}
+      <div class="relative" x-data="dropdown" @keydown.escape="close" @click.outside="close">
+        <button type="button" class="flex items-center gap-1.5 rounded-md p-1 text-slate-200 hover:bg-white/10" @click="toggle" aria-haspopup="true" aria-label="Your account">
+          {% include "components/_avatar.html" with person=user %}
+          {% icon "chevron-down" "size-3" %}
+        </button>
+        <div class="menu" x-show="open" x-cloak>
+          <p class="border-b border-slate-100 px-3 py-2"><span class="block font-medium text-slate-900">{{ user.name }}</span><span class="text-xs text-slate-500">{{ user.email }}</span></p>
+          {% if user.mfa_done %}<a class="menu-item" href="{% url 'accounts:profile' %}">{% icon "user-circle" "size-4" %} Profile</a>{% endif %}
+          <form method="post" action="{% url 'account_logout' %}">{% csrf_token %}
+            <button type="submit" class="menu-item">{% icon "arrow-right-start-on-rectangle" "size-4" %} Sign out</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+{% endwith %}
+<main id="main" class="mx-auto max-w-screen-2xl px-4 py-6">
+  <div class="{% block content_class %}{% endblock content_class %}">
+  {% block content %}{% endblock content %}
+  </div>
+</main>
+<dialog id="drawer" class="dialog drawer" aria-label="Side panel">
+  <button type="button" class="btn-icon absolute top-3 right-3" data-dialog-close aria-label="Close">{% icon "x-mark" "size-5" %}</button>
+  <div id="drawer-body" class="dialog-body pt-5"></div>
+</dialog>
+<dialog id="modal" class="dialog modal" aria-label="Dialog">
+  <button type="button" class="btn-icon absolute top-3 right-3" data-dialog-close aria-label="Close">{% icon "x-mark" "size-5" %}</button>
+  <div id="modal-body" class="dialog-body pt-5"></div>
+</dialog>
+{% endblock body %}

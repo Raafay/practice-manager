@@ -1,0 +1,41 @@
+{% extends "layouts/app.html" %}
+{% block title %}Audit log{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Audit log" subtitle="Every sign-in and change: who, what and when. Entries are never edited or deleted." %}
+  <a href="{% url 'core:settings' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Settings</a>
+</div>
+<form method="get" class="card card-body mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5 lg:items-end">
+  {% for field in form %}{% include "components/_field.html" with field=field %}{% endfor %}
+  <div class="flex gap-2">
+    <button type="submit" class="btn btn-primary">{% icon "funnel" "size-4" %} Filter</button>
+    <a href="{% url 'events:audit_log' %}" class="btn btn-ghost">Clear</a>
+  </div>
+</form>
+{% if page.object_list %}
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th scope="col">When</th><th scope="col">Who</th><th scope="col">Action</th><th scope="col">What happened</th><th scope="col">Address</th></tr></thead>
+    <tbody>
+      {% for event in page.object_list %}
+      <tr>
+        <td class="whitespace-nowrap tabular-nums">{{ event.created_at|date:"d/m/Y H:i:s" }}</td>
+        <td class="whitespace-nowrap">{% if event.actor %}{% include "components/_avatar.html" with person=event.actor %} {% endif %}{{ event.actor_label }}</td>
+        <td><code class="text-xs">{{ event.verb }}</code></td>
+        <td>
+          {{ event.summary }}
+          {% if event.data %}
+          <details class="mt-1 text-xs text-slate-500"><summary class="cursor-pointer">Details</summary><pre class="mt-1 overflow-x-auto whitespace-pre-wrap">{{ event.data|pretty_json }}</pre></details>
+          {% endif %}
+        </td>
+        <td class="whitespace-nowrap text-xs text-slate-500">{{ event.ip_address|default:"" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "components/_pagination.html" %}
+{% else %}
+  {% include "components/_empty.html" with title="No events match" message="Try fewer filters, or a wider range of dates." icon_name="clipboard-document-list" %}
+{% endif %}
+{% endblock %}

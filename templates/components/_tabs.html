@@ -1,0 +1,6 @@
+{# Link tabs for record pages. tabs is a list of (label, url, key); current is the active key. #}
+<nav class="tabs" aria-label="{{ label|default:'Sections' }}">
+  {% for tab_label, tab_url, tab_key in tabs %}
+  <a href="{{ tab_url }}" class="tab" {% if tab_key == current %}aria-current="page"{% endif %}>{{ tab_label }}</a>
+  {% endfor %}
+</nav>

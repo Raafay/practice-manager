@@ -25,7 +25,10 @@ def check_staff(request) -> None | object:
 
 
 class StaffRequiredMixin(AccessMixin):
-    """Signed in, kind staff, active, two-factor done. Optionally a recent password."""
+    """Signed in, kind staff, active, two-factor done.
+
+    require_reauth: a POST needs the password entered in the last few minutes.
+    """
 
     require_reauth = False
 
@@ -36,8 +39,10 @@ class StaffRequiredMixin(AccessMixin):
         if not self.has_access(request):
             raise PermissionDenied
         if self.require_reauth:
-            # allauth asks for the password again, then replays this request.
-            return reauthentication_required(super().dispatch)(request, *args, **kwargs)
+            # Before a change (not a page view), allauth asks for the password
+            # again if it was not entered recently, then replays the request.
+            guarded = reauthentication_required(super().dispatch, allow_get=True)
+            return guarded(request, *args, **kwargs)
         return super().dispatch(request, *args, **kwargs)
 
     def has_access(self, request) -> bool:

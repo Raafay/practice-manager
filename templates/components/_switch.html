@@ -1,0 +1,7 @@
+{# A toggle switch. Pass name, label, checked, and optionally id and disabled. On and off are spelled out. #}
+<label class="switch" for="{{ id|default:name }}">
+  <input type="checkbox" role="switch" class="peer" id="{{ id|default:name }}" name="{{ name }}" {% if checked %}checked{% endif %} {% if disabled %}disabled{% endif %}>
+  <span class="switch-track" aria-hidden="true"></span>
+  <span>{{ label }}</span>
+  <span class="switch-on text-xs font-medium text-green-700">On</span><span class="switch-off text-xs text-slate-500">Off</span>
+</label>

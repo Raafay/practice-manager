@@ -1,0 +1,35 @@
+{% extends "layouts/app.html" %}
+{% block title %}Your profile{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="flex items-center gap-3">
+    {% include "components/_avatar.html" with person=person size="lg" %}
+    <div><h1>Your profile</h1><p class="muted">{{ person.email }} · {{ person.role|default:"No role" }}</p></div>
+  </div>
+</div>
+<div class="grid gap-4 lg:grid-cols-3">
+  <form method="post" class="card card-body space-y-4 lg:col-span-2" novalidate>
+    {% csrf_token %}
+    {% include "components/_form_fields.html" %}
+    <button type="submit" class="btn btn-primary">Save profile</button>
+  </form>
+  <aside class="space-y-4">
+    <section class="card card-body space-y-2" aria-labelledby="h-password">
+      <h2 id="h-password">Password</h2>
+      <p class="muted">At least 12 characters. There is no forced change on a timer.</p>
+      <a href="{% url 'account_change_password' %}" class="btn btn-secondary">Change password</a>
+    </section>
+    <section class="card card-body space-y-2" aria-labelledby="h-2fa">
+      <h2 id="h-2fa">Two-factor</h2>
+      <p>{% include "components/_badge.html" with text="Authenticator app set up" tone="green" icon_name="check" %}</p>
+      <a href="{% url 'mfa_index' %}" class="btn btn-secondary">Manage two-factor and recovery codes</a>
+    </section>
+    {% if person.teams.exists %}
+    <section class="card card-body space-y-2" aria-labelledby="h-teams">
+      <h2 id="h-teams">Teams</h2>
+      <p>{% for team in person.teams.all %}{% include "components/_badge.html" with text=team.name %} {% endfor %}</p>
+    </section>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

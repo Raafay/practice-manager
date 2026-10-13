@@ -1,0 +1,163 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+{% block title %}Styleguide{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'vendor/trix/trix.css' %}">
+<script src="{% static 'vendor/trix/trix.umd.min.js' %}" defer></script>
+<script src="{% static 'vendor/sortable/Sortable.min.js' %}" defer></script>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Styleguide" subtitle="Every component, in one place. Reuse these; add new ones here." %}
+</div>
+
+<nav aria-label="Components" class="mb-6 flex flex-wrap gap-2 text-sm">
+  {% for anchor, label in "buttons:Buttons,badges:Badges,avatars:Avatars,tabs:Tabs,panels:Folding panels,tables:Tables,forms:Forms,switches:Switches,dialogs:Drawer and modal,toasts:Toasts,empty:Empty states,icons:Icons,sortable:Drag to reorder"|split_pairs %}
+  <a class="badge badge-neutral no-underline hover:no-underline" href="#{{ anchor }}">{{ label }}</a>
+  {% endfor %}
+</nav>
+
+<div class="space-y-10">
+  <section id="buttons" aria-labelledby="h-buttons" class="space-y-3">
+    <h2 id="h-buttons">Buttons</h2>
+    <div class="flex flex-wrap items-center gap-2">
+      <button type="button" class="btn btn-primary">Primary</button>
+      <button type="button" class="btn btn-secondary">Secondary</button>
+      <button type="button" class="btn btn-danger">Danger</button>
+      <button type="button" class="btn btn-ghost">Ghost</button>
+      <button type="button" class="btn btn-primary btn-sm">Small</button>
+      <button type="button" class="btn btn-secondary">{% icon "plus" "size-4" %} With icon</button>
+      <button type="button" class="btn btn-primary" disabled>Disabled</button>
+      <button type="button" class="btn-icon" aria-label="Edit">{% icon "pencil-square" %}</button>
+    </div>
+    <p class="muted"><code>.btn</code> with <code>.btn-primary</code>, <code>.btn-secondary</code>, <code>.btn-danger</code>, <code>.btn-ghost</code>, <code>.btn-sm</code>; <code>.btn-icon</code> needs an <code>aria-label</code>.</p>
+  </section>
+
+  <section id="badges" aria-labelledby="h-badges" class="space-y-3">
+    <h2 id="h-badges">Status badges</h2>
+    <div class="flex flex-wrap gap-2">
+      {% include "components/_badge.html" with text="Done" tone="green" icon_name="check" %}
+      {% include "components/_badge.html" with text="Due soon" tone="amber" icon_name="clock" %}
+      {% include "components/_badge.html" with text="Overdue" tone="red" icon_name="exclamation-triangle" %}
+      {% include "components/_badge.html" with text="Draft" %}
+      {% include "components/_badge.html" with text="New" tone="accent" %}
+    </div>
+    <p class="muted">Green for done or on, amber for due soon, red for overdue. The words always say it too.</p>
+  </section>
+
+  <section id="avatars" aria-labelledby="h-avatars" class="space-y-3">
+    <h2 id="h-avatars">Avatars</h2>
+    <div class="flex items-center gap-2">
+      {% for person in people %}{% include "components/_avatar.html" with person=person %}{% endfor %}
+      {% include "components/_avatar.html" with person=user size="lg" %}
+    </div>
+  </section>
+
+  <section id="tabs" aria-labelledby="h-tabs" class="space-y-3">
+    <h2 id="h-tabs">Tabs</h2>
+    {% url 'core:styleguide' as here %}
+    {% include "components/_tabs.html" with tabs=styleguide_tabs current=tab label="Example record" %}
+    <div class="card card-body text-sm">Showing the <strong>{{ tab }}</strong> tab. Record pages use one address per tab, so a tab can be bookmarked.</div>
+  </section>
+
+  <section id="panels" aria-labelledby="h-panels" class="space-y-3">
+    <h2 id="h-panels">Folding panels</h2>
+    <div class="grid gap-3 md:grid-cols-2">
+      <details class="panel" open>
+        <summary>Company details {% icon "chevron-right" "panel-chevron size-4 text-slate-400 transition-transform" %}</summary>
+        <div class="panel-body"><dl class="grid grid-cols-3 gap-2"><dt class="muted">Number</dt><dd class="col-span-2">00000000</dd><dt class="muted">Year end</dt><dd class="col-span-2">31/03</dd></dl></div>
+      </details>
+      <details class="panel">
+        <summary>Notes {% icon "chevron-right" "panel-chevron size-4 text-slate-400 transition-transform" %}</summary>
+        <div class="panel-body">Folded by default. Opens with a click or the keyboard.</div>
+      </details>
+    </div>
+  </section>
+
+  <section id="tables" aria-labelledby="h-tables" class="space-y-3">
+    <h2 id="h-tables">Tables</h2>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th scope="col">Work</th><th scope="col">Owner</th><th scope="col">Due</th><th scope="col">Status</th><th scope="col">Fee</th></tr></thead>
+        <tbody>
+          {% for row in sample_rows %}
+          <tr><td class="font-medium text-slate-900">{{ row.name }}</td><td>{{ row.owner }}</td><td>{{ row.due }}</td><td>{% include "components/_badge.html" with text=row.status.0 tone=row.status.1 %}</td><td class="tabular-nums">{{ 1250|money }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "components/_pagination.html" %}
+  </section>
+
+  <section id="forms" aria-labelledby="h-forms" class="space-y-3">
+    <h2 id="h-forms">Forms</h2>
+    <form class="card card-body grid max-w-2xl gap-4 md:grid-cols-2" method="get" action="#forms">
+      <div><label class="label" for="sg-name">Name</label><input id="sg-name" class="input" placeholder="Jane Example"></div>
+      <div><label class="label" for="sg-type">Type</label><select id="sg-type" class="select"><option>Limited company</option><option>Sole trader</option></select></div>
+      <div class="has-error"><label class="label" for="sg-email">Email</label><input id="sg-email" class="input" value="not-an-email" aria-describedby="sg-email-error"><p class="field-error" id="sg-email-error">Enter a valid email address.</p></div>
+      <div><label class="label" for="sg-date">Date</label><input id="sg-date" class="input" type="date"><p class="help">Shown as dd/mm/yyyy.</p></div>
+      <div class="md:col-span-2"><label class="label" for="sg-notes">Notes</label><textarea id="sg-notes" class="textarea" rows="3"></textarea></div>
+      <div class="md:col-span-2">
+        <label class="label" for="sg-rich">Rich text</label>
+        <input id="sg-rich" type="hidden" name="rich">
+        <trix-editor input="sg-rich" class="textarea min-h-24" aria-label="Rich text"></trix-editor>
+        <p class="help">Trix. Text is cleaned with nh3 before it is stored or shown.</p>
+      </div>
+      <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox"> A tick box</label>
+      <div class="md:col-span-2"><button type="button" class="btn btn-primary">Save</button></div>
+    </form>
+  </section>
+
+  <section id="switches" aria-labelledby="h-switches" class="space-y-3">
+    <h2 id="h-switches">Toggle switches</h2>
+    <div class="flex flex-col gap-3">
+      {% include "components/_switch.html" with name="sg-switch-1" label="Accounts" checked=True %}
+      {% include "components/_switch.html" with name="sg-switch-2" label="Payroll" %}
+      {% include "components/_switch.html" with name="sg-switch-3" label="Locked" checked=True disabled=True %}
+    </div>
+  </section>
+
+  <section id="dialogs" aria-labelledby="h-dialogs" class="space-y-3">
+    <h2 id="h-dialogs">Drawer and modal</h2>
+    <div class="flex gap-2">
+      <a href="{% url 'core:styleguide_demo' 'drawer' %}" class="btn btn-secondary" hx-get="{% url 'core:styleguide_demo' 'drawer' %}" hx-target="#drawer-body">Open drawer</a>
+      <a href="{% url 'core:styleguide_demo' 'modal' %}" class="btn btn-secondary" hx-get="{% url 'core:styleguide_demo' 'modal' %}" hx-target="#modal-body">Open modal</a>
+    </div>
+    <p class="muted">Both load their content with HTMX, close with Escape, and keep focus inside while open. Without scripts the link opens a full page.</p>
+  </section>
+
+  <section id="toasts" aria-labelledby="h-toasts" class="space-y-3">
+    <h2 id="h-toasts">Toasts</h2>
+    <div class="flex gap-2">
+      <form method="post" action="{% url 'core:styleguide_demo' 'toast' %}">{% csrf_token %}<button class="btn btn-secondary" type="submit">Show a success toast</button></form>
+      <form method="post" action="{% url 'core:styleguide_demo' 'toast' %}">{% csrf_token %}<input type="hidden" name="tone" value="error"><button class="btn btn-secondary" type="submit">Show an error toast</button></form>
+    </div>
+  </section>
+
+  <section id="empty" aria-labelledby="h-empty" class="space-y-3">
+    <h2 id="h-empty">Empty states</h2>
+    {% url 'core:styleguide' as sg_url %}
+    {% include "components/_empty.html" with title="No tasks yet" message="Tasks appear here when a service creates them, or add one by hand." action_url=sg_url action_label="Add a task" icon_name="clipboard-document-list" %}
+  </section>
+
+  <section id="icons" aria-labelledby="h-icons" class="space-y-3">
+    <h2 id="h-icons">Icons</h2>
+    <div class="flex flex-wrap gap-3 text-slate-600">
+      {% for name in "bell,magnifying-glass,plus,users,user-group,shield-check,key,calendar,clock,envelope,phone,document-text,inbox,funnel,trash,eye,lock-closed,cog-6-tooth"|split_list %}
+      <span class="flex flex-col items-center gap-1 text-xs" title="{{ name }}">{% icon name "size-6" %}<span class="sr-only">{{ name }}</span></span>
+      {% endfor %}
+    </div>
+    <p class="muted"><code>{% templatetag openblock %} icon "bell" "size-5" {% templatetag closeblock %}</code>. Heroicons, MIT licence. Add files to <code>apps/core/icons/</code>.</p>
+  </section>
+
+  <section id="sortable" aria-labelledby="h-sortable" class="space-y-3">
+    <h2 id="h-sortable">Drag to reorder</h2>
+    <ul class="card max-w-sm divide-y divide-slate-100" data-sortable>
+      {% for item in "To do,In progress,Waiting on client,In review,Done"|split_list %}
+      <li class="flex items-center gap-2 px-3 py-2 text-sm"><span data-sortable-handle class="cursor-grab text-slate-400" aria-hidden="true">{% icon "bars-3" "size-4" %}</span>{{ item }}</li>
+      {% endfor %}
+    </ul>
+    <p class="muted">SortableJS. Pages that reorder things also offer a keyboard way to do it.</p>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% load allauth %}
+<div class="{% if attrs.errors %}has-error{% endif %}">
+{% if attrs.type == "textarea" %}
+  <label class="label" for="{{ attrs.id }}">{% slot label %}{% endslot %}</label>
+  <textarea class="textarea" {% if attrs.required %}required{% endif %} {% if attrs.rows %}rows="{{ attrs.rows }}"{% endif %} {% if attrs.disabled %}disabled{% endif %} {% if attrs.readonly %}readonly{% endif %} {% if attrs.name %}name="{{ attrs.name }}"{% endif %} {% if attrs.id %}id="{{ attrs.id }}"{% endif %} {% if attrs.placeholder %}placeholder="{{ attrs.placeholder }}"{% endif %}>{% slot value %}{% endslot %}</textarea>
+{% elif attrs.type == "checkbox" or attrs.type == "radio" %}
+  <label class="flex items-center gap-2 text-sm text-slate-700" for="{{ attrs.id }}">
+    <input class="checkbox" type="{{ attrs.type }}" {% if attrs.required %}required{% endif %} {% if attrs.disabled %}disabled{% endif %} {% if attrs.checked %}checked{% endif %} {% if attrs.name %}name="{{ attrs.name }}"{% endif %} {% if attrs.id %}id="{{ attrs.id }}"{% endif %} {% if attrs.value is not None %}value="{{ attrs.value }}"{% endif %}>
+    {% slot label %}{% endslot %}
+  </label>
+{% else %}
+  <label class="label" for="{{ attrs.id }}">{% slot label %}{% endslot %}</label>
+  <input class="input" type="{{ attrs.type }}" {% if attrs.required %}required{% endif %} {% if attrs.disabled %}disabled{% endif %} {% if attrs.readonly %}readonly{% endif %} {% if attrs.name %}name="{{ attrs.name }}"{% endif %} {% if attrs.id %}id="{{ attrs.id }}"{% endif %} {% if attrs.placeholder %}placeholder="{{ attrs.placeholder }}"{% endif %} {% if attrs.autocomplete %}autocomplete="{{ attrs.autocomplete }}"{% endif %} {% if attrs.value is not None %}value="{{ attrs.value }}"{% endif %}>
+{% endif %}
+{% if slots.help_text %}<p class="help">{% slot help_text %}{% endslot %}</p>{% endif %}
+{% for error in attrs.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+</div>

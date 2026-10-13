@@ -10,6 +10,7 @@ from apps.events.services import changes, snapshot
 
 from .forms_settings import PracticeDetailsForm, SecuritySettingsForm
 from .models import PracticeSettings
+from .pagination import paginate
 from .permissions import CapabilityRequiredMixin, StaffRequiredMixin
 
 
@@ -28,6 +29,9 @@ class StyleguideView(StaffRequiredMixin, TemplateView):
         from apps.accounts.models import User
 
         context = super().get_context_data(**kwargs)
+        here = reverse("core:styleguide")
+        tabs = [("Info", "info"), ("Services", "services"), ("Activity", "activity")]
+        context["styleguide_tabs"] = [(label, f"{here}?tab={key}#tabs", key) for label, key in tabs]
         context["tab"] = self.request.GET.get("tab", "info")
         context["people"] = User.objects.staff().filter(is_active=True)[:5]
         context["sample_rows"] = [
@@ -50,6 +54,7 @@ class StyleguideView(StaffRequiredMixin, TemplateView):
                 "status": ("Done", "green"),
             },
         ]
+        context["page"] = paginate(self.request, context["sample_rows"], per_page=2)
         return context
 
 
@@ -63,7 +68,12 @@ class StyleguideDemoView(StaffRequiredMixin, TemplateView):
         return [f"core/_styleguide_{kind}.html"]
 
     def post(self, request, *args, **kwargs):
-        messages.success(request, "Saved. This is a success toast.")
+        if self.kwargs["kind"] != "toast":
+            raise Http404
+        if request.POST.get("tone") == "error":
+            messages.error(request, "Something went wrong. Error toasts stay until closed.")
+        else:
+            messages.success(request, "Saved. Success toasts hide after a few seconds.")
         return redirect(reverse("core:styleguide") + "#toasts")
 
 

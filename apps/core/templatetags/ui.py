@@ -66,3 +66,41 @@ def masked(value):
 def can(user, right: str) -> bool:
     """{% if request.user|can:"fees.view" %}. False for anyone signed out."""
     return bool(getattr(user, "is_authenticated", False) and user.can(right))
+
+
+@register.simple_tag(takes_context=True)
+def page_query(context, number):
+    """The current query string with the page number changed (for pagination links)."""
+    from apps.core.pagination import page_query as build
+
+    return build(context["request"], number)
+
+
+@register.filter
+def split_list(value: str) -> list[str]:
+    """ "a,b,c"|split_list gives ["a", "b", "c"]. For short fixed lists in templates."""
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+@register.filter
+def split_pairs(value: str) -> list[tuple[str, str]]:
+    """ "key:Label,key2:Label two"|split_pairs gives [("key", "Label"), ...]."""
+    return [tuple(item.split(":", 1)) for item in split_list(value)]
+
+
+@register.filter
+def styled(bound_field):
+    """Render a field's widget with the styleguide class, for forms we do not own (allauth)."""
+    widget = bound_field.field.widget
+    if widget.attrs.get("class") or getattr(widget, "input_type", "") == "hidden":
+        return bound_field
+    from apps.core.forms import widget_css
+
+    return bound_field.as_widget(attrs={"class": widget_css(widget)})
+
+
+@register.filter
+def pretty_json(value) -> str:
+    import json
+
+    return json.dumps(value, indent=2, ensure_ascii=False, sort_keys=True, default=str)

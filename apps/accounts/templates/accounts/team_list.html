@@ -1,0 +1,30 @@
+{% extends "layouts/app.html" %}
+{% block title %}Teams{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Teams" subtitle="Teams group people for filtering work. They do not limit what anyone can see." %}
+  <div class="flex gap-2">
+    <a href="{% url 'accounts:users' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Users</a>
+    <a href="{% url 'accounts:team_create' %}" class="btn btn-primary">{% icon "plus" "size-4" %} New team</a>
+  </div>
+</div>
+{% if teams %}
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th scope="col">Team</th><th scope="col">Description</th><th scope="col">Members</th></tr></thead>
+    <tbody>
+      {% for team in teams %}
+      <tr>
+        <td><a href="{% url 'accounts:team_edit' team.pk %}" class="font-medium">{{ team.name }}</a></td>
+        <td>{{ team.description }}</td>
+        <td><div class="flex -space-x-1">{% for member in team.members.all %}{% include "components/_avatar.html" with person=member %}{% empty %}<span class="muted">Nobody yet</span>{% endfor %}</div></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  {% url 'accounts:team_create' as new_team_url %}
+  {% include "components/_empty.html" with title="No teams yet" message="Create a team, such as Compliance or Advisory, and add people to it." action_url=new_team_url action_label="New team" icon_name="user-group" %}
+{% endif %}
+{% endblock %}

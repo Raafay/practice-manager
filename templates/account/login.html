@@ -1,0 +1,13 @@
+{% extends "layouts/auth.html" %}
+{% block title %}Sign in{% endblock %}
+{% block content %}
+<h1>Staff sign-in</h1>
+<p class="text-sm text-slate-600">Use your work email and password. You will then be asked for the code from your authenticator app.</p>
+<form method="post" action="{% url 'account_login' %}" class="space-y-4" novalidate>
+  {% csrf_token %}
+  {% include "components/_form_fields.html" %}
+  {{ redirect_field }}
+  <button type="submit" class="btn btn-primary w-full">Sign in</button>
+</form>
+<p class="text-xs text-slate-500">New staff are invited by the practice owner. Clients sign in to the portal, not here.</p>
+{% endblock %}

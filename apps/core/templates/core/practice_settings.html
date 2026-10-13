@@ -1,0 +1,16 @@
+{% extends "layouts/app.html" %}
+{% block title %}Practice details{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Practice details" subtitle="Shown on letters, emails and the portal." %}
+  <a href="{% url 'core:settings' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Settings</a>
+</div>
+<form method="post" enctype="multipart/form-data" class="card card-body max-w-2xl space-y-4" novalidate>
+  {% csrf_token %}
+  {% if practice.logo %}
+  <div class="flex items-center gap-3"><img src="{% url 'core:practice_logo' %}" alt="Current logo" class="h-12 w-auto rounded border border-slate-200 bg-white p-1"><span class="muted">Current logo</span></div>
+  {% endif %}
+  {% include "components/_form_fields.html" %}
+  <div><button type="submit" class="btn btn-primary">Save practice details</button></div>
+</form>
+{% endblock %}
