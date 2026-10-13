@@ -1,0 +1,58 @@
+{% extends "layouts/app.html" %}
+{% block title %}{{ message.subject|default:"Message" }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ message.subject|default:"(no subject)" }}</h1>
+    <p class="muted mt-0.5">For <a href="{% url 'clients:detail' message.client.pk %}">{{ message.client.name }}</a> ·
+      {{ message.get_state_display }}{% if message.sent_at %} on {{ message.sent_at|date:"d/m/Y H:i" }}{% endif %}</p>
+  </div>
+  <a href="{% url 'comms:queue' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Queued</a>
+</div>
+
+{% if paused %}<div class="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">All automatic sending is paused. An approved message waits until sending resumes.</div>{% endif %}
+{% if warning %}<div class="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">{{ warning }}</div>{% endif %}
+{% if message.error %}<div class="mb-4 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert">It failed to send: {{ message.error }}</div>{% endif %}
+{% if problems %}<div class="mb-4 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert"><p class="font-medium">This cannot be approved yet:</p><ul class="list-disc pl-5">{% for p in problems %}<li>{{ p }}</li>{% endfor %}</ul></div>{% endif %}
+{% if message.reason %}<p class="muted mb-3">Why this was made: {{ message.reason }}</p>{% endif %}
+
+<form method="post" class="card card-body max-w-3xl space-y-4" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-errors" role="alert">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+  <dl class="grid grid-cols-[6rem_1fr] gap-y-1 text-sm">
+    <dt class="muted">Send from</dt><dd>{% if sender %}{{ sender.name }}{% else %}{{ practice.practice_name }}{% endif %} &lt;{{ from_address }}&gt;</dd>
+    <dt class="muted">Replies go to</dt><dd>{% if sender %}{{ sender.email }}{% else %}{{ practice.email|default:"the practice address" }}{% endif %}{% if not message.approved_by %} <span class="muted">(whoever approves it)</span>{% endif %}</dd>
+    {% if attachments %}<dt class="muted">Attached</dt><dd>{% for a in attachments %}{{ a.original_name }}{% if not forloop.last %}, {% endif %}{% endfor %}</dd>{% endif %}
+  </dl>
+  {% if message.is_editable %}
+    {% include "components/_field.html" with field=form.to %}
+    {% if form.cc %}<div class="grid gap-4 sm:grid-cols-2">{% include "components/_field.html" with field=form.cc %}{% include "components/_field.html" with field=form.bcc %}</div>{% endif %}
+    {% if form.subject %}{% include "components/_field.html" with field=form.subject %}{% endif %}
+    <div>
+      <label class="label" for="id_body_editor">Message</label>
+      {{ form.body }}
+      <trix-editor input="{{ form.body.id_for_label }}" id="id_body_editor" class="textarea min-h-48 rich-text" aria-label="Message"></trix-editor>
+      {% for e in form.body.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+    </div>
+    <div class="flex flex-wrap justify-between gap-2">
+      <button type="submit" name="action" value="cancel" class="btn btn-ghost text-red-700" data-confirm="Cancel this message? It will not be sent.">Cancel message</button>
+      <div class="flex gap-2">
+        <button type="submit" name="action" value="save" class="btn btn-secondary">Save</button>
+        {% if message.state == "failed" and can_approve %}<button type="submit" name="action" value="retry" class="btn btn-secondary">Try again</button>{% endif %}
+        {% if can_approve %}<button type="submit" name="action" value="approve" class="btn btn-primary" {% if problems %}disabled{% endif %}>{% icon "envelope" "size-4" %} Approve and send</button>
+        {% else %}<span class="muted self-center">You do not have the right to approve messages.</span>{% endif %}
+      </div>
+    </div>
+  {% else %}
+    <dl class="grid grid-cols-[6rem_1fr] gap-y-1 text-sm">
+      <dt class="muted">To</dt><dd>{{ message.to }}</dd>
+      {% if message.cc %}<dt class="muted">Cc</dt><dd>{{ message.cc }}</dd>{% endif %}
+      {% if message.approved_by %}<dt class="muted">Approved by</dt><dd>{{ message.approved_by.name }}, {{ message.approved_at|date:"d/m/Y H:i" }}</dd>{% endif %}
+    </dl>
+    <div class="rounded border border-slate-200 bg-slate-50 p-4 text-sm">{% if message.body_html %}{{ message.body_html|safe }}{% else %}<p class="whitespace-pre-line">{{ message.body_text }}</p>{% endif %}</div>
+    {% if message.state == "approved" and message.state != "sent" %}
+    <div class="flex justify-end"><button type="submit" name="action" value="cancel" class="btn btn-ghost text-red-700" data-confirm="Cancel this message? It will not be sent.">Cancel message</button></div>
+    {% endif %}
+  {% endif %}
+</form>
+{% endblock %}

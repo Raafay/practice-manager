@@ -11,6 +11,7 @@
     <nav aria-label="Main" class="flex items-center gap-1">
       <a href="{% url 'overview' %}" class="nav-link" {% if nav == "overview" %}aria-current="page"{% endif %}>My work</a>
       <a href="{% url 'tasks:list' %}" class="nav-link" {% if request.path|slice:":7" == "/tasks/" %}aria-current="page"{% endif %}>Tasks</a>
+      <a href="{% url 'comms:queue' %}" class="nav-link" {% if request.path|slice:":10" == "/messages/" %}aria-current="page"{% endif %}>Queued{% if comms_waiting %} <span class="rounded-full bg-amber-500 px-1.5 text-[10px] font-semibold leading-4 text-white" aria-label="{{ comms_waiting }} waiting for approval">{{ comms_waiting }}</span>{% endif %}</a>
       <a href="{% url 'clients:list' %}" class="nav-link" {% if request.path|slice:":9" == "/clients/" or request.path|slice:":10" == "/contacts/" or request.path == "/search/" %}aria-current="page"{% endif %}>Clients</a>
       <a href="{% url 'services:reports' %}" class="nav-link" {% if request.path|slice:":9" == "/reports/" %}aria-current="page"{% endif %}>Reports</a>
       <a href="{% url 'core:settings' %}" class="nav-link" {% if request.path|slice:":10" == "/settings/" %}aria-current="page"{% endif %}>Settings</a>
@@ -60,6 +61,9 @@
   </div>
 </header>
 {% endwith %}
+{% if practice.comms_paused and user.mfa_done %}
+<div class="bg-amber-100 px-4 py-2 text-center text-sm text-amber-900" role="status">All automatic sending is paused. Nothing leaves the practice until it is resumed on the <a href="{% url 'comms:queue' %}">Queued page</a>.</div>
+{% endif %}
 <main id="main" class="mx-auto max-w-screen-2xl px-4 py-6">
   <div class="{% block content_class %}{% endblock content_class %}">
   {% block content %}{% endblock content %}

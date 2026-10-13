@@ -1,0 +1,29 @@
+{# The compose window, shown in the drawer. #}
+<h2 class="mb-3">Email {{ client.name }}</h2>
+{% if warning %}<div class="mb-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">{{ warning }}</div>{% endif %}
+<form method="post" action="{% url 'comms:compose' client.pk %}" hx-post="{% url 'comms:compose' client.pk %}" hx-target="#drawer-body" hx-encoding="multipart/form-data" enctype="multipart/form-data" class="space-y-4" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-errors" role="alert">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+  <div>
+    {% include "components/_field.html" with field=form.template %}
+    <button type="submit" name="action" value="load_template" class="btn btn-secondary btn-sm mt-1" formnovalidate>Fill in from template</button>
+  </div>
+  {% include "components/_field.html" with field=form.contacts %}
+  {% include "components/_field.html" with field=form.to %}
+  <div class="grid gap-3 sm:grid-cols-2">{% include "components/_field.html" with field=form.cc %}{% include "components/_field.html" with field=form.bcc %}</div>
+  {% include "components/_field.html" with field=form.subject %}
+  <div>
+    <label class="label" for="compose_body_editor">Message</label>
+    {{ form.body }}
+    <trix-editor input="{{ form.body.id_for_label }}" id="compose_body_editor" class="textarea min-h-40 rich-text" aria-label="Message"></trix-editor>
+    {% for e in form.body.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+  </div>
+  {% if form.attachments.field.choices %}{% include "components/_field.html" with field=form.attachments %}{% endif %}
+  {% include "components/_field.html" with field=form.upload %}
+  {% include "components/_field.html" with field=form.signature %}
+  <div class="flex justify-end gap-2">
+    <button type="button" class="btn btn-secondary" data-dialog-close>Cancel</button>
+    <button type="submit" name="action" value="queue" class="btn btn-secondary">Save to queue</button>
+    {% if user|can:"comms.approve" %}<button type="submit" name="action" value="send" class="btn btn-primary">{% icon "envelope" "size-4" %} Send now</button>{% endif %}
+  </div>
+</form>

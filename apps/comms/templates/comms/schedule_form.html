@@ -1,0 +1,14 @@
+{% extends "layouts/app.html" %}
+{% block title %}{{ instance.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title=instance.name subtitle=instance.description %}
+  <a href="{% url 'comms:reminders' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Reminders</a>
+</div>
+<form method="post" class="card card-body max-w-2xl space-y-4" novalidate>
+  {% csrf_token %}
+  <p class="muted">Timing: {{ instance.get_trigger_display }}. A reminder stops when a step flagged “Stops reminders” is ticked on the task, when the deadline is done, and for former or lost clients and clients set to “do not send automatic messages”.</p>
+  {% include "components/_form_fields.html" %}
+  <div><button type="submit" class="btn btn-primary">Save reminder</button></div>
+</form>
+{% endblock %}

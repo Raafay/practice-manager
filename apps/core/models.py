@@ -87,6 +87,22 @@ class PracticeSettings(TimeStampedModel):
         validators=[MinValueValidator(1), MaxValueValidator(50)],
     )
 
+    # Email to clients (Stage 6).
+    sending_address = models.EmailField(
+        "Sending address",
+        blank=True,
+        help_text="Messages to clients come from this address, with the staff member's name. "
+        "Leave blank to use the practice email.",
+    )
+    bcc_practice = models.BooleanField(
+        "Copy every sent email to the practice address", default=False
+    )
+    comms_paused = models.BooleanField("Pause all automatic sending", default=False)
+    comms_paused_at = models.DateTimeField(null=True, blank=True)
+    comms_paused_by = models.ForeignKey(
+        "accounts.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+
     class Meta:
         verbose_name = "practice settings"
         verbose_name_plural = "practice settings"

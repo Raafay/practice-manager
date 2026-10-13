@@ -1,0 +1,68 @@
+{% extends "layouts/app.html" %}
+{% block title %}Queued messages{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Queued messages" subtitle="Nothing reaches a client until a person approves it, unless the owner has set that template to send itself." %}
+  {% if can_pause %}
+  <form method="post" action="{% url 'comms:pause' %}" class="card card-body flex items-center gap-3">{% csrf_token %}
+    <input type="hidden" name="paused" value="{% if paused %}0{% else %}1{% endif %}">
+    <button type="submit" role="switch" class="switch-button" aria-checked="{% if paused %}true{% else %}false{% endif %}">
+      <span class="switch-track" aria-hidden="true"></span>
+      <span>Pause all automatic sending</span>
+      <span class="text-xs font-medium {% if paused %}text-amber-800{% else %}text-slate-500{% endif %}">{% if paused %}On: nothing leaves{% else %}Off{% endif %}</span>
+    </button>
+  </form>
+  {% endif %}
+</div>
+
+<form method="get" class="card card-body mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5" aria-label="Filter messages">
+  <div><label class="label" for="q">Client or subject</label><input class="input" id="q" name="q" value="{{ q }}"></div>
+  <div><label class="label" for="state">State</label>
+    <select class="select" id="state" name="state"><option value="">Needs doing, and recent</option>
+      {% for value, label in states %}<option value="{{ value }}" {% if value == state %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+  <div><label class="label" for="template">Template</label>
+    <select class="select" id="template" name="template"><option value="">Any</option>
+      {% for t in templates %}<option value="{{ t.pk }}" {% if t.pk|stringformat:"s" == template_id %}selected{% endif %}>{{ t.name }}</option>{% endfor %}</select></div>
+  <div><label class="label" for="manager">Manager</label>
+    <select class="select" id="manager" name="manager"><option value="">Any</option>
+      {% for m in managers %}<option value="{{ m.pk }}" {% if m.pk|stringformat:"s" == manager_id %}selected{% endif %}>{{ m.name }}</option>{% endfor %}</select></div>
+  <div class="flex items-end"><button type="submit" class="btn btn-secondary">Filter</button></div>
+</form>
+
+{% if page.object_list %}
+<form method="post" action="{% url 'comms:bulk_approve' %}">{% csrf_token %}
+  <div class="mb-2 flex items-center justify-between">
+    <p class="muted">{{ waiting }} waiting for approval.</p>
+    <button type="submit" class="btn btn-primary btn-sm">{% icon "check" "size-4" %} Approve ticked</button>
+  </div>
+  <div class="table-wrap"><table class="table">
+    <thead><tr>
+      <th scope="col" class="w-8"><input type="checkbox" class="checkbox" data-check-all aria-label="Tick every message"></th>
+      <th scope="col">Client</th><th scope="col">Message</th><th scope="col">To</th><th scope="col">Why</th><th scope="col">State</th>
+    </tr></thead>
+    <tbody>{% for m in page.object_list %}
+      <tr>
+        <td>{% if m.is_editable and m.can_approve %}<input type="checkbox" class="checkbox" name="ids" value="{{ m.pk }}" aria-label="Tick {{ m.subject }} for {{ m.client.name }}">{% endif %}</td>
+        <td><a href="{% url 'clients:detail' m.client.pk %}">{{ m.client.name }}</a></td>
+        <td><a href="{% url 'comms:message' m.pk %}" class="font-medium">{{ m.subject|default:"(no subject)" }}</a>
+          {% if m.template %}<span class="muted block">{{ m.template.name }}</span>{% endif %}</td>
+        <td>{% if m.to %}{{ m.to }}{% else %}{% include "components/_badge.html" with text="No email address" tone="red" icon_name="exclamation-triangle" %}{% endif %}</td>
+        <td class="muted max-w-xs">{{ m.reason }}</td>
+        <td>
+          {% if m.state == "needs_approval" %}{% include "components/_badge.html" with text="Needs approval" tone="amber" %}
+          {% elif m.state == "sent" %}{% include "components/_badge.html" with text="Sent" tone="green" %}
+          {% elif m.state == "failed" %}{% include "components/_badge.html" with text="Failed" tone="red" icon_name="exclamation-triangle" %}
+          {% elif m.state == "approved" %}{% include "components/_badge.html" with text="Approved" tone="accent" %}
+          {% else %}{% include "components/_badge.html" with text=m.get_state_display %}{% endif %}
+          {% if m.delivery_state %}<span class="muted block">{{ m.get_delivery_state_display }}</span>{% endif %}
+          {% if m.problems and m.state != "failed" %}<span class="muted block">{{ m.problems|first }}</span>{% endif %}
+          {% if m.error %}<span class="block text-xs text-red-700">{{ m.error }}</span>{% endif %}
+        </td>
+      </tr>{% endfor %}
+    </tbody></table></div>
+</form>
+{% include "components/_pagination.html" %}
+{% else %}
+  {% include "components/_empty.html" with title="No messages here" message="Reminders appear when a schedule is switched on in Settings, Reminders. You can also write to a client from their page." icon_name="envelope" action_url="/settings/reminders/" action_label="Reminder schedules" %}
+{% endif %}
+{% endblock %}
