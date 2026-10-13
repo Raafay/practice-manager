@@ -194,7 +194,9 @@ def seed() -> dict:
             people_synced_at=now,
         )
         Client.objects.filter(pk=client.pk).update(last_synced_at=now)
-        ClientContact.objects.filter(client=client, roles__contains=["director"]).update(
+        # Filtered in Python: a JSON "contains" lookup is PostgreSQL only (DECISIONS 21).
+        directors = [link.pk for link in client.client_contacts.all() if "director" in link.roles]
+        ClientContact.objects.filter(pk__in=directors).update(
             source=ClientContact.Source.COMPANIES_HOUSE
         )
         made += 1
