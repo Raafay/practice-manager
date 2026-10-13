@@ -1,0 +1,7 @@
+<ul class="divide-y divide-slate-100 rounded-md border border-slate-200 text-sm" aria-label="Matching clients">
+  {% for other in matches %}
+  <li class="px-3 py-2"><label class="flex items-center gap-2"><input type="radio" name="other" value="{{ other.pk }}" class="checkbox" required> <span><span class="font-medium text-slate-900">{{ other.name }}</span> <span class="muted">{{ other.reference }}</span></span></label></li>
+  {% empty %}
+  <li class="px-3 py-2 text-slate-500">{% if q %}No other client matches “{{ q }}”.{% else %}Type two letters of the other client's name.{% endif %}</li>
+  {% endfor %}
+</ul>

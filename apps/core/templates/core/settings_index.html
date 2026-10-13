@@ -15,6 +15,16 @@
     <span class="muted mt-1 block">Name, address, logo, accent colour and VAT.</span>
   </a>
   {% endif %}
+  {% if user|can:"settings.manage" %}
+  <a href="{% url 'clients:tags' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "tag" %} Tags</span>
+    <span class="muted mt-1 block">Labels for clients, used to filter the client list.</span>
+  </a>
+  <a href="{% url 'clients:custom_fields' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "adjustments-horizontal" %} Custom fields</span>
+    <span class="muted mt-1 block">Extra details held on every client.</span>
+  </a>
+  {% endif %}
   {% if user|can:"users.manage" %}
   <a href="{% url 'accounts:users' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
     <span class="flex items-center gap-2 font-semibold">{% icon "users" %} Users</span>

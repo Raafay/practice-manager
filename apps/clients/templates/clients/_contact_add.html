@@ -1,0 +1,22 @@
+<h2 class="mb-3">Add a contact to {{ client.name }}</h2>
+<section aria-labelledby="find-person">
+  <h3 id="find-person" class="mb-1 text-sm font-semibold">1. Is the person already on file?</h3>
+  <label class="label" for="contact-q">Search by name or email</label>
+  <input id="contact-q" type="search" name="q" value="{{ q }}" class="input mb-2" autocomplete="off"
+         hx-get="{% url 'clients:contact_add' client.pk %}?matches=1" hx-trigger="input changed delay:250ms, search" hx-target="#contact-matches" hx-swap="innerHTML">
+  <div id="contact-matches">{% include "clients/_contact_matches.html" %}</div>
+</section>
+<section class="mt-6" aria-labelledby="new-person">
+  <h3 id="new-person" class="mb-1 text-sm font-semibold">2. Or add someone new</h3>
+  {% if confirm %}
+  <div class="mb-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="alert">
+    Someone with the same email or name is already on file (listed above). Link them instead, or tick the box below if this really is a different person.
+  </div>
+  {% endif %}
+  <form method="post" action="{% url 'clients:contact_add' client.pk %}" hx-post="{% url 'clients:contact_add' client.pk %}" hx-target="#drawer-body" hx-swap="innerHTML" class="space-y-4" novalidate>
+    {% csrf_token %}
+    {% include "components/_form_fields.html" %}
+    {% if confirm %}<label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox" name="confirm_new" value="1"> This is a different person. Create a new record.</label>{% endif %}
+    <div class="flex justify-end gap-2"><button type="button" class="btn btn-secondary" data-dialog-close>Cancel</button><button type="submit" class="btn btn-primary">Add person</button></div>
+  </form>
+</section>

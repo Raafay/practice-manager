@@ -1,0 +1,23 @@
+{% extends "layouts/app.html" %}
+{% block title %}Custom fields{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Custom fields" subtitle="Extra details the practice wants on every client. They appear in the Internal panel." %}
+  <div class="flex gap-2">
+    <a href="{% url 'core:settings' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Settings</a>
+    <button type="button" class="btn btn-primary" hx-get="{% url 'clients:custom_field_add' %}" hx-target="#drawer-body">{% icon "plus" "size-4" %} New field</button>
+  </div>
+</div>
+{% if items %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th scope="col">Field</th><th scope="col">Type</th><th scope="col">Order</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+  <tbody>{% for field in items %}
+    <tr><td class="font-medium text-slate-900">{{ field.name }}</td><td>{{ field.get_kind_display }}</td><td>{{ field.position }}</td>
+    <td class="whitespace-nowrap text-right">
+      <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'clients:custom_field_edit' field.pk %}" hx-target="#drawer-body">Edit</button>
+      <form method="post" action="{% url 'clients:custom_field_delete' field.pk %}" data-confirm="Delete the field {{ field.name }}? Values already entered stop showing." class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Delete</button></form></td></tr>
+  {% endfor %}</tbody></table></div>
+{% else %}
+  {% include "components/_empty.html" with title="No custom fields yet" message="Add a field such as “Year-end contact” or “Bookkeeping software”." icon_name="adjustments-horizontal" %}
+{% endif %}
+{% endblock %}

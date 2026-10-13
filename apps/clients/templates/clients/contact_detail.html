@@ -1,0 +1,52 @@
+{% extends "layouts/app.html" %}
+{% block title %}{{ contact.full_name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title=contact.display_name subtitle="A person. They can be linked to more than one client." %}
+  <div class="flex gap-2">
+    {% if back_client %}<a href="{% url 'clients:contacts' back_client %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Back to client</a>{% endif %}
+    <a href="{% url 'clients:contact_detail_edit' contact.pk %}" class="btn btn-secondary">{% icon "pencil-square" "size-4" %} Edit</a>
+  </div>
+</div>
+<div class="grid gap-4 lg:grid-cols-3">
+  <div class="space-y-3 lg:col-span-2">
+    <details class="panel" open data-panel="contact-person"><summary>Details {% icon "chevron-right" "panel-chevron size-4 text-slate-400 transition-transform" %}</summary>
+      <div class="panel-body"><dl class="grid grid-cols-3 gap-x-4 gap-y-2 text-sm">
+        <dt class="muted">Name</dt><dd class="col-span-2">{{ contact.display_name }}{% if contact.preferred_name %} (“{{ contact.preferred_name }}”){% endif %}</dd>
+        <dt class="muted">Email</dt><dd class="col-span-2">{{ contact.email }}</dd>
+        <dt class="muted">Mobile</dt><dd class="col-span-2">{{ contact.mobile }}</dd>
+        <dt class="muted">Phone</dt><dd class="col-span-2">{{ contact.phone }}</dd>
+        <dt class="muted">Date of birth</dt><dd class="col-span-2">{{ contact.date_of_birth|date:"d/m/Y" }}</dd>
+        <dt class="muted">Home address</dt><dd class="col-span-2 whitespace-pre-line">{{ contact.home_address }}</dd>
+        <dt class="muted">Nationality</dt><dd class="col-span-2">{{ contact.nationality }}</dd>
+        <dt class="muted">Country of residence</dt><dd class="col-span-2">{{ contact.country_of_residence }}</dd>
+        <dt class="muted">Occupation</dt><dd class="col-span-2">{{ contact.occupation }}</dd>
+        <dt class="muted">Notes</dt><dd class="col-span-2 whitespace-pre-line">{{ contact.notes }}</dd>
+      </dl></div></details>
+    <details class="panel" open data-panel="contact-ids"><summary>Tax and identity references {% icon "chevron-right" "panel-chevron size-4 text-slate-400 transition-transform" %}</summary>
+      <div class="panel-body"><dl class="grid grid-cols-3 gap-x-4 gap-y-2 text-sm">
+        {% for item in sensitive %}
+        <dt class="muted">{{ item.label }}</dt>
+        <dd class="col-span-2"><span id="reveal-{{ item.name }}">{% if item.masked %}<span class="font-mono">{{ item.masked }}</span> <button type="button" class="btn btn-ghost btn-sm" hx-post="{% url 'clients:contact_reveal' contact.pk item.name %}" hx-vals='{"client": "{{ back_client }}"}' hx-target="#reveal-{{ item.name }}" hx-swap="outerHTML" aria-label="Show {{ item.label }}">Show</button>{% else %}<span class="muted">Not set</span>{% endif %}</span></dd>
+        {% endfor %}
+        <dt class="muted">Companies House officer id</dt><dd class="col-span-2">{{ contact.ch_officer_id }}</dd>
+        <dt class="muted">Identity verified with Companies House</dt><dd class="col-span-2">{% if contact.ch_identity_verified %}Yes{% if contact.ch_identity_verified_on %}, on {{ contact.ch_identity_verified_on|date:"d/m/Y" }}{% endif %}{% else %}No{% endif %}</dd>
+      </dl>
+      <p class="help mt-2">Each time a value is shown, it is recorded in the audit log.</p></div></details>
+  </div>
+  <section aria-labelledby="h-clients">
+    <h2 id="h-clients" class="mb-2">Linked clients</h2>
+    {% if links %}
+    <ul class="card divide-y divide-slate-100 text-sm">
+      {% for link in links %}
+      <li class="px-4 py-3"><a href="{% url 'clients:detail' link.client.pk %}" class="font-medium">{{ link.client.name }}</a>
+        {% if link.is_main %} {% include "components/_badge.html" with text="Main contact" tone="accent" %}{% endif %}
+        <span class="muted block">{% for role in link.role_labels %}{{ role }}{% if not forloop.last %}, {% endif %}{% empty %}No role set{% endfor %}</span></li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="muted">Not linked to any client. They stay on file.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

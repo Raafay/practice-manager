@@ -1,0 +1,6 @@
+{% extends "layouts/app.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content_class %}max-w-2xl{% endblock %}
+{% block content %}
+<div class="card card-body">{% include "clients/_form_dialog.html" with plain=True %}</div>
+{% endblock %}

@@ -28,3 +28,12 @@ class StyledFormMixin:
             widget = field.widget
             existing = widget.attrs.get("class", "")
             widget.attrs["class"] = f"{existing} {widget_css(widget)}".strip()
+
+
+class DateInput(forms.DateInput):
+    """The browser's date picker. The value is sent and shown as yyyy-mm-dd, which it requires."""
+
+    input_type = "date"
+
+    def __init__(self, attrs=None):
+        super().__init__(attrs=attrs, format="%Y-%m-%d")

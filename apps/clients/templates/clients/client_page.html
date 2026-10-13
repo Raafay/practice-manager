@@ -1,0 +1,48 @@
+{% extends "layouts/app.html" %}
+{% block title %}{{ client.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="flex flex-wrap items-center gap-2">
+      <h1>{{ client.name }}</h1>
+      {% include "components/_badge.html" with text=client.get_status_display tone=client.status_tone %}
+      {% if client.is_archived %}{% include "components/_badge.html" with text="Archived" tone="red" icon_name="archive-box" %}{% endif %}
+    </div>
+    <p class="muted mt-0.5">
+      {{ client.get_client_type_display }} · {{ client.reference }}
+      {% if client.company_number %} · Company {{ client.company_number }} <a href="{{ client.companies_house_url }}" target="_blank" rel="noopener noreferrer">View on Companies House</a>{% endif %}
+    </p>
+  </div>
+  <div class="flex flex-wrap items-center gap-2">
+    <button type="button" class="btn btn-secondary" hx-get="{% url 'clients:add_note' client.pk %}" hx-target="#drawer-body">{% icon "pencil-square" "size-4" %} Add note</button>
+    <div class="relative" x-data="dropdown" @keydown.escape="close" @click.outside="close">
+      <button type="button" class="btn btn-secondary" @click="toggle" :aria-expanded="open" aria-haspopup="true">More {% icon "chevron-down" "size-3" %}</button>
+      <div class="menu right-0" x-show="open" x-cloak>
+        <a class="menu-item" href="{% url 'clients:log_call' client.pk %}" hx-get="{% url 'clients:log_call' client.pk %}" hx-target="#drawer-body">{% icon "phone" "size-4" %} Log a call</a>
+        {% if user|can:"clients.status" %}<a class="menu-item" href="{% url 'clients:status' client.pk %}" hx-get="{% url 'clients:status' client.pk %}" hx-target="#modal-body">{% icon "arrow-path" "size-4" %} Change status</a>{% endif %}
+        {% if user|can:"clients.archive" %}
+          {% if client.is_archived %}
+          <form method="post" action="{% url 'clients:restore' client.pk %}">{% csrf_token %}<button type="submit" class="menu-item">{% icon "arrow-uturn-left" "size-4" %} Restore</button></form>
+          {% else %}
+          <a class="menu-item" href="{% url 'clients:archive' client.pk %}" hx-get="{% url 'clients:archive' client.pk %}" hx-target="#modal-body">{% icon "archive-box" "size-4" %} Archive</a>
+          {% endif %}
+        {% endif %}
+        {% if user|can:"clients.delete" %}<a class="menu-item text-red-700" href="{% url 'clients:delete' client.pk %}" hx-get="{% url 'clients:delete' client.pk %}" hx-target="#modal-body">{% icon "trash" "size-4" %} Delete for good</a>{% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if client.is_archived %}
+<div class="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+  Archived on {{ client.archived_at|date:"d/m/Y" }}: {{ client.archive_reason }}. It is hidden from lists and search.
+</div>
+{% endif %}
+{% if no_main_contact %}
+<div class="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+  This client has no main contact. <a href="{% url 'clients:contacts' client.pk %}">Choose one on the Contacts tab.</a>
+</div>
+{% endif %}
+
+<div id="client-body">{% include "clients/_body.html" %}</div>
+{% endblock %}

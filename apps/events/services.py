@@ -27,6 +27,7 @@ def record(
     target=None,
     *,
     actor_label: str = "",
+    client_label: str = "",
     request=None,
     **data,
 ) -> ActivityEvent:
@@ -57,7 +58,9 @@ def record(
         actor_label=actor_label[:200],
         verb=verb,
         client=client,
-        client_label=(f"{client.name} ({client.reference})" if client is not None else "")[:220],
+        client_label=(
+            f"{client.name} ({client.reference})" if client is not None else client_label
+        )[:220],
         summary=summary[:500],
         data=json.loads(json.dumps(data, cls=DjangoJSONEncoder)),
         ip_address=ip_address,

@@ -1,0 +1,15 @@
+{% extends "layouts/app.html" %}
+{% block title %}New client{% endblock %}
+{% block content_class %}max-w-2xl{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="New client" subtitle="The basics. Everything else is filled in on the client page." %}
+  <a href="{% url 'clients:list' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Clients</a>
+</div>
+<form method="post" class="card card-body space-y-4" novalidate>
+  {% csrf_token %}
+  {% include "components/_form_fields.html" %}
+  <p class="help">If the email matches someone already on file, that person is linked instead of a second copy being made.</p>
+  <div><button type="submit" class="btn btn-primary">Add client</button></div>
+</form>
+{% endblock %}

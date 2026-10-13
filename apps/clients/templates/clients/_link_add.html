@@ -1,0 +1,15 @@
+<h2 class="mb-3">Link {{ client.name }} to another client</h2>
+<form method="post" action="{% url 'clients:link_add' client.pk %}" hx-post="{% url 'clients:link_add' client.pk %}" hx-target="#drawer-body" hx-swap="innerHTML" class="space-y-4" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-errors" role="alert">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+  <div>
+    <label class="label" for="link-q">Find the other client</label>
+    <input id="link-q" type="search" class="input mb-2" autocomplete="off" name="q" value="{{ q }}"
+           hx-get="{% url 'clients:link_add' client.pk %}?matches=1" hx-trigger="input changed delay:250ms, search" hx-target="#link-matches" hx-swap="innerHTML">
+    <div id="link-matches">{% include "clients/_link_matches.html" %}</div>
+    {% for error in form.other.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+  </div>
+  {% include "components/_field.html" with field=form.relationship %}
+  {% include "components/_field.html" with field=form.note %}
+  <div class="flex justify-end gap-2"><button type="button" class="btn btn-secondary" data-dialog-close>Cancel</button><button type="submit" class="btn btn-primary">Add link</button></div>
+</form>

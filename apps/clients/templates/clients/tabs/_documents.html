@@ -1,0 +1,71 @@
+<section class="card card-body mb-4" aria-label="Upload documents">
+  <form method="post" action="{% url 'clients:document_upload' client.pk %}" enctype="multipart/form-data" class="grid gap-3 sm:grid-cols-4 sm:items-end" data-dropzone>
+    {% csrf_token %}
+    <div class="sm:col-span-2 rounded-md border-2 border-dashed border-slate-300 p-3 text-sm" data-dropzone-target>
+      <label class="label" for="id_files">Drop files here or choose them</label>
+      {{ upload_form.files }}
+      <p class="help">Up to 25 MB each: PDF, images, Word, Excel, CSV, text, email.</p>
+    </div>
+    {% include "components/_field.html" with field=upload_form.category %}
+    {% include "components/_field.html" with field=upload_form.contact %}
+    <div>{% include "components/_field.html" with field=upload_form.sensitive %}</div>
+    <div><button type="submit" class="btn btn-primary">{% icon "arrow-up-tray" "size-4" %} Upload</button></div>
+  </form>
+</section>
+<form method="get" action="{% url 'clients:documents' client.pk %}" hx-get="{% url 'clients:documents' client.pk %}" hx-target="#client-body" hx-push-url="true" class="mb-3 flex items-end gap-2" role="search">
+  <div><label class="label" for="doc-q">Search documents</label><input id="doc-q" type="search" name="q" value="{{ q }}" class="input"></div>
+  <button type="submit" class="btn btn-secondary btn-sm">Search</button>
+</form>
+{% for label, items in doc_groups %}
+<h2 class="mb-1 mt-4 text-sm font-semibold uppercase tracking-wide text-slate-600">{{ label }}</h2>
+<div class="table-wrap">
+  <table class="table">
+    <thead class="sr-only"><tr><th scope="col">Document</th><th scope="col">Added</th><th scope="col">Actions</th></tr></thead>
+    <tbody>
+      {% for doc in items %}
+      <tr>
+        <td>
+          {% if doc.sensitive and not can_see_sensitive %}
+            <span class="font-medium text-slate-700">{{ doc.title }}</span>
+            {% include "components/_badge.html" with text="Sensitive, restricted" tone="amber" icon_name="lock-closed" %}
+          {% else %}
+            <span class="font-medium text-slate-900">{{ doc.title }}</span>
+            {% if doc.sensitive %}{% include "components/_badge.html" with text="Sensitive" tone="amber" icon_name="lock-closed" %}{% endif %}
+          {% endif %}
+          <span class="muted block">{{ doc.original_name }} · {{ doc.size|filesizeformat }}{% if doc.contact %} · {{ doc.contact.full_name }}{% endif %}</span>
+        </td>
+        <td class="whitespace-nowrap">{{ doc.created_at|date:"d/m/Y" }}<span class="muted block">{{ doc.uploaded_by.name|default:"" }}</span></td>
+        <td class="whitespace-nowrap text-right">
+          {% if not doc.sensitive or can_see_sensitive %}
+            {% if doc.can_preview %}<a href="{% url 'clients:document_preview' doc.public_id %}" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm">Preview</a>{% endif %}
+            <a href="{% url 'clients:document_download' doc.public_id %}" class="btn btn-ghost btn-sm">Download</a>
+            <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'clients:document_edit' doc.public_id %}" hx-target="#drawer-body">Edit</button>
+            <form method="post" action="{% url 'clients:document_delete' doc.public_id %}" hx-post="{% url 'clients:document_delete' doc.public_id %}" hx-swap="none" hx-confirm="Delete {{ doc.title }}? It is hidden, and only the owner can remove it for good." class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Delete</button></form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% empty %}
+  {% if q %}
+    {% include "components/_empty.html" with title="No documents match" message="Try part of the title." icon_name="document" %}
+  {% else %}
+    {% include "components/_empty.html" with title="No documents yet" message="Upload engagement letters, accounts, identity documents and correspondence above." icon_name="document" %}
+  {% endif %}
+{% endfor %}
+{% if hidden_documents %}
+<details class="panel mt-6">
+  <summary>Deleted documents (owner only) {% icon "chevron-right" "panel-chevron size-4 text-slate-400 transition-transform" %}</summary>
+  <div class="panel-body">
+    <p class="muted mb-2">These are hidden from everyone. Removing one erases the file for good and is recorded.</p>
+    <ul class="divide-y divide-slate-100 text-sm">
+      {% for doc in hidden_documents %}
+      <li class="flex items-center justify-between py-2"><span>{{ doc.title }} <span class="muted">deleted {{ doc.deleted_at|date:"d/m/Y" }}</span></span>
+        <form method="post" action="{% url 'clients:document_purge' doc.public_id %}" hx-post="{% url 'clients:document_purge' doc.public_id %}" hx-swap="none" hx-confirm="Remove {{ doc.title }} for good? This cannot be undone.">{% csrf_token %}<button type="submit" class="btn btn-danger btn-sm">Remove for good</button></form></li>
+      {% endfor %}
+    </ul>
+  </div>
+</details>
+{% endif %}

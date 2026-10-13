@@ -269,6 +269,16 @@ class Client(PublicIdModel, TimeStampedModel):
         super().save(*args, **kwargs)
 
     @property
+    def status_tone(self) -> str:
+        return {
+            "active": "green",
+            "onboarding": "accent",
+            "prospect": "accent",
+            "paused": "amber",
+            "lost": "red",
+        }.get(self.status, "neutral")
+
+    @property
     def is_company(self) -> bool:
         return self.client_type in COMPANY_TYPES
 

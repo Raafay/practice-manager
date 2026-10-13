@@ -1,0 +1,30 @@
+<div class="mb-3 flex justify-end">
+  <button type="button" class="btn btn-primary btn-sm" hx-get="{% url 'clients:contact_add' client.pk %}" hx-target="#drawer-body">{% icon "user-plus" "size-4" %} Add contact</button>
+</div>
+{% if links %}
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th scope="col">Person</th><th scope="col">Roles</th><th scope="col">Reminders</th><th scope="col">Can sign</th><th scope="col">Portal</th><th scope="col">Appointed</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+    <tbody>
+      {% for link in links %}
+      <tr>
+        <td><a href="{% url 'clients:contact_detail' link.contact.pk %}?client={{ client.pk }}" class="font-medium text-slate-900">{{ link.contact.display_name }}</a>
+          {% if link.is_main %} {% include "components/_badge.html" with text="Main contact" tone="accent" icon_name="star" %}{% endif %}
+          <span class="muted block">{{ link.contact.email }}</span></td>
+        <td>{% for role in link.role_labels %}<span class="badge badge-neutral">{{ role }}</span> {% empty %}<span class="muted">None</span>{% endfor %}{% if link.shareholding_percent is not None %} <span class="muted">{{ link.shareholding_percent }}%</span>{% endif %}</td>
+        <td>{% if link.receives_reminders %}On{% else %}<span class="muted">Off</span>{% endif %}</td>
+        <td>{% if link.can_sign %}On{% else %}<span class="muted">Off</span>{% endif %}</td>
+        <td>{% if link.portal_access %}On{% else %}<span class="muted">Off</span>{% endif %}</td>
+        <td class="whitespace-nowrap">{{ link.appointed_on|date:"d/m/Y" }}{% if link.resigned_on %} <span class="muted">to {{ link.resigned_on|date:"d/m/Y" }}</span>{% endif %}</td>
+        <td class="whitespace-nowrap text-right">
+          <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'clients:contact_edit' client.pk link.pk %}" hx-target="#drawer-body">Edit</button>
+          <form method="post" action="{% url 'clients:contact_unlink' client.pk link.pk %}" hx-post="{% url 'clients:contact_unlink' client.pk link.pk %}" hx-swap="none" hx-confirm="Unlink {{ link.contact.full_name }} from {{ client.name }}? The person stays on file." class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Unlink</button></form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  {% include "components/_empty.html" with title="No contacts yet" message="Add the people who deal with the practice for this client. Search first, in case they are already on file." icon_name="users" %}
+{% endif %}

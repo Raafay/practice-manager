@@ -1,0 +1,17 @@
+{% if key == "name" %}
+  <a href="{% url 'clients:detail' client.pk %}" class="font-medium text-slate-900">{{ client.name }}</a>
+  {% if client.status != "active" %} {% include "components/_badge.html" with text=client.get_status_display tone=client.status_tone %}{% endif %}
+  {% if client.is_archived %} {% include "components/_badge.html" with text="Archived" tone="red" %}{% endif %}
+{% elif key == "reference" %}{{ client.reference }}
+{% elif key == "type" %}{{ client.get_client_type_display }}
+{% elif key == "status" %}{{ client.get_status_display }}
+{% elif key == "manager" %}{{ client.manager.name|default:"" }}
+{% elif key == "partner" %}{{ client.partner.name|default:"" }}
+{% elif key == "team" %}{{ client.team.name|default:"" }}
+{% elif key == "year_end" %}{{ client.year_end }}
+{% elif key == "company_number" %}{{ client.company_number }}
+{% elif key == "email" %}{{ client.email }}
+{% elif key == "phone" %}{{ client.phone }}
+{% elif key == "client_since" %}{{ client.client_since|date:"d/m/Y" }}
+{% elif key == "tags" %}{% for tag in client.tags.all %}<span class="badge badge-neutral">{{ tag.name }}</span> {% endfor %}
+{% endif %}
