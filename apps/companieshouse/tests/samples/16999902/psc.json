@@ -1,0 +1,42 @@
+{
+  "items": [
+    {
+      "kind": "individual-person-with-significant-control",
+      "name": "Ms Chloe Newman",
+      "notified_on": "2026-07-01",
+      "natures_of_control": [
+        "ownership-of-shares-75-to-100-percent"
+      ],
+      "address": {
+        "premises": "1",
+        "address_line_1": "Example Street",
+        "locality": "Sampletown",
+        "postal_code": "ZZ1 1ZZ",
+        "country": "England"
+      },
+      "links": {
+        "self": "/company/16999902/persons-with-significant-control/individual/PSC211"
+      },
+      "etag": "pscPSC211",
+      "name_elements": {
+        "title": "Ms",
+        "forename": "Chloe",
+        "surname": "Newman"
+      },
+      "date_of_birth": {
+        "month": 11,
+        "year": 1992
+      },
+      "nationality": "British",
+      "country_of_residence": "England"
+    }
+  ],
+  "items_per_page": 25,
+  "start_index": 0,
+  "total_results": 1,
+  "active_count": 1,
+  "ceased_count": 0,
+  "links": {
+    "self": "/company/16999902/persons-with-significant-control"
+  }
+}

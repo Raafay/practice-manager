@@ -1,0 +1,42 @@
+{
+  "kind": "officer-list",
+  "items": [
+    {
+      "name": "CLOSER, Henry",
+      "officer_role": "director",
+      "appointed_on": "2011-09-09",
+      "address": {
+        "premises": "1",
+        "address_line_1": "Example Street",
+        "locality": "Sampletown",
+        "postal_code": "ZZ1 1ZZ",
+        "country": "England"
+      },
+      "links": {
+        "self": "/company/07999904/appointments/DDD111",
+        "officer": {
+          "appointments": "/officers/DDD111OFF/appointments"
+        }
+      },
+      "etag": "etagDDD111",
+      "date_of_birth": {
+        "month": 1,
+        "year": 1970
+      },
+      "nationality": "British",
+      "country_of_residence": "England",
+      "occupation": "Director",
+      "resigned_on": "2025-03-18"
+    }
+  ],
+  "items_per_page": 100,
+  "start_index": 0,
+  "total_results": 1,
+  "active_count": 0,
+  "resigned_count": 1,
+  "inactive_count": 0,
+  "etag": "officers-07999904",
+  "links": {
+    "self": "/company/07999904/officers"
+  }
+}

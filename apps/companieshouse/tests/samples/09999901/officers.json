@@ -1,0 +1,95 @@
+{
+  "kind": "officer-list",
+  "items": [
+    {
+      "name": "SAMPLE, Alice Jane",
+      "officer_role": "director",
+      "appointed_on": "2015-03-12",
+      "address": {
+        "premises": "1",
+        "address_line_1": "Example Street",
+        "locality": "Sampletown",
+        "postal_code": "ZZ1 1ZZ",
+        "country": "England"
+      },
+      "links": {
+        "self": "/company/09999901/appointments/AAA111",
+        "officer": {
+          "appointments": "/officers/AAA111OFF/appointments"
+        }
+      },
+      "etag": "etagAAA111",
+      "date_of_birth": {
+        "month": 6,
+        "year": 1980
+      },
+      "nationality": "British",
+      "country_of_residence": "England",
+      "occupation": "Director",
+      "identity_verification_details": {
+        "identity_verified_on": "2026-01-15",
+        "appointment_verification_start_on": "2026-01-15",
+        "preferred_name": "Alice"
+      }
+    },
+    {
+      "name": "TESTER, Robert",
+      "officer_role": "secretary",
+      "appointed_on": "2018-05-01",
+      "address": {
+        "premises": "1",
+        "address_line_1": "Example Street",
+        "locality": "Sampletown",
+        "postal_code": "ZZ1 1ZZ",
+        "country": "England"
+      },
+      "links": {
+        "self": "/company/09999901/appointments/AAA222",
+        "officer": {
+          "appointments": "/officers/AAA222OFF/appointments"
+        }
+      },
+      "etag": "etagAAA222",
+      "date_of_birth": {
+        "month": 2,
+        "year": 1975
+      },
+      "nationality": "British",
+      "country_of_residence": "England",
+      "occupation": "Director"
+    },
+    {
+      "name": "EXAMPLE NOMINEES LIMITED",
+      "officer_role": "corporate-secretary",
+      "appointed_on": "2019-01-01",
+      "address": {
+        "premises": "1",
+        "address_line_1": "Example Street",
+        "locality": "Sampletown",
+        "postal_code": "ZZ1 1ZZ",
+        "country": "England"
+      },
+      "links": {
+        "self": "/company/09999901/appointments/AAA333",
+        "officer": {
+          "appointments": "/officers/AAA333OFF/appointments"
+        }
+      },
+      "etag": "etagAAA333",
+      "identification": {
+        "identification_type": "uk-limited-company",
+        "registration_number": "99999999"
+      }
+    }
+  ],
+  "items_per_page": 100,
+  "start_index": 0,
+  "total_results": 3,
+  "active_count": 3,
+  "resigned_count": 0,
+  "inactive_count": 0,
+  "etag": "officers-09999901",
+  "links": {
+    "self": "/company/09999901/officers"
+  }
+}

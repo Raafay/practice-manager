@@ -1,0 +1,56 @@
+{
+  "company_name": "EXAMPLE TRADING LTD",
+  "company_number": "09999901",
+  "company_status": "active",
+  "type": "ltd",
+  "date_of_creation": "2015-03-12",
+  "jurisdiction": "england-wales",
+  "registered_office_address": {
+    "address_line_1": "1 Example Street",
+    "address_line_2": "Unit 2",
+    "locality": "Sampletown",
+    "region": "Exampleshire",
+    "postal_code": "ZZ1 1ZZ",
+    "country": "England"
+  },
+  "sic_codes": [
+    "47910",
+    "62020"
+  ],
+  "has_charges": false,
+  "has_insolvency_history": false,
+  "can_file": true,
+  "etag": "etag-09999901-1",
+  "links": {
+    "self": "/company/09999901",
+    "officers": "/company/09999901/officers",
+    "filing_history": "/company/09999901/filing-history"
+  },
+  "accounts": {
+    "accounting_reference_date": {
+      "day": "31",
+      "month": "03"
+    },
+    "last_accounts": {
+      "made_up_to": "2025-03-31",
+      "period_start_on": "2024-04-01",
+      "period_end_on": "2025-03-31",
+      "type": "micro-entity"
+    },
+    "next_accounts": {
+      "period_start_on": "2025-04-01",
+      "period_end_on": "2026-03-31",
+      "due_on": "2026-12-31",
+      "overdue": false
+    },
+    "next_made_up_to": "2026-03-31",
+    "next_due": "2026-12-31",
+    "overdue": false
+  },
+  "confirmation_statement": {
+    "last_made_up_to": "2025-10-20",
+    "next_made_up_to": "2026-10-20",
+    "next_due": "2026-11-03",
+    "overdue": false
+  }
+}

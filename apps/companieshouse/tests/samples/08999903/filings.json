@@ -1,0 +1,55 @@
+{
+  "items": [
+    {
+      "category": "officers",
+      "type": "TM01",
+      "date": "2025-07-02",
+      "description": "termination-director-company-with-name-termination-date",
+      "transaction_id": "TXN0301AA",
+      "pages": 3,
+      "barcode": "XTXN0301",
+      "links": {
+        "self": "/company/x/filing-history/TXN0301AA"
+      },
+      "description_values": {
+        "officer_name": "Margaret Leaver",
+        "termination_date": "2025-06-30"
+      }
+    },
+    {
+      "category": "officers",
+      "type": "AP01",
+      "date": "2025-07-02",
+      "description": "appoint-person-director-company-with-name-date",
+      "transaction_id": "TXN0302AA",
+      "pages": 3,
+      "barcode": "XTXN0302",
+      "links": {
+        "self": "/company/x/filing-history/TXN0302AA"
+      },
+      "description_values": {
+        "officer_name": "Daniel Owen Fresh",
+        "appointment_date": "2025-06-30"
+      }
+    },
+    {
+      "category": "accounts",
+      "type": "AA",
+      "date": "2025-08-14",
+      "description": "accounts-with-accounts-type-total-exemption-full",
+      "transaction_id": "TXN0303AA",
+      "pages": 3,
+      "barcode": "XTXN0303",
+      "links": {
+        "self": "/company/x/filing-history/TXN0303AA"
+      },
+      "description_values": {
+        "made_up_date": "2025-02-28"
+      }
+    }
+  ],
+  "items_per_page": 25,
+  "start_index": 0,
+  "total_count": 3,
+  "filing_history_status": "filing-history-available"
+}

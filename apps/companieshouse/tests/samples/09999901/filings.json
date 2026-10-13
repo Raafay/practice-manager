@@ -1,0 +1,54 @@
+{
+  "items": [
+    {
+      "category": "confirmation-statement",
+      "type": "CS01",
+      "date": "2025-10-25",
+      "description": "confirmation-statement-with-no-updates",
+      "transaction_id": "TXN0101AA",
+      "pages": 3,
+      "barcode": "XTXN0101",
+      "links": {
+        "self": "/company/x/filing-history/TXN0101AA"
+      },
+      "description_values": {
+        "made_up_date": "2025-10-20"
+      }
+    },
+    {
+      "category": "accounts",
+      "type": "AA",
+      "date": "2025-11-02",
+      "description": "accounts-with-accounts-type-micro-entity",
+      "transaction_id": "TXN0102AA",
+      "pages": 3,
+      "barcode": "XTXN0102",
+      "links": {
+        "self": "/company/x/filing-history/TXN0102AA"
+      },
+      "description_values": {
+        "made_up_date": "2025-03-31"
+      }
+    },
+    {
+      "category": "officers",
+      "type": "AP03",
+      "date": "2018-05-02",
+      "description": "appoint-person-secretary-company-with-name-date",
+      "transaction_id": "TXN0103AA",
+      "pages": 3,
+      "barcode": "XTXN0103",
+      "links": {
+        "self": "/company/x/filing-history/TXN0103AA"
+      },
+      "description_values": {
+        "officer_name": "Robert Tester",
+        "appointment_date": "2018-05-01"
+      }
+    }
+  ],
+  "items_per_page": 25,
+  "start_index": 0,
+  "total_count": 3,
+  "filing_history_status": "filing-history-available"
+}

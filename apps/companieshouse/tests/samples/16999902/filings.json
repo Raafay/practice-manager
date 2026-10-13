@@ -1,0 +1,20 @@
+{
+  "items": [
+    {
+      "category": "incorporation",
+      "type": "NEWINC",
+      "date": "2026-07-01",
+      "description": "incorporation-company",
+      "transaction_id": "TXN0201AA",
+      "pages": 3,
+      "barcode": "XTXN0201",
+      "links": {
+        "self": "/company/x/filing-history/TXN0201AA"
+      }
+    }
+  ],
+  "items_per_page": 25,
+  "start_index": 0,
+  "total_count": 1,
+  "filing_history_status": "filing-history-available"
+}
