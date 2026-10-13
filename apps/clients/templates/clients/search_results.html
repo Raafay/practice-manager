@@ -1,0 +1,36 @@
+{% extends "layouts/app.html" %}
+{% block title %}Search{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Search results" subtitle=q %}
+</div>
+{% if not q %}
+  {% include "components/_empty.html" with title="Type something to search" message="Search by client name, trading name, company number, reference, contact name or email." icon_name="magnifying-glass" %}
+{% else %}
+<h2 class="mb-2">Clients</h2>
+{% if page.object_list %}
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th scope="col">Name</th><th scope="col">Reference</th><th scope="col">Type</th><th scope="col">Company number</th><th scope="col">Manager</th></tr></thead>
+    <tbody>
+      {% for client in page.object_list %}
+      <tr>
+        <td>{% include "clients/_cell.html" with key="name" %}</td>
+        <td>{{ client.reference }}</td><td>{{ client.get_client_type_display }}</td><td>{{ client.company_number }}</td><td>{{ client.manager.name|default:"" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "components/_pagination.html" %}
+{% else %}
+  {% include "components/_empty.html" with title="No clients match" message="Check the spelling, or try part of a name or a company number." icon_name="magnifying-glass" %}
+{% endif %}
+{% if people %}
+<h2 class="mb-2 mt-8">People</h2>
+<ul class="card divide-y divide-slate-100">
+  {% for person in people %}<li class="px-4 py-2"><a href="{% url 'clients:contact_detail' person.pk %}" class="font-medium">{{ person.full_name }}</a> <span class="muted">{{ person.email }}</span></li>{% endfor %}
+</ul>
+{% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,10 @@
+<ul class="divide-y divide-slate-100 rounded-md border border-slate-200 text-sm" aria-label="People already on file">
+  {% for person in matches %}
+  <li class="flex items-center justify-between gap-2 px-3 py-2">
+    <span><span class="font-medium text-slate-900">{{ person.full_name }}</span> <span class="muted">{{ person.email }}</span></span>
+    <form method="post" action="{% url 'clients:contact_link' client.pk person.pk %}" hx-post="{% url 'clients:contact_link' client.pk person.pk %}" hx-swap="none">{% csrf_token %}<button type="submit" class="btn btn-secondary btn-sm">Link to {{ client.name|truncatechars:20 }}</button></form>
+  </li>
+  {% empty %}
+  <li class="px-3 py-2 text-slate-500">{% if q %}Nobody on file matches “{{ q }}”. Add them below.{% else %}Type two letters of a name or email.{% endif %}</li>
+  {% endfor %}
+</ul>

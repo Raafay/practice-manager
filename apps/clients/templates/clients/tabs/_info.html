@@ -1,0 +1,17 @@
+{% if pinned_notes %}
+<section class="mb-4 space-y-2" aria-label="Pinned notes">
+  {% for note in pinned_notes %}
+  <div class="flex items-start gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm">
+    {% icon "bookmark" "size-4 mt-0.5 shrink-0 text-amber-700" %}
+    <div class="flex-1"><p class="whitespace-pre-line text-slate-900">{{ note.text }}</p><p class="muted mt-1">{{ note.author.name|default:"Someone" }}, {{ note.created_at|date:"d/m/Y" }}</p></div>
+    <form method="post" action="{% url 'clients:pin_note' client.pk note.pk %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Unpin</button></form>
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+<div class="grid gap-4 lg:grid-cols-3">
+  <div class="space-y-3 lg:col-span-2">
+    {% for item in panels %}{% include "clients/_panel.html" with client=item.client panel=item.panel rows=item.rows form=item.form main_contact=item.main_contact has_individual_client=item.has_individual_client %}{% endfor %}
+  </div>
+  <div aria-label="Services" class="lg:col-span-1"></div>
+</div>

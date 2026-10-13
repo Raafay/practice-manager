@@ -1,0 +1,14 @@
+{% extends "layouts/app.html" %}
+{% block title %}Edit {{ contact.full_name }}{% endblock %}
+{% block content_class %}max-w-3xl{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Edit "|add:contact.full_name subtitle="Leave a National Insurance number or UTR blank to keep the saved one." %}
+  <a href="{% url 'clients:contact_detail' contact.pk %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Cancel</a>
+</div>
+<form method="post" class="card card-body space-y-4" novalidate>
+  {% csrf_token %}
+  {% include "components/_form_fields.html" %}
+  <div><button type="submit" class="btn btn-primary">Save</button></div>
+</form>
+{% endblock %}

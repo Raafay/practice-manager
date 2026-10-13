@@ -1,0 +1,33 @@
+<div class="mb-3 flex flex-wrap items-end justify-between gap-3">
+  <form method="get" action="{% url 'clients:timeline' client.pk %}" hx-get="{% url 'clients:timeline' client.pk %}" hx-target="#client-body" hx-push-url="true" class="flex items-end gap-2">
+    <div><label class="label" for="timeline-type">Show</label>
+      <select id="timeline-type" name="type" class="select" data-submit-on-change>
+        <option value="">Everything</option>
+        {% for prefix in type_choices %}<option value="{{ prefix }}" {% if prefix == type %}selected{% endif %}>{{ prefix|capfirst }}</option>{% endfor %}
+      </select></div>
+    <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+  </form>
+  <div class="flex gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" hx-get="{% url 'clients:add_note' client.pk %}" hx-target="#drawer-body">{% icon "pencil-square" "size-4" %} Add note</button>
+    <button type="button" class="btn btn-secondary btn-sm" hx-get="{% url 'clients:log_call' client.pk %}" hx-target="#drawer-body">{% icon "phone" "size-4" %} Log a call</button>
+  </div>
+</div>
+{% if page.object_list %}
+<ol class="card divide-y divide-slate-100">
+  {% for event in page.object_list %}
+  <li class="px-4 py-3 text-sm">
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
+      <p class="text-slate-900">{{ event.summary }}</p>
+      <time class="muted whitespace-nowrap tabular-nums" datetime="{{ event.created_at|date:'c' }}">{{ event.created_at|date:"d/m/Y H:i" }}</time>
+    </div>
+    {% if event.data.text %}<p class="mt-1 whitespace-pre-line rounded bg-slate-50 px-3 py-2 text-slate-700">{{ event.data.text }}</p>{% endif %}
+    {% if event.note %}
+    <form method="post" action="{% url 'clients:pin_note' client.pk event.note.pk %}" class="mt-1">{% csrf_token %}<input type="hidden" name="next" value="{% url 'clients:timeline' client.pk %}"><button type="submit" class="btn btn-ghost btn-sm">{% if event.note.pinned %}Unpin from Info tab{% else %}Pin to Info tab{% endif %}</button></form>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ol>
+{% include "components/_pagination.html" %}
+{% else %}
+  {% include "components/_empty.html" with title="Nothing on the timeline yet" message="Notes, calls, changes and documents for this client appear here. Add a note to start." icon_name="clock" %}
+{% endif %}

@@ -80,9 +80,18 @@
       {% if person.is_active %}
         <form method="post" action="{% url 'accounts:user_deactivate' person.pk %}" data-confirm="Deactivate {{ person.name }}? They will be signed out and unable to sign in.">
           {% csrf_token %}
+          {% if open_clients %}
+          <div class="mb-3 max-w-sm">
+            <label class="label" for="hand-over">Hand over their {{ open_clients }} client{{ open_clients|pluralize }} to</label>
+            <select id="hand-over" name="hand_over_to" class="select" required>
+              <option value="">Choose a person</option>
+              {% for other in successors %}<option value="{{ other.pk }}">{{ other.name }}</option>{% endfor %}
+            </select>
+          </div>
+          {% endif %}
           <button type="submit" class="btn btn-danger">{% icon "no-symbol" "size-4" %} Deactivate</button>
         </form>
-        <p class="muted">Their records and history are kept. Handing over their clients and tasks arrives with those features.</p>
+        <p class="muted">Their records and history are kept. Handing over their tasks arrives with tasks in a later stage.</p>
       {% else %}
         <p class="muted">Deactivated on {{ person.deactivated_at|date:"d/m/Y" }}.</p>
         <form method="post" action="{% url 'accounts:user_reactivate' person.pk %}">

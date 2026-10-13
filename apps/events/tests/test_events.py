@@ -27,9 +27,17 @@ def test_record_without_actor_or_request_is_the_system():
     assert event.actor_label == "System"
 
 
-def test_record_refuses_a_client_until_stage_two():
-    with pytest.raises(ValueError):
-        events.record(None, "client.changed", "x", client=object())
+def test_record_keeps_the_client_and_a_label_that_outlives_it():
+    from apps.clients.tests.factories import ClientFactory
+
+    client = ClientFactory(name="Sample Traders Ltd")
+    event = events.record(None, "client.changed", "Changed.", client=client)
+    assert event.client == client
+    assert event.client_label == f"Sample Traders Ltd ({client.reference})"
+    client.delete()
+    event.refresh_from_db()
+    assert event.client is None
+    assert event.client_label.startswith("Sample Traders Ltd")
 
 
 def test_events_are_never_changed_or_deleted():

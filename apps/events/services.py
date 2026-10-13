@@ -27,6 +27,7 @@ def record(
     target=None,
     *,
     actor_label: str = "",
+    client_label: str = "",
     request=None,
     **data,
 ) -> ActivityEvent:
@@ -36,9 +37,6 @@ def record(
     request, or the system when there is none. `data` must never hold the value
     of an encrypted field: build it with `changes()` or `snapshot()`.
     """
-    if client is not None:
-        raise ValueError("The client link on events is added in Stage 2.")
-
     info = get_current()
     if request is not None:
         ip_address = request_ip(request)
@@ -59,6 +57,10 @@ def record(
         actor=actor_obj,
         actor_label=actor_label[:200],
         verb=verb,
+        client=client,
+        client_label=(
+            f"{client.name} ({client.reference})" if client is not None else client_label
+        )[:220],
         summary=summary[:500],
         data=json.loads(json.dumps(data, cls=DjangoJSONEncoder)),
         ip_address=ip_address,

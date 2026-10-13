@@ -1,0 +1,12 @@
+{# A form in a dialog (HTMX) or on its own page (plain=True). #}
+<h2 class="mb-3">{{ title }}</h2>
+{% if intro %}<p class="muted mb-3 max-w-prose">{{ intro }}</p>{% endif %}
+<form method="post" action="{{ action }}" {% if not plain %}hx-post="{{ action }}" hx-target="#{{ target }}-body" hx-swap="innerHTML"{% endif %} {% if multipart %}enctype="multipart/form-data"{% endif %} class="space-y-4" novalidate>
+  {% csrf_token %}
+  {% include "components/_form_fields.html" %}
+  {% if extra_template %}{% include extra_template %}{% endif %}
+  <div class="flex justify-end gap-2">
+    {% if plain %}<a href="{{ back|default:'/' }}" class="btn btn-secondary">Cancel</a>{% else %}<button type="button" class="btn btn-secondary" data-dialog-close>Cancel</button>{% endif %}
+    <button type="submit" class="btn {% if danger %}btn-danger{% else %}btn-primary{% endif %}">{{ submit }}</button>
+  </div>
+</form>

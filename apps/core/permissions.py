@@ -31,6 +31,9 @@ class StaffRequiredMixin(AccessMixin):
     """
 
     require_reauth = False
+    # Opening the page does not need the password; only the change does. A view that
+    # acts on GET (a file download) sets this to False so the GET is guarded too.
+    reauth_allow_get = True
 
     def dispatch(self, request, *args, **kwargs):
         response = check_staff(request)
@@ -41,7 +44,7 @@ class StaffRequiredMixin(AccessMixin):
         if self.require_reauth:
             # Before a change (not a page view), allauth asks for the password
             # again if it was not entered recently, then replays the request.
-            guarded = reauthentication_required(super().dispatch, allow_get=True)
+            guarded = reauthentication_required(super().dispatch, allow_get=self.reauth_allow_get)
             return guarded(request, *args, **kwargs)
         return super().dispatch(request, *args, **kwargs)
 

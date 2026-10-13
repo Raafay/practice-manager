@@ -1,0 +1,22 @@
+<div class="mb-3 flex justify-end">
+  <button type="button" class="btn btn-primary btn-sm" hx-get="{% url 'clients:link_add' client.pk %}" hx-target="#drawer-body">{% icon "link" "size-4" %} Add link</button>
+</div>
+{% if linked %}
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th scope="col">Related client</th><th scope="col">Relationship</th><th scope="col">Note</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+    <tbody>
+      {% for link, other in linked %}
+      <tr>
+        <td><a href="{% url 'clients:detail' other.pk %}" class="font-medium text-slate-900">{{ other.name }}</a> <span class="muted">{{ other.reference }}</span></td>
+        <td>{{ link.get_relationship_display }}</td>
+        <td>{{ link.note }}</td>
+        <td class="text-right"><form method="post" action="{% url 'clients:link_remove' client.pk link.pk %}" hx-post="{% url 'clients:link_remove' client.pk link.pk %}" hx-swap="none" hx-confirm="Remove the link to {{ other.name }}? Both clients stay.">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Remove</button></form></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  {% include "components/_empty.html" with title="No related clients" message="Link a director's personal tax client, a group company or a spouse so each shows on the other's page." icon_name="link" %}
+{% endif %}

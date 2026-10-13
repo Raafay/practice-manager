@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.views import View
 from django.views.generic import TemplateView
 
+from apps.clients.services import clients_of
 from apps.core.htmx import htmx_redirect
 from apps.core.permissions import CapabilityRequiredMixin, StaffRequiredMixin
 
@@ -104,6 +105,8 @@ class UserDetailView(ManageUsersMixin, TemplateView):
             teams_form=TeamsForm(initial={"teams": list(person.teams.all())}),
             role_rights=person.role.effective_rights() if person.role else set(),
             rights=RIGHTS,
+            open_clients=clients_of(person).count(),
+            successors=User.objects.staff().filter(is_active=True).exclude(pk=person.pk),
         )
         return context
 
@@ -170,7 +173,13 @@ class ResetMfaView(UserActionView):
 
 class DeactivateUserView(UserActionView):
     def act(self, request, person):
-        services.deactivate_user(request.user, person)
+        successor = (
+            User.objects.staff()
+            .filter(pk=request.POST.get("hand_over_to") or 0, is_active=True)
+            .exclude(pk=person.pk)
+            .first()
+        )
+        services.deactivate_user(request.user, person, hand_over_to=successor)
         messages.success(request, f"{person} was deactivated and can no longer sign in.")
 
 

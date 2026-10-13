@@ -1,0 +1,13 @@
+{% if q and q|length >= 2 %}
+<ul class="menu !block max-h-96 overflow-auto" role="listbox" aria-label="Matching clients">
+  {% for client in results %}
+  <li role="option"><a class="menu-item" href="{% url 'clients:detail' client.pk %}">
+    <span class="flex-1"><span class="font-medium text-slate-900">{{ client.name }}</span> <span class="muted">{{ client.reference }}{% if client.company_number %} · {{ client.company_number }}{% endif %}</span></span>
+    {% if client.status != "active" %}{% include "components/_badge.html" with text=client.get_status_display tone="amber" %}{% endif %}
+  </a></li>
+  {% empty %}
+  <li class="px-3 py-2 text-slate-500">No clients match “{{ q }}”.</li>
+  {% endfor %}
+  <li class="border-t border-slate-100"><a class="menu-item" href="{% url 'clients:search' %}?q={{ q|urlencode }}">{% icon "magnifying-glass" "size-4" %} All results for “{{ q }}”</a></li>
+</ul>
+{% endif %}

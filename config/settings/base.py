@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.accounts",
     "apps.events",
+    "apps.clients",
 ]
 
 MIDDLEWARE = [

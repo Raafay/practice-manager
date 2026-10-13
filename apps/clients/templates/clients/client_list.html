@@ -1,0 +1,92 @@
+{% extends "layouts/app.html" %}
+{% block title %}Clients{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Clients" subtitle="Everyone the practice acts for. Prospects and lost enquiries show when you choose their status." %}
+  <div class="flex flex-wrap gap-2">
+    <div class="relative" x-data="dropdown" @keydown.escape="close" @click.outside="close">
+      <button type="button" class="btn btn-secondary" @click="toggle" :aria-expanded="open" aria-haspopup="true">{% icon "bookmark" "size-4" %} Views{% if active_view %}: {{ active_view.name }}{% endif %} {% icon "chevron-down" "size-3" %}</button>
+      <div class="menu min-w-64" x-show="open" x-cloak>
+        {% for saved in saved_views %}
+        <div class="flex items-center justify-between gap-2 pr-2">
+          <a class="menu-item flex-1" href="{% url 'clients:list' %}?view={{ saved.pk }}">{{ saved.name }}{% if saved.shared %} <span class="muted">(shared)</span>{% endif %}</a>
+          {% if saved.owner_id == user.pk or user.is_owner %}
+          <form method="post" action="{% url 'clients:view_delete' saved.pk %}" data-confirm="Delete the view {{ saved.name }}?">{% csrf_token %}<button type="submit" class="btn-icon" aria-label="Delete view {{ saved.name }}">{% icon "trash" "size-4" %}</button></form>
+          {% endif %}
+        </div>
+        {% empty %}
+        <p class="px-3 py-2 text-slate-500">No saved views yet. Set the filters, then save them below.</p>
+        {% endfor %}
+        <form method="post" action="{% url 'clients:view_save' %}" class="space-y-2 border-t border-slate-100 p-3">{% csrf_token %}
+          <input type="hidden" name="query" value="{{ export_query }}">
+          <label class="label" for="view-name">Save this view as</label>
+          <input id="view-name" name="name" class="input" required maxlength="80">
+          <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="shared" class="checkbox"> Share with everyone</label>
+          <button type="submit" class="btn btn-secondary btn-sm">Save view</button>
+        </form>
+      </div>
+    </div>
+    {% if user|can:"data.export" %}<a href="{% url 'clients:export' %}?{{ export_query }}" class="btn btn-secondary">{% icon "arrow-down-tray" "size-4" %} Export CSV</a>{% endif %}
+    <a href="{% url 'clients:new' %}" class="btn btn-primary">{% icon "plus" "size-4" %} New client</a>
+  </div>
+</div>
+
+<form method="get" class="card card-body mb-4 space-y-3" aria-label="Filter clients">
+  <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    {% include "components/_field.html" with field=form.q %}
+    {% include "components/_field.html" with field=form.client_type %}
+    {% include "components/_field.html" with field=form.manager %}
+    {% include "components/_field.html" with field=form.partner %}
+    {% include "components/_field.html" with field=form.team %}
+    {% include "components/_field.html" with field=form.tag %}
+    {% include "components/_field.html" with field=form.archived %}
+  </div>
+  <fieldset>
+    <legend class="label">Status</legend>
+    <div class="flex flex-wrap gap-x-4 gap-y-1">
+      {% for value, label in statuses %}
+      <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox" name="status" value="{{ value }}" {% if value in chosen_statuses %}checked{% endif %}> {{ label }}</label>
+      {% endfor %}
+    </div>
+  </fieldset>
+  <details>
+    <summary class="cursor-pointer text-sm font-medium text-slate-700">Columns</summary>
+    <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+      {% for key, label, on in all_columns %}
+      <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox" name="cols" value="{{ key }}" {% if on %}checked{% endif %} {% if key == "name" %}disabled checked{% endif %}> {{ label }}</label>
+      {% endfor %}
+      <input type="hidden" name="cols" value="name">
+    </div>
+  </details>
+  {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+  <div class="flex gap-2">
+    <button type="submit" class="btn btn-primary">{% icon "funnel" "size-4" %} Apply</button>
+    <a href="{% url 'clients:list' %}" class="btn btn-ghost">Clear</a>
+  </div>
+</form>
+
+{% if page.object_list %}
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        {% for key, label in columns %}
+        <th scope="col" {% if sort == key %}aria-sort="ascending"{% elif sort == "-"|add:key %}aria-sort="descending"{% endif %}>
+          <a href="?{% if keep_query %}{{ keep_query }}&{% endif %}sort={% if sort == key %}-{% endif %}{{ key }}" class="text-slate-700">{{ label }}{% if sort == key %} {% icon "chevron-up" "size-3 inline" %}{% elif sort == "-"|add:key %} {% icon "chevron-down" "size-3 inline" %}{% endif %}</a>
+        </th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for client in page.object_list %}
+      <tr>{% for key, label in columns %}<td>{% include "clients/_cell.html" %}</td>{% endfor %}</tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "components/_pagination.html" %}
+{% else %}
+  {% url 'clients:new' as new_url %}
+  {% include "components/_empty.html" with title="No clients match" message="Change the filters, or add a client." action_url=new_url action_label="New client" icon_name="building-office-2" %}
+{% endif %}
+{% endblock %}

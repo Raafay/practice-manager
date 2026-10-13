@@ -1,0 +1,6 @@
+<nav class="tabs" aria-label="Client sections">
+  {% for tab_label, tab_url, tab_key in tabs %}
+  <a href="{{ tab_url }}" class="tab" hx-get="{{ tab_url }}" hx-target="#client-body" hx-swap="innerHTML" hx-push-url="true" {% if tab_key == tab %}aria-current="page"{% endif %}>{{ tab_label }}</a>
+  {% endfor %}
+</nav>
+<div id="tab-content" class="pt-4">{% include tab_template %}</div>

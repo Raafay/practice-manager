@@ -1,0 +1,23 @@
+{% extends "layouts/app.html" %}
+{% block title %}Tags{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Tags" subtitle="Labels you can put on clients and filter the client list by." %}
+  <div class="flex gap-2">
+    <a href="{% url 'core:settings' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Settings</a>
+    <button type="button" class="btn btn-primary" hx-get="{% url 'clients:tag_add' %}" hx-target="#drawer-body">{% icon "plus" "size-4" %} New tag</button>
+  </div>
+</div>
+{% if items %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th scope="col">Tag</th><th scope="col">Clients</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+  <tbody>{% for tag in items %}
+    <tr><td><span class="inline-block size-3 rounded-full align-middle" style="background: {{ tag.colour }}"></span> <span class="font-medium text-slate-900">{{ tag.name }}</span></td><td>{{ tag.uses }}</td>
+    <td class="whitespace-nowrap text-right">
+      <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'clients:tag_edit' tag.pk %}" hx-target="#drawer-body">Edit</button>
+      <form method="post" action="{% url 'clients:tag_delete' tag.pk %}" data-confirm="Delete the tag {{ tag.name }}? It is taken off {{ tag.uses }} client{{ tag.uses|pluralize }}." class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Delete</button></form></td></tr>
+  {% endfor %}</tbody></table></div>
+{% else %}
+  {% include "components/_empty.html" with title="No tags yet" message="Add a tag such as “VIP” or “Dormant”, then put it on clients from the Internal panel." icon_name="tag" %}
+{% endif %}
+{% endblock %}
