@@ -4,13 +4,13 @@ Keep this file under 150 lines. When it grows, shorten older stages to two lines
 
 ## Where things stand
 
-Next stage to build: 3 (Companies House and jobs).
+Next stage to build: 3 (Companies House and jobs). The owner has added a live Companies House key as an environment secret, so Stage 3 uses the real API (see the top of its stage file).
 
 | Stage | State | Merged on |
 |---|---|---|
 | 0 Project pack | Done | 12/10/2026 |
 | 1 Foundation | Done | 13/10/2026 |
-| 2 Clients and contacts | Built, in review | |
+| 2 Clients and contacts | Done | 13/10/2026 |
 | 3 Companies House and jobs | Not started | |
 | 4 Services and deadlines | Not started | |
 | 5 Tasks, part one | Not started | |
