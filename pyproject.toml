@@ -52,4 +52,7 @@ DJANGO_SETTINGS_MODULE = "config.settings.test"
 python_files = ["test_*.py", "tests.py"]
 testpaths = ["apps", "config"]
 addopts = "-q --tb=short --no-header"
-filterwarnings = ["ignore::DeprecationWarning:allauth.*"]
+filterwarnings = [
+    "ignore::DeprecationWarning:allauth.*",
+    "ignore:No directory at:UserWarning",
+]

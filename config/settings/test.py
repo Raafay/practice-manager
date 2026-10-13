@@ -17,3 +17,7 @@ FIELD_ENCRYPTION_KEYS = [Fernet.generate_key().decode()]
 MEDIA_ROOT = BASE_DIR / "media_test"  # noqa: F405
 
 ALLOW_DEMO_DATA = True
+
+# A model with an encrypted field, for the field's own tests. No migrations: the
+# test database creates its table directly.
+INSTALLED_APPS = [*INSTALLED_APPS, "apps.core.tests.encrypted_app"]  # noqa: F405

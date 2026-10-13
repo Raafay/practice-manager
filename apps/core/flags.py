@@ -18,8 +18,9 @@ class PracticeFlag:
 
         try:
             return bool(getattr(PracticeSettings.load(), self.field))
-        except (OperationalError, ProgrammingError):
-            # The table does not exist yet, for example during the first migrate.
+        except (OperationalError, ProgrammingError, RuntimeError):
+            # No table yet (first migrate), or no database access at all (a
+            # library reading the flag while URLs are imported under the test runner).
             return self.default
 
     def __repr__(self) -> str:

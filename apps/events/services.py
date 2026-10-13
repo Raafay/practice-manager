@@ -4,6 +4,7 @@ import json
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.serializers.json import DjangoJSONEncoder
+from django.db import models
 
 from apps.core.fields import EncryptedTextField
 
@@ -78,6 +79,8 @@ def snapshot(instance, fields: list[str]) -> dict:
         field = instance._meta.get_field(name)
         if isinstance(field, EncryptedTextField):
             values[name] = "(encrypted)"
+        elif isinstance(field, models.FileField):
+            values[name] = getattr(instance, name).name or None
         elif field.many_to_many:
             values[name] = (
                 sorted(str(obj) for obj in getattr(instance, name).all()) if instance.pk else []
