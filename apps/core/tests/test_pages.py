@@ -71,6 +71,8 @@ class TestPracticeSettings:
                 "practice_name": "Example Practice",
                 "accent_colour": "#112233",
                 "vat_rate": "20.00",
+                "retention_years": "6",
+                "aml_retention_years": "5",
                 "vat_registered": "on",
             },
         )
@@ -90,7 +92,13 @@ class TestPracticeSettings:
         sign_in(client, owner())
         response = client.post(
             reverse("core:practice_settings"),
-            {"practice_name": "X", "accent_colour": colour, "vat_rate": "20"},
+            {
+                "practice_name": "X",
+                "accent_colour": colour,
+                "vat_rate": "20",
+                "retention_years": "6",
+                "aml_retention_years": "5",
+            },
         )
         assert response.status_code == 422
         assert PracticeSettings.load().accent_colour == "#2f5d8a"
@@ -100,14 +108,28 @@ class TestPracticeSettings:
         bad = SimpleUploadedFile("logo.png", b"not really a png", content_type="image/png")
         response = client.post(
             reverse("core:practice_settings"),
-            {"practice_name": "X", "accent_colour": "#112233", "vat_rate": "20", "logo": bad},
+            {
+                "practice_name": "X",
+                "accent_colour": "#112233",
+                "vat_rate": "20",
+                "retention_years": "6",
+                "aml_retention_years": "5",
+                "logo": bad,
+            },
         )
         assert response.status_code == 422
 
         good = SimpleUploadedFile("logo.png", PNG, content_type="image/png")
         client.post(
             reverse("core:practice_settings"),
-            {"practice_name": "X", "accent_colour": "#112233", "vat_rate": "20", "logo": good},
+            {
+                "practice_name": "X",
+                "accent_colour": "#112233",
+                "vat_rate": "20",
+                "retention_years": "6",
+                "aml_retention_years": "5",
+                "logo": good,
+            },
         )
         practice = PracticeSettings.load()
         assert practice.logo.name.startswith("practice/")
