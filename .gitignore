@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Django
+*.sqlite3
+/media/
+/staticfiles/
+/.django_tailwind_cli/
+
+# Secrets and local settings
+.env
+.env.*
+!.env.example
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Editors and operating system
+.DS_Store
+.idea/
+.vscode/
+
+# Node, only if it is ever used
+node_modules/
