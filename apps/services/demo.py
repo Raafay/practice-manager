@@ -164,13 +164,13 @@ def seed(today: date | None = None) -> dict:
             made += 1
         if client.status == S.ACTIVE:
             generated += len(deadlines.generate_for_client(client, today=today).created)
-    # A few finished and changed deadlines, so the tab shows more than open ones.
-    for deadline in Deadline.objects.filter(status="open", due_date__lt=today).order_by("due_date")[
-        :4
-    ]:
-        if deadline.source != "companies_house":
-            deadline.status = Deadline.Status.DONE
-            deadline.done_on = deadline.due_date - timedelta(days=2)
-            deadline.done_note = "Filed (demo)"
-            deadline.save()
+    # Older work is finished, so only the most recent dates are overdue.
+    finished = Deadline.objects.filter(
+        status="open", due_date__lt=today - timedelta(days=20)
+    ).exclude(source="companies_house")
+    for deadline in finished:
+        deadline.status = Deadline.Status.DONE
+        deadline.done_on = deadline.due_date - timedelta(days=2)
+        deadline.done_note = "Filed (demo)"
+        deadline.save()
     return {"client_services": made, "deadlines": generated}
