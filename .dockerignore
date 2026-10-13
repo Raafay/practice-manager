@@ -1,0 +1,16 @@
+.git
+.venv
+.env
+.env.*
+!.env.example
+.django_tailwind_cli
+.pytest_cache
+.ruff_cache
+__pycache__
+*.sqlite3
+media
+media_test
+staticfiles
+static/css/tailwind.css
+node_modules
+docs/screens
