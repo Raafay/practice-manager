@@ -1,0 +1,37 @@
+{% extends "layouts/app.html" %}
+{% block title %}{% if template.pk %}Edit template{% else %}New template{% endif %}{% endblock %}
+{% block content_class %}max-w-3xl{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title=service.name subtitle="Task template" %}
+  <a href="{% url 'tasks:service_templates' service.pk %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Templates</a>
+</div>
+<form method="post" class="space-y-6" novalidate>
+  {% csrf_token %}
+  <div class="card card-body">{% include "components/_form_fields.html" %}</div>
+  <div class="card card-body">
+    <h2 class="mb-2 text-base">Steps</h2>
+    <p class="muted mb-3">Steps run in the order of the number. Tick “Delete” to remove one. A filing step marks the deadline done when ticked.</p>
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}<div class="form-errors" role="alert">{{ formset.non_form_errors }}</div>{% endif %}
+    <table class="table">
+      <thead><tr><th scope="col">Step</th><th scope="col">Order</th><th scope="col">Stops reminders</th><th scope="col">Filing step</th><th scope="col">Delete</th></tr></thead>
+      <tbody>
+        {% for sub in formset %}
+        <tr>
+          <td>{% for hidden in sub.hidden_fields %}{{ hidden }}{% endfor %}<label class="sr-only" for="{{ sub.name.id_for_label }}">Step name</label>{{ sub.name|styled }}{% for e in sub.name.errors %}<p class="field-error">{{ e }}</p>{% endfor %}</td>
+          <td class="w-24"><label class="sr-only" for="{{ sub.position.id_for_label }}">Order</label>{{ sub.position|styled }}</td>
+          <td>{{ sub.stops_reminders|styled }}</td>
+          <td>{{ sub.is_filing|styled }}</td>
+          <td>{% if sub.instance.pk %}{{ sub.DELETE|styled }}{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="flex justify-end gap-2">
+    <a href="{% url 'tasks:service_templates' service.pk %}" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary">Save template</button>
+  </div>
+</form>
+{% endblock %}

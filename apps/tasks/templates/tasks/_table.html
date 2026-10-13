@@ -1,0 +1,27 @@
+{# The head and rows of one group. Needs: rows (a list of tasks), header. #}
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col" class="w-8"><input type="checkbox" class="checkbox" data-check-all aria-label="Select every task in this table"></th>
+        <th scope="col" class="w-8"><span class="sr-only">Starred</span></th>
+        <th scope="col" class="w-8"><span class="sr-only">Needs attention</span></th>
+        {% for h in header %}
+        <th scope="col" {% if h.sorted %}aria-sort="{{ h.sorted }}"{% endif %}>
+          {% if h.key %}<a href="{{ base_url }}?{{ h.qs }}" hx-get="{{ base_url }}?{{ h.qs }}" hx-target="#task-page" hx-push-url="true" class="text-slate-600 no-underline hover:underline">{{ h.label }}{% if h.sorted == "ascending" %} {% icon "chevron-up" "size-3 inline" %}{% elif h.sorted == "descending" %} {% icon "chevron-down" "size-3 inline" %}{% endif %}</a>{% else %}{{ h.label }}{% endif %}
+        </th>
+        {% endfor %}
+        <th scope="col"><span class="sr-only">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for task in rows %}{% include "tasks/_row.html" %}{% endfor %}
+      {% if add_url %}
+      <tr>
+        <td></td>
+        <td colspan="{{ header|length|add:3 }}"><button type="button" class="btn btn-ghost btn-sm" hx-get="{{ add_url }}" hx-target="#drawer-body">{% icon "plus" "size-4" %} Add task</button></td>
+      </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>

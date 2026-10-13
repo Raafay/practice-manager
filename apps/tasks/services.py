@@ -415,5 +415,3 @@ def merge_status(actor, source: TaskStatus, into: TaskStatus) -> int:
         setting="task_status",
     )
     return moved
-
-

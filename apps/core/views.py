@@ -14,10 +14,6 @@ from .pagination import paginate
 from .permissions import CapabilityRequiredMixin, StaffRequiredMixin
 
 
-class OverviewView(StaffRequiredMixin, TemplateView):
-    template_name = "core/overview.html"
-
-
 class SettingsIndexView(StaffRequiredMixin, TemplateView):
     template_name = "core/settings_index.html"
 

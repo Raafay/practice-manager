@@ -327,6 +327,7 @@ TABS = [
     ("links", "Links", "clients:links"),
     ("documents", "Documents", "clients:documents"),
     ("deadlines", "Deadlines", "services:client_deadlines"),
+    ("tasks", "Tasks", "tasks:client_tasks"),
 ]
 
 
