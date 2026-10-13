@@ -43,9 +43,10 @@ class TaskStatus(TimeStampedModel):
 
     @classmethod
     def done_status(cls) -> "TaskStatus":
-        return cls.objects.filter(is_done=True, active=True).first() or cls.objects.filter(
-            is_done=True
-        ).first()
+        return (
+            cls.objects.filter(is_done=True, active=True).first()
+            or cls.objects.filter(is_done=True).first()
+        )
 
 
 class TaskKind(models.TextChoices):
@@ -84,7 +85,10 @@ class TaskTemplate(TimeStampedModel):
     class Target(models.TextChoices):
         DAYS_BEFORE_DUE = "days_before_due", "Days before the due date"
         WORKING_DAYS_BEFORE_DUE = "working_days_before_due", "Working days before the due date"
-        DAYS_BEFORE_CT_PAYMENT = "days_before_ct_payment", "Days before the corporation tax payment date"
+        DAYS_BEFORE_CT_PAYMENT = (
+            "days_before_ct_payment",
+            "Days before the corporation tax payment date",
+        )
         FIXED_DAY = "fixed_day", "A fixed day of the year before the due date"
 
     service = models.ForeignKey(

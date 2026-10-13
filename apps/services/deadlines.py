@@ -11,6 +11,7 @@ from datetime import date, timedelta
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.dispatch import Signal
 from django.utils import timezone
 
 from apps import events
@@ -22,6 +23,10 @@ from .rules import REGISTRY, Inputs, Period
 # A service that started long ago is not given years of overdue history (assumption,
 # see STATUS.md). Periods due more than this many days ago are not created.
 LOOKBACK_DAYS = 60
+
+# The tasks app listens to these; services never imports tasks.
+deadlines_created = Signal()  # client, deadlines, actor
+deadline_date_changed = Signal()  # deadline, old, new, actor
 
 CH_RULES = {
     "ch_accounts": "last_accounts_made_up_to",
@@ -124,6 +129,9 @@ def generate_for_client(client: Client, *, today: date | None = None, actor=None
             client=client,
             labels=[f"{d.label} ({d.rule_title})" for d in result.created][:20],
         )
+        deadlines_created.send(
+            sender=Deadline, client=client, deadlines=result.created, actor=actor
+        )
     return result
 
 
@@ -188,6 +196,9 @@ def _apply_period(client, cs, rule_name, period: Period, actor, result: Result) 
             old=changed["due_date"],
             new=row.due_date,
             source=row.source,
+        )
+        deadline_date_changed.send(
+            sender=Deadline, deadline=row, old=changed["due_date"], new=row.due_date, actor=actor
         )
         result.updated.append(row)
 
@@ -266,6 +277,10 @@ def _move_open_period(client, cs, rule_name, period: Period, actor, result: Resu
         old_period_end=old_end,
         new_period_end=period.period_end,
     )
+    if old_due != row.due_date:
+        deadline_date_changed.send(
+            sender=Deadline, deadline=row, old=old_due, new=row.due_date, actor=actor
+        )
     result.updated.append(row)
 
 
@@ -277,7 +292,12 @@ def _not_open(deadline: Deadline) -> ValidationError:
 
 
 def mark_done(
-    actor, deadline: Deadline, *, done_on: date | None = None, note: str = ""
+    actor,
+    deadline: Deadline,
+    *,
+    done_on: date | None = None,
+    note: str = "",
+    evidence: str = "",
 ) -> Deadline:
     if not deadline.is_open:
         raise _not_open(deadline)
@@ -285,6 +305,8 @@ def mark_done(
     deadline.done_on = done_on or timezone.localdate()
     deadline.done_by = actor
     deadline.done_note = note.strip()[:500]
+    if evidence:
+        deadline.evidence = evidence[:500]
     deadline.save()
     events.record(
         actor,
@@ -368,5 +390,8 @@ def change_due_date(actor, deadline: Deadline, new_date: date, *, reason: str) -
         new=new_date,
         original=deadline.original_due_date,
         reason=reason,
+    )
+    deadline_date_changed.send(
+        sender=Deadline, deadline=deadline, old=old, new=new_date, actor=actor
     )
     return deadline
