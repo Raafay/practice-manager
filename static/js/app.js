@@ -157,3 +157,41 @@ document.addEventListener("drop", (event) => {
     form.requestSubmit();
   }
 });
+
+// "n" opens the New task drawer, unless the person is typing somewhere.
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "n" || event.ctrlKey || event.metaKey || event.altKey) return;
+  const target = event.target;
+  if (target.closest && target.closest("input, textarea, select, trix-editor, [contenteditable=true], dialog[open]")) return;
+  const link = document.getElementById("new-task-link");
+  if (link) {
+    event.preventDefault();
+    link.click();
+  }
+});
+
+// The header tick box ticks every row in its table.
+document.addEventListener("change", (event) => {
+  if (!event.target.matches("[data-check-all]")) return;
+  const table = event.target.closest("table");
+  table.querySelectorAll("tbody input[type=checkbox][name=ids]").forEach((box) => {
+    box.checked = event.target.checked;
+  });
+});
+
+// A page opened at a task's own address shows the task in the drawer over the list.
+// Closing the drawer puts the list's address back.
+function openDrawerOnLoad() {
+  const drawer = document.getElementById("drawer");
+  if (drawer && drawer.hasAttribute("data-open-on-load") && !drawer.open) {
+    drawer.showModal();
+    drawer.addEventListener("close", () => {
+      const back = drawer.dataset.returnUrl;
+      if (back) window.history.replaceState(null, "", back);
+    });
+  }
+}
+document.addEventListener("DOMContentLoaded", openDrawerOnLoad);
+
+// Rich text takes no files: a paste or drop of a file into Trix is refused.
+document.addEventListener("trix-file-accept", (event) => event.preventDefault());

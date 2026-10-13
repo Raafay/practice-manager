@@ -1,0 +1,1 @@
+{% for c in clients %}<option value="{{ c.name }}{% if c.reference %} ({{ c.reference }}){% endif %}"></option>{% endfor %}

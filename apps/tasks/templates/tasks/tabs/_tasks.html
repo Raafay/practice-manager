@@ -1,0 +1,4 @@
+<div class="mb-3 flex justify-end">
+  <button type="button" class="btn btn-secondary" hx-get="{% url 'tasks:new' %}?client={{ client.pk }}" hx-target="#drawer-body">{% icon "plus" "size-4" %} New task</button>
+</div>
+<div id="task-page">{% include "tasks/_page.html" %}</div>

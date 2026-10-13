@@ -1,0 +1,26 @@
+{% extends "layouts/app.html" %}
+{% block title %}My work{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="My work" subtitle="Your open tasks, soonest first." %}
+  <div class="flex gap-2">
+    <a href="{% url 'tasks:list' %}?chip=mine" class="btn btn-secondary">{% icon "list-bullet" "size-4" %} All my tasks</a>
+    <button type="button" class="btn btn-primary" hx-get="{% url 'tasks:new' %}" hx-target="#drawer-body">{% icon "plus" "size-4" %} New task</button>
+  </div>
+</div>
+<p class="mb-4 text-sm">
+  <a href="{% url 'tasks:list' %}?chip=unassigned" class="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 no-underline hover:bg-slate-50">
+    {% icon "user-plus" "size-4" %} <strong>{{ unassigned_count }}</strong> unassigned task{{ unassigned_count|pluralize }}
+  </a>
+</p>
+{% for section in sections %}
+<section class="mb-6" aria-labelledby="sec-{{ section.key }}">
+  <h2 id="sec-{{ section.key }}" class="mb-2 flex items-center gap-2 text-base">{{ section.label }} <span class="badge {% if section.key == 'overdue' and section.tasks %}badge-red{% else %}badge-neutral{% endif %}">{{ section.tasks|length }}</span></h2>
+  {% if section.tasks %}
+    {% include "tasks/_table.html" with rows=section.tasks %}
+  {% else %}
+    <p class="muted">Nothing here.</p>
+  {% endif %}
+</section>
+{% endfor %}
+{% endblock %}

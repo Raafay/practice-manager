@@ -554,12 +554,20 @@ class SavedView(TimeStampedModel):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="saved_views"
     )
     shared = models.BooleanField("share with everyone", default=False)
+    is_default = models.BooleanField("open this view first", default=False)
     filters = models.JSONField(default=dict, blank=True)
     columns = models.JSONField(default=list, blank=True)
     sort = models.CharField(max_length=40, blank=True)
 
     class Meta:
         ordering = ["name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["owner", "list_key"],
+                condition=models.Q(is_default=True),
+                name="one_default_view_per_list",
+            )
+        ]
 
     def __str__(self) -> str:
         return self.name

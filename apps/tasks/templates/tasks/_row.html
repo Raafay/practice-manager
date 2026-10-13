@@ -1,0 +1,57 @@
+{# One task row. In-place edits post to the field address and swap this row. #}
+<tr id="task-row-{{ task.pk }}" {% if task.is_done %}class="text-slate-500"{% endif %}>
+  <td class="w-8"><input type="checkbox" class="checkbox" name="ids" value="{{ task.pk }}" form="bulk-form" aria-label="Select {{ task.title }}"></td>
+  <td class="w-8">
+    <button type="button" class="btn-icon p-1" hx-post="{% url 'tasks:star' task.pk %}" hx-target="#task-row-{{ task.pk }}" hx-swap="outerHTML" aria-pressed="{% if task.is_starred %}true{% else %}false{% endif %}" aria-label="{% if task.is_starred %}Remove star from{% else %}Star{% endif %} {{ task.title }}">
+      {% if task.is_starred %}{% icon "star" "size-4 text-amber-500" "mini" %}{% else %}{% icon "star" "size-4" %}{% endif %}
+    </button>
+  </td>
+  <td class="w-8">{% if task.show_alert %}{% icon "exclamation-triangle" "size-4 text-red-600" "mini" "Needs attention: target date passed or deadline close" %}{% endif %}</td>
+  <td class="min-w-56">
+    <a href="{% url 'tasks:detail' task.pk %}" hx-get="{% url 'tasks:detail' task.pk %}" hx-target="#drawer-body" class="font-medium text-slate-900">{{ task.title }}</a>
+    {% if task.kind != "compliance" %}<span class="ml-1 text-xs text-slate-500">{{ task.get_kind_display }}</span>{% endif %}
+    {% if task.priority == "urgent" or task.priority == "high" %}<span class="ml-1">{% include "components/_badge.html" with text=task.get_priority_display tone="red" %}</span>{% endif %}
+    {% if row_error %}<p class="field-error" role="alert">{{ row_error }}</p>{% endif %}
+  </td>
+  {% if not fixed_client %}<td>{% if task.client %}<a href="{% url 'clients:detail' task.client_id %}">{{ task.client.name }}</a>{% else %}<span class="muted">Internal</span>{% endif %}</td>{% endif %}
+  <td>{% if task.category %}<span class="inline-flex items-center gap-1.5 whitespace-nowrap"><span class="inline-block size-2.5 rounded-full" style="background-color: {{ task.category.colour }}" aria-hidden="true"></span>{{ task.category.name }}</span>{% endif %}</td>
+  <td class="w-24">
+    <div class="flex items-center gap-1.5">
+      {% if task.owner %}{% include "components/_avatar.html" with person=task.owner %}{% else %}<span class="avatar bg-slate-200 text-slate-600" title="Unassigned" role="img" aria-label="Unassigned">?</span>{% endif %}
+      <label class="sr-only" for="owner-{{ task.pk }}">Owner of {{ task.title }}</label>
+      <select id="owner-{{ task.pk }}" name="value" class="cell-input" hx-post="{% url 'tasks:field' task.pk 'owner' %}" hx-trigger="change" hx-target="#task-row-{{ task.pk }}" hx-swap="outerHTML">
+        <option value="">Unassigned</option>
+        {% for person in people %}<option value="{{ person.pk }}" {% if person.pk == task.owner_id %}selected{% endif %}>{{ person.name }}</option>{% endfor %}
+      </select>
+    </div>
+  </td>
+  <td class="w-44">
+    <label class="sr-only" for="step-{{ task.pk }}">Latest action for {{ task.title }}</label>
+    {% if task.step_list %}
+    <select id="step-{{ task.pk }}" name="step" class="cell-input" hx-post="{% url 'tasks:step_pick' task.pk %}" hx-trigger="change" hx-target="#task-row-{{ task.pk }}" hx-swap="outerHTML" title="Choose the next step to tick">
+      <option value="" selected disabled>{{ task.latest|default:"No action yet" }}</option>
+      {% for step in task.step_list %}<option value="{{ step.pk }}" {% if step.done_at %}disabled{% endif %}>{% if step.done_at %}✓ {% endif %}{{ step.name }}</option>{% endfor %}
+    </select>
+    {% else %}<span class="muted">No action yet</span>{% endif %}
+  </td>
+  <td class="w-44">
+    <label class="sr-only" for="status-{{ task.pk }}">Status of {{ task.title }}</label>
+    <select id="status-{{ task.pk }}" name="value" class="cell-input font-medium" style="background-color: {{ task.status.colour }}1f; border-color: {{ task.status.colour }}66" hx-post="{% url 'tasks:field' task.pk 'status' %}" hx-trigger="change" hx-target="#task-row-{{ task.pk }}" hx-swap="outerHTML">
+      {% for status in statuses %}<option value="{{ status.pk }}" {% if status.pk == task.status_id %}selected{% endif %}>{{ status.name }}</option>{% endfor %}
+      {% if task.status not in statuses %}<option value="{{ task.status_id }}" selected>{{ task.status.name }}</option>{% endif %}
+    </select>
+  </td>
+  <td class="w-36">
+    <label class="sr-only" for="target-{{ task.pk }}">Target date of {{ task.title }}</label>
+    <input id="target-{{ task.pk }}" type="date" name="value" value="{{ task.target_date|date:'Y-m-d' }}" class="cell-input" hx-post="{% url 'tasks:field' task.pk 'target_date' %}" hx-trigger="change" hx-target="#task-row-{{ task.pk }}" hx-swap="outerHTML">
+  </td>
+  <td class="whitespace-nowrap">
+    {% if task.due_date %}{% include "components/_badge.html" with text=task.due_date|date:"d/m/Y" tone=task.tone icon_name=task.tone_icon %}{% else %}<span class="muted">No deadline</span>{% endif %}
+  </td>
+  <td class="whitespace-nowrap text-right">
+    <a href="{% url 'tasks:detail' task.pk %}#comments" class="btn-icon inline-flex" hx-get="{% url 'tasks:detail' task.pk %}" hx-target="#drawer-body" aria-label="Comment on {{ task.title }}" title="Comment">{% icon "pencil-square" "size-4" %}</a>
+    {% if not task.is_done %}
+    <button type="button" class="btn-icon" hx-post="{% url 'tasks:complete' task.pk %}" hx-target="#task-row-{{ task.pk }}" hx-swap="outerHTML" aria-label="Complete {{ task.title }}" title="Complete">{% icon "check-circle" "size-4" %}</button>
+    {% else %}<span class="inline-flex p-1.5 text-green-700" title="Done">{% icon "check-circle" "size-4" "mini" "Done" %}</span>{% endif %}
+  </td>
+</tr>

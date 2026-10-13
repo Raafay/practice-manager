@@ -1,0 +1,104 @@
+{# Everything under the page title on the Tasks page and the client's Tasks tab. #}
+<div class="mb-3 flex flex-wrap items-center gap-2" role="group" aria-label="Quick filters">
+  {% for chip in chips %}
+  <a href="{{ base_url }}?{{ chip.qs }}" class="chip" {% if chip.active %}aria-current="true"{% endif %} hx-get="{{ base_url }}?{{ chip.qs }}" hx-target="#task-page" hx-push-url="true">{% if chip.active %}{% icon "check" "size-3" "mini" %}{% endif %}{{ chip.label }}</a>
+  {% endfor %}
+  <span class="mx-1 h-5 w-px bg-slate-300" aria-hidden="true"></span>
+  <a href="{{ base_url }}?{{ show_done_qs }}" class="chip" {% if query.show_done %}aria-current="true"{% endif %} hx-get="{{ base_url }}?{{ show_done_qs }}" hx-target="#task-page" hx-push-url="true">{% if query.show_done %}{% icon "check" "size-3" "mini" %}{% endif %}Show done</a>
+  {% if not fixed_client %}
+  <div class="relative ml-auto" x-data="dropdown" @keydown.escape="close" @click.outside="close">
+    <button type="button" class="btn btn-secondary btn-sm" @click="toggle" :aria-expanded="open" aria-haspopup="true">{% icon "bookmark" "size-4" %} Views{% if active_view %}: {{ active_view.name }}{% endif %} {% icon "chevron-down" "size-3" %}</button>
+    <div class="menu min-w-72" x-show="open" x-cloak>
+      {% for saved in saved_views %}
+      <div class="flex items-center justify-between gap-1 pr-2">
+        <a class="menu-item flex-1" href="{% url 'tasks:list' %}?view={{ saved.pk }}">{{ saved.name }}{% if saved.shared %} <span class="muted">(shared)</span>{% endif %}{% if saved.is_default and saved.owner_id == user.pk %} <span class="badge badge-accent">Opens first</span>{% endif %}</a>
+        <form method="post" action="{% url 'tasks:view_default' saved.pk %}">{% csrf_token %}<button type="submit" class="btn-icon" aria-label="{% if saved.is_default and saved.owner_id == user.pk %}Stop opening {{ saved.name }} first{% else %}Open {{ saved.name }} first{% endif %}" title="Open this view first">{% if saved.is_default and saved.owner_id == user.pk %}{% icon "star" "size-4 text-amber-500" "mini" %}{% else %}{% icon "star" "size-4" %}{% endif %}</button></form>
+        {% if saved.owner_id == user.pk or user.is_owner %}
+        <form method="post" action="{% url 'tasks:view_delete' saved.pk %}" data-confirm="Delete the view {{ saved.name }}?">{% csrf_token %}<button type="submit" class="btn-icon" aria-label="Delete view {{ saved.name }}">{% icon "trash" "size-4" %}</button></form>
+        {% endif %}
+      </div>
+      {% empty %}
+      <p class="px-3 py-2 text-slate-500">No saved views yet. Set the filters, then save them below.</p>
+      {% endfor %}
+      <form method="post" action="{% url 'tasks:view_save' %}" class="space-y-2 border-t border-slate-100 p-3">{% csrf_token %}
+        <input type="hidden" name="query" value="{{ state_qs }}">
+        <label class="label" for="view-name">Save this view as</label>
+        <input id="view-name" name="name" class="input" required maxlength="80">
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="shared" class="checkbox"> Share with everyone</label>
+        <button type="submit" class="btn btn-secondary btn-sm">Save view</button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<form id="filter-form" method="get" action="{{ base_url }}" hx-get="{{ base_url }}" hx-target="#task-page" hx-push-url="true" hx-trigger="submit, change" class="mb-3">
+  {% for key, value in state_inputs %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endfor %}
+  <details class="panel" {% if query.filters_active %}open{% endif %}>
+    <summary>Filters and grouping{% if query.filters_active %} <span class="badge badge-accent">On</span>{% endif %} {% icon "chevron-right" "panel-chevron size-4 text-slate-400 transition-transform" %}</summary>
+    <div class="panel-body">
+      <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div><label class="label" for="id_group">Group by</label>
+          <select id="id_group" name="group" class="select">{% for key, label in groups_options %}<option value="{{ key }}" {% if key == query.group %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        <div><label class="label" for="{{ form.q.id_for_label }}">Search</label>{{ form.q }}</div>
+        <div><label class="label" for="{{ form.owner.id_for_label }}">Owner</label>{{ form.owner }}</div>
+        {% if not fixed_client %}<div><label class="label" for="{{ form.client.id_for_label }}">Client</label>{{ form.client }}</div>
+        <div><label class="label" for="{{ form.manager.id_for_label }}">Client manager</label>{{ form.manager }}</div>{% endif %}
+        <div><label class="label" for="{{ form.team.id_for_label }}">Team</label>{{ form.team }}</div>
+        <div><label class="label" for="{{ form.kind.id_for_label }}">Kind</label>{{ form.kind }}</div>
+        <div><label class="label" for="{{ form.category.id_for_label }}">Category</label>{{ form.category }}</div>
+        <div><label class="label" for="{{ form.service.id_for_label }}">Service</label>{{ form.service }}</div>
+        <div><label class="label" for="{{ form.status.id_for_label }}">Status</label>{{ form.status }}</div>
+        <div><label class="label" for="{{ form.priority.id_for_label }}">Priority</label>{{ form.priority }}</div>
+        <div><label class="label" for="{{ form.date_field.id_for_label }}">Date range on</label>{{ form.date_field }}</div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label class="label" for="{{ form.date_from.id_for_label }}">From</label>{{ form.date_from }}</div>
+          <div><label class="label" for="{{ form.date_to.id_for_label }}">To</label>{{ form.date_to }}</div>
+        </div>
+        <div class="flex items-end pb-1"><label class="flex items-center gap-2 text-sm text-slate-700">{{ form.starred }} Starred only</label></div>
+      </div>
+      <div class="mt-3 flex gap-2">
+        <button type="submit" class="btn btn-primary btn-sm">Apply</button>
+        <a href="{{ base_url }}" class="btn btn-secondary btn-sm" hx-get="{{ base_url }}" hx-target="#task-page" hx-push-url="true">Clear all</a>
+      </div>
+    </div>
+  </details>
+</form>
+
+<form id="bulk-form" method="post" action="{% url 'tasks:bulk' %}" class="mb-3 flex flex-wrap items-end gap-2 rounded-md border border-slate-200 bg-white p-2 text-sm">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+  <div><label class="label" for="bulk-action">With the ticked tasks</label>
+    <select id="bulk-action" name="action" class="select">
+      <option value="owner">Change owner</option><option value="status">Change status</option>
+      <option value="target_date">Change target date</option><option value="complete">Complete</option><option value="cancel">Cancel</option>
+    </select></div>
+  <div><label class="label" for="bulk-owner">Owner</label><select id="bulk-owner" name="owner" class="select"><option value="">Unassigned</option>{% for person in people %}<option value="{{ person.pk }}">{{ person.name }}</option>{% endfor %}</select></div>
+  <div><label class="label" for="bulk-status">Status</label><select id="bulk-status" name="status" class="select">{% for status in statuses %}<option value="{{ status.pk }}">{{ status.name }}</option>{% endfor %}</select></div>
+  <div><label class="label" for="bulk-date">Target date</label><input id="bulk-date" type="date" name="target_date" class="input"></div>
+  <button type="submit" class="btn btn-secondary">Apply to ticked</button>
+</form>
+
+<div id="task-results">
+{% if groups and total %}
+  {% for group in groups %}
+  {% if query.group %}
+  <details class="panel mb-4" open>
+    <summary>{{ group.label }} <span class="muted">({{ group.total }})</span> {% icon "chevron-right" "panel-chevron size-4 text-slate-400 transition-transform" %}</summary>
+    <div class="panel-body">
+      {% include "tasks/_table.html" with rows=group.tasks add_url=group.add_url %}
+      {% if group.hidden %}<p class="muted mt-2">Showing {{ group.tasks|length }} of {{ group.total }}.</p>{% endif %}
+    </div>
+  </details>
+  {% else %}
+    {% include "tasks/_table.html" with rows=group.tasks add_url=group.add_url %}
+    {% if group.hidden %}<p class="muted mt-2">Showing {{ group.tasks|length }} of {{ group.total }}.</p>{% endif %}
+  {% endif %}
+  {% endfor %}
+  {% if more %}
+  <p class="mt-3 text-center"><a href="{{ base_url }}?{{ more_qs }}" class="btn btn-secondary" hx-get="{{ base_url }}?{{ more_qs }}" hx-target="#task-page" hx-push-url="true">Load more</a></p>
+  {% endif %}
+{% else %}
+  {% include "components/_empty.html" with title="No tasks here" message="Nothing matches. Clear the filters, switch on Show done, or add a task." icon_name="clipboard-document-list" action_url=add_url_all action_label="New task" %}
+{% endif %}
+</div>

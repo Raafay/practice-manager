@@ -23,6 +23,7 @@
         <form method="post" action="{% url 'services:move' service.pk 'up' %}" class="inline">{% csrf_token %}<button type="submit" class="btn-icon" aria-label="Move {{ service.name }} up" {% if forloop.first %}disabled{% endif %}>{% icon "chevron-up" "size-4" %}</button></form>
         <form method="post" action="{% url 'services:move' service.pk 'down' %}" class="inline">{% csrf_token %}<button type="submit" class="btn-icon" aria-label="Move {{ service.name }} down" {% if forloop.last %}disabled{% endif %}>{% icon "chevron-down" "size-4" %}</button></form>
         <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'services:edit' service.pk %}" hx-target="#drawer-body">Edit</button>
+        <a href="{% url 'tasks:service_templates' service.pk %}" class="btn btn-ghost btn-sm">Tasks</a>
         <form method="post" action="{% url 'services:toggle' service.pk %}" class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">{% if service.active %}Switch off{% else %}Switch on{% endif %}</button></form>
       </td>
     </tr>

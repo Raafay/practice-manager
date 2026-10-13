@@ -140,6 +140,27 @@
     </div>
   </section>
 
+  <section id="chips" aria-labelledby="h-chips" class="space-y-3">
+    <h2 id="h-chips">Chips and in-row fields</h2>
+    <p class="muted">Chips are quick filters. The current one has a tick and a border, not only a colour. In-row fields look like text until pointed at, and save when changed.</p>
+    <div class="flex flex-wrap items-center gap-2">
+      <a href="#chips" class="chip" aria-current="true">{% icon "check" "size-3" "mini" %}All</a>
+      <a href="#chips" class="chip">Compliance</a>
+      <a href="#chips" class="chip">Fractional</a>
+      <a href="#chips" class="chip">Mine</a>
+    </div>
+    <div class="grid max-w-xl grid-cols-2 gap-3">
+      <div><label class="label" for="sg-cell-select">In-row select</label>
+        <select id="sg-cell-select" class="cell-input"><option>To do</option><option>In review</option></select></div>
+      <div><label class="label" for="sg-cell-date">In-row date</label>
+        <input id="sg-cell-date" type="date" class="cell-input" value="2026-10-30"></div>
+    </div>
+    <div class="rich-text max-w-xl rounded-md border border-slate-200 bg-white p-3">
+      <p>Rich text from Trix is cleaned, then shown with this style.</p>
+      <ul><li>A list item</li><li>Another</li></ul>
+    </div>
+  </section>
+
   <section id="empty" aria-labelledby="h-empty" class="space-y-3">
     <h2 id="h-empty">Empty states</h2>
     {% url 'core:styleguide' as sg_url %}

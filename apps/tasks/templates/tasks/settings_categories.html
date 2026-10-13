@@ -1,0 +1,28 @@
+{% extends "layouts/app.html" %}
+{% block title %}Task categories{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Task categories" subtitle="Kinds of work. A category in use cannot be deleted, only switched off or merged." %}
+  <div class="flex gap-2">
+    <a href="{% url 'core:settings' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Settings</a>
+    <button type="button" class="btn btn-primary" hx-get="{% url 'tasks:category_add' %}" hx-target="#drawer-body">{% icon "plus" "size-4" %} New category</button>
+  </div>
+</div>
+<div class="table-wrap"><table class="table">
+  <thead><tr><th scope="col">Category</th><th scope="col">Kind</th><th scope="col">Tasks</th><th scope="col">State</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+  <tbody>{% for category in items %}
+    <tr>
+      <td><span class="inline-flex items-center gap-2 font-medium text-slate-900"><span class="inline-block size-3 rounded-full" style="background-color: {{ category.colour }}" aria-hidden="true"></span>{{ category.name }}</span></td>
+      <td>{{ category.get_kind_display }}</td>
+      <td>{{ category.uses }}</td>
+      <td>{% if category.active %}{% include "components/_badge.html" with text="In use" tone="green" %}{% else %}{% include "components/_badge.html" with text="Off" tone="neutral" %}{% endif %}</td>
+      <td class="whitespace-nowrap text-right">
+        <form method="post" action="{% url 'tasks:category_move' category.pk 'up' %}" class="inline">{% csrf_token %}<button type="submit" class="btn-icon" aria-label="Move {{ category.name }} up" {% if forloop.first %}disabled{% endif %}>{% icon "chevron-up" "size-4" %}</button></form>
+        <form method="post" action="{% url 'tasks:category_move' category.pk 'down' %}" class="inline">{% csrf_token %}<button type="submit" class="btn-icon" aria-label="Move {{ category.name }} down" {% if forloop.last %}disabled{% endif %}>{% icon "chevron-down" "size-4" %}</button></form>
+        <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'tasks:category_edit' category.pk %}" hx-target="#drawer-body">Edit</button>
+        <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'tasks:category_merge' category.pk %}" hx-target="#drawer-body">Merge</button>
+        <form method="post" action="{% url 'tasks:category_delete' category.pk %}" class="inline" data-confirm="Delete the category {{ category.name }}?">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm text-red-700" {% if category.uses %}disabled title="In use by {{ category.uses }} task{{ category.uses|pluralize }}"{% endif %}>Delete</button></form>
+      </td>
+    </tr>
+  {% endfor %}</tbody></table></div>
+{% endblock %}

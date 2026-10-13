@@ -1,0 +1,29 @@
+{% extends "layouts/app.html" %}
+{% block title %}Task templates for {{ service.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title=service.name subtitle="Task templates. When a deadline of this service is created, one task is made for each active template that matches its rule." %}
+  <div class="flex gap-2">
+    <a href="{% url 'services:list' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Services</a>
+    {% if service.rules %}<a href="{% url 'tasks:template_add' service.pk %}" class="btn btn-primary">{% icon "plus" "size-4" %} New template</a>{% endif %}
+  </div>
+</div>
+{% for template in templates %}
+<section class="panel mb-4">
+  <div class="panel-body">
+    <div class="flex flex-wrap items-start justify-between gap-2">
+      <div>
+        <h2 class="text-base">{{ template.name_pattern }}</h2>
+        <p class="muted">Rule {{ template.rule }} · {{ template.category.name|default:"No category" }} · {{ template.get_default_owner_display }} · {{ template.get_target_kind_display }}{% if template.target_kind == "fixed_day" %}: {{ template.target_day }}/{{ template.target_month }}{% else %}: {{ template.target_days }}{% endif %}{% if not template.active %} · <strong>Switched off</strong>{% endif %}</p>
+      </div>
+      <a href="{% url 'tasks:template_edit' template.pk %}" class="btn btn-secondary btn-sm">Edit</a>
+    </div>
+    <ol class="mt-2 list-decimal space-y-0.5 pl-5 text-sm">
+      {% for step in template.steps.all %}<li>{{ step.name }}{% if step.stops_reminders %} <span class="badge badge-neutral">Stops reminders</span>{% endif %}{% if step.is_filing %} <span class="badge badge-accent">Filing step</span>{% endif %}</li>{% endfor %}
+    </ol>
+  </div>
+</section>
+{% empty %}
+  {% include "components/_empty.html" with title="No task templates" message="This service creates no tasks yet. Add a template to make one for each deadline." icon_name="clipboard-document-list" %}
+{% endfor %}
+{% endblock %}

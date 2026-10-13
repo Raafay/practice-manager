@@ -1,0 +1,155 @@
+{# The task drawer. Everything saves at once; edits post to the field address and swap this whole panel. #}
+<article aria-labelledby="task-title" class="space-y-5">
+  <header>
+    <p class="muted">
+      {% if task.client %}<a href="{% url 'clients:detail' task.client_id %}">{{ task.client.name }}</a>{% else %}Internal work{% endif %}
+      · {{ task.get_kind_display }}{% if task.category %} · {{ task.category.name }}{% endif %}
+    </p>
+    <form method="post" action="{% url 'tasks:field' task.pk 'title' %}" hx-post="{% url 'tasks:field' task.pk 'title' %}" hx-target="#drawer-body" hx-trigger="change">
+      {% csrf_token %}<input type="hidden" name="view" value="drawer">
+      <label class="sr-only" for="task-title">Title</label>
+      <input id="task-title" name="value" value="{{ task.title }}" maxlength="250" class="w-full rounded-md border border-transparent px-1 text-xl font-semibold text-slate-900 hover:border-slate-300 focus:border-accent focus:ring-2 focus:ring-accent/30 focus:outline-none" {% if task.is_cancelled %}disabled{% endif %}>
+    </form>
+    {% if form_error %}<p class="field-error" role="alert">{{ form_error }}</p>{% endif %}
+    <div class="mt-1 flex flex-wrap items-center gap-2">
+      <form method="post" action="{% url 'tasks:star' task.pk %}" hx-post="{% url 'tasks:star' task.pk %}" hx-target="#drawer-body">{% csrf_token %}<input type="hidden" name="view" value="drawer">
+        <button type="submit" class="btn btn-ghost btn-sm" aria-pressed="{% if task.is_starred %}true{% else %}false{% endif %}">{% if task.is_starred %}{% icon "star" "size-4 text-amber-500" "mini" %} Starred{% else %}{% icon "star" "size-4" %} Star{% endif %}</button></form>
+      {% if task.is_cancelled %}{% include "components/_badge.html" with text="Cancelled" tone="red" %}{% endif %}
+      {% if task.show_alert %}{% include "components/_badge.html" with text="Needs attention" tone="red" icon_name="exclamation-triangle" %}{% endif %}
+      {% if not task.is_done and not task.is_cancelled %}
+      <form method="post" action="{% url 'tasks:complete' task.pk %}" hx-post="{% url 'tasks:complete' task.pk %}" hx-target="#drawer-body">{% csrf_token %}<input type="hidden" name="view" value="drawer"><button type="submit" class="btn btn-secondary btn-sm">{% icon "check-circle" "size-4" %} Complete</button></form>
+      {% endif %}
+      {% if not task.is_cancelled %}
+      <form method="post" action="{% url 'tasks:cancel' task.pk %}" data-confirm="Cancel this task? It will be hidden from lists.">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm text-red-700">{% icon "no-symbol" "size-4" %} Cancel task</button></form>
+      {% endif %}
+    </div>
+  </header>
+
+  {% if offer_complete %}
+  <div class="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+    <p>The deadline “{{ task.deadline.label }}” has been marked done. This task is still open.</p>
+    <form method="post" action="{% url 'tasks:complete' task.pk %}" hx-post="{% url 'tasks:complete' task.pk %}" hx-target="#drawer-body" class="mt-2">{% csrf_token %}<input type="hidden" name="view" value="drawer"><button type="submit" class="btn btn-secondary btn-sm">Complete this task</button></form>
+  </div>
+  {% endif %}
+
+  <section aria-label="Details" class="grid gap-3 sm:grid-cols-2">
+    {% with t=task %}
+    <div><label class="label" for="d-status">Status</label>
+      <select id="d-status" name="value" class="select" hx-post="{% url 'tasks:field' t.pk 'status' %}" hx-trigger="change" hx-target="#drawer-body" hx-vals='{"view": "drawer"}'>
+        {% for s in statuses %}<option value="{{ s.pk }}" {% if s.pk == t.status_id %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+        {% if t.status not in statuses %}<option value="{{ t.status_id }}" selected>{{ t.status.name }}</option>{% endif %}
+      </select></div>
+    <div><label class="label" for="d-owner">Owner</label>
+      <select id="d-owner" name="value" class="select" hx-post="{% url 'tasks:field' t.pk 'owner' %}" hx-trigger="change" hx-target="#drawer-body" hx-vals='{"view": "drawer"}'>
+        <option value="">Unassigned</option>{% for p in people %}<option value="{{ p.pk }}" {% if p.pk == t.owner_id %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
+      </select></div>
+    <div><label class="label" for="d-reviewer">Reviewer</label>
+      <select id="d-reviewer" name="value" class="select" hx-post="{% url 'tasks:field' t.pk 'reviewer' %}" hx-trigger="change" hx-target="#drawer-body" hx-vals='{"view": "drawer"}'>
+        <option value="">None</option>{% for p in people %}<option value="{{ p.pk }}" {% if p.pk == t.reviewer_id %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
+      </select></div>
+    <div><label class="label" for="d-priority">Priority</label>
+      <select id="d-priority" name="value" class="select" hx-post="{% url 'tasks:field' t.pk 'priority' %}" hx-trigger="change" hx-target="#drawer-body" hx-vals='{"view": "drawer"}'>
+        {% for value, label in priorities %}<option value="{{ value }}" {% if value == t.priority %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></div>
+    <div><label class="label" for="d-target">Target date</label>
+      <input id="d-target" type="date" name="value" value="{{ t.target_date|date:'Y-m-d' }}" class="input" hx-post="{% url 'tasks:field' t.pk 'target_date' %}" hx-trigger="change" hx-target="#drawer-body" hx-vals='{"view": "drawer"}'></div>
+    <div><label class="label" for="d-due">Due date {% if t.deadline_id %}<span class="font-normal text-slate-400">(follows its deadline)</span>{% endif %}</label>
+      <input id="d-due" type="date" name="value" value="{{ t.due_date|date:'Y-m-d' }}" class="input" hx-post="{% url 'tasks:field' t.pk 'due_date' %}" hx-trigger="change" hx-target="#drawer-body" hx-vals='{"view": "drawer"}'></div>
+    <div><label class="label" for="d-kind">Kind</label>
+      <select id="d-kind" name="value" class="select" hx-post="{% url 'tasks:field' t.pk 'kind' %}" hx-trigger="change" hx-target="#drawer-body" hx-vals='{"view": "drawer"}'>
+        {% for value, label in kinds %}<option value="{{ value }}" {% if value == t.kind %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select></div>
+    <div><label class="label" for="d-category">Category</label>
+      <select id="d-category" name="value" class="select" hx-post="{% url 'tasks:field' t.pk 'category' %}" hx-trigger="change" hx-target="#drawer-body" hx-vals='{"view": "drawer"}'>
+        <option value="">None</option>{% for c in categories %}<option value="{{ c.pk }}" {% if c.pk == t.category_id %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+      </select></div>
+    <div><label class="label" for="d-team">Team</label>
+      <select id="d-team" name="value" class="select" hx-post="{% url 'tasks:field' t.pk 'team' %}" hx-trigger="change" hx-target="#drawer-body" hx-vals='{"view": "drawer"}'>
+        <option value="">None</option>{% for team in teams %}<option value="{{ team.pk }}" {% if team.pk == t.team_id %}selected{% endif %}>{{ team.name }}</option>{% endfor %}
+      </select></div>
+    <div><label class="label" for="d-period">Period</label>
+      <input id="d-period" name="value" value="{{ t.period_label }}" maxlength="100" class="input" hx-post="{% url 'tasks:field' t.pk 'period_label' %}" hx-trigger="change" hx-target="#drawer-body" hx-vals='{"view": "drawer"}'></div>
+    {% endwith %}
+  </section>
+  {% if task.deadline %}<p class="muted">Deadline: {{ task.deadline.label }}, due {{ task.deadline.due_date|date:"d/m/Y" }}.</p>{% endif %}
+
+  <section aria-labelledby="desc-h">
+    <div class="mb-1 flex items-center justify-between"><h2 id="desc-h" class="text-sm font-semibold">Description</h2>
+      <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'tasks:description' task.pk %}" hx-target="#task-description">{% icon "pencil-square" "size-4" %} Edit</button></div>
+    <div id="task-description">
+      {% if task.description %}<div class="rich-text">{{ task.description|safe }}</div>{% else %}<p class="muted">No description yet.</p>{% endif %}
+    </div>
+  </section>
+
+  <section aria-labelledby="steps-h">
+    <h2 id="steps-h" class="mb-1 text-sm font-semibold">Steps {% if total_steps %}<span class="muted">({{ done_steps }}/{{ total_steps }})</span>{% endif %}</h2>
+    {% if task.step_list %}
+    <ul class="space-y-1">
+      {% for step in task.step_list %}
+      <li>
+        <form method="post" action="{% url 'tasks:step' task.pk step.pk %}" hx-post="{% url 'tasks:step' task.pk step.pk %}" hx-target="#drawer-body" class="flex items-center gap-2">
+          {% csrf_token %}<input type="hidden" name="view" value="drawer">
+          <button type="submit" class="flex items-center gap-2 text-left text-sm {% if step.done_at %}text-slate-500 line-through{% endif %}" role="checkbox" aria-checked="{% if step.done_at %}true{% else %}false{% endif %}" {% if task.is_cancelled %}disabled{% endif %}>
+            <span class="inline-flex size-4 items-center justify-center rounded border border-slate-400 {% if step.done_at %}bg-accent text-white{% endif %}">{% if step.done_at %}{% icon "check" "size-3" "mini" %}{% endif %}</span>
+            {{ step.name }}
+          </button>
+          {% if step.is_filing %}<span class="badge badge-accent">Filing step</span>{% endif %}
+          {% if step.stops_reminders %}<span class="badge badge-neutral">Stops reminders</span>{% endif %}
+          {% if step.done_at %}<span class="muted">{{ step.done_by|default:"" }} {{ step.done_at|date:"d/m/Y" }}</span>{% endif %}
+        </form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="muted">This task has no steps.</p>{% endif %}
+  </section>
+
+  <section aria-labelledby="docs-h">
+    <h2 id="docs-h" class="mb-1 text-sm font-semibold">Documents</h2>
+    {% if attachments %}
+    <ul class="mb-2 space-y-1 text-sm">
+      {% for link in attachments %}<li>{% if link.can_open %}<a href="{% url 'clients:document_download' link.document.public_id %}">{{ link.document.title }}</a>{% else %}{{ link.document.title }} <span class="muted">(restricted)</span>{% endif %}</li>{% endfor %}
+    </ul>
+    {% else %}<p class="muted mb-2">Nothing attached.</p>{% endif %}
+    {% if task.client %}
+    <form method="post" action="{% url 'tasks:attach' task.pk %}" enctype="multipart/form-data" class="flex flex-wrap items-end gap-2">
+      {% csrf_token %}
+      <div><label class="label" for="attach-file">Upload a file</label><input id="attach-file" type="file" name="file" class="file-input"></div>
+      {% if available_documents %}
+      <div><label class="label" for="attach-doc">Or attach one the client has</label>
+        <select id="attach-doc" name="document" class="select"><option value="">Choose…</option>{% for d in available_documents %}<option value="{{ d.pk }}">{{ d.title }}</option>{% endfor %}</select></div>
+      {% endif %}
+      <button type="submit" class="btn btn-secondary btn-sm">Attach</button>
+    </form>
+    {% else %}<p class="muted">Documents attach to a client's tasks.</p>{% endif %}
+  </section>
+
+  <section aria-labelledby="followers-h">
+    <h2 id="followers-h" class="mb-1 text-sm font-semibold">Followers</h2>
+    <div class="flex flex-wrap items-center gap-2">
+      {% for f in followers %}{% include "components/_avatar.html" with person=f %}{% empty %}<span class="muted">No followers yet.</span>{% endfor %}
+      <form method="post" action="{% url 'tasks:follow' task.pk %}" hx-post="{% url 'tasks:follow' task.pk %}" hx-target="#drawer-body">{% csrf_token %}<input type="hidden" name="view" value="drawer"><button type="submit" class="btn btn-ghost btn-sm">{% if is_following %}Stop following{% else %}Follow{% endif %}</button></form>
+    </div>
+  </section>
+
+  <section aria-labelledby="comments-h" id="comments">
+    <h2 id="comments-h" class="mb-2 text-sm font-semibold">Comments and history</h2>
+    <ol class="space-y-3">
+      {% for item in stream %}
+      {% if item.comment %}
+      <li class="rounded-md border border-slate-200 bg-white p-3 text-sm">
+        <p class="mb-1 flex items-center gap-2 text-xs text-slate-500">{% if item.comment.author %}{% include "components/_avatar.html" with person=item.comment.author %}<strong class="text-slate-800">{{ item.comment.author.name }}</strong>{% endif %} {{ item.when|date:"d/m/Y H:i" }}</p>
+        <p class="whitespace-pre-line">{{ item.comment.body }}</p>
+      </li>
+      {% else %}
+      <li class="text-xs text-slate-500">{{ item.when|date:"d/m/Y H:i" }} · {{ item.event.summary }}</li>
+      {% endif %}
+      {% empty %}<li class="muted">No comments yet.</li>{% endfor %}
+    </ol>
+    <form method="post" action="{% url 'tasks:comment' task.pk %}" hx-post="{% url 'tasks:comment' task.pk %}" hx-target="#drawer-body" class="mt-3 space-y-2">
+      {% csrf_token %}<input type="hidden" name="view" value="drawer">
+      <label class="label" for="id_body">Add a comment</label>
+      {{ comment_form.body }}
+      <button type="submit" class="btn btn-primary btn-sm">Comment</button>
+    </form>
+  </section>
+</article>

@@ -3,10 +3,10 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import RedirectView
 
-from apps.core.views import OverviewView
+from apps.tasks.views import MyWorkView
 
 urlpatterns = [
-    path("", OverviewView.as_view(), name="overview"),
+    path("", MyWorkView.as_view(), name="overview"),
     path("control/", admin.site.urls),
     # Email addresses are managed by the owner, not through allauth's own page.
     path("email/", RedirectView.as_view(pattern_name="accounts:profile"), name="account_email"),
@@ -21,6 +21,7 @@ urlpatterns = [
     path("", include("apps.jobs.urls")),
     path("", include("apps.companieshouse.urls")),
     path("", include("apps.services.urls")),
+    path("", include("apps.tasks.urls")),
 ]
 
 handler403 = "apps.core.views.permission_denied"

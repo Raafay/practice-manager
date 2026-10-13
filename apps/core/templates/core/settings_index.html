@@ -24,6 +24,14 @@
     <span class="flex items-center gap-2 font-semibold">{% icon "rectangle-stack" %} Services</span>
     <span class="muted mt-1 block">What the practice sells and the deadlines each service creates.</span>
   </a>
+  <a href="{% url 'tasks:statuses' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "list-bullet" %} Task statuses</span>
+    <span class="muted mt-1 block">The columns a task moves through, and which one means done.</span>
+  </a>
+  <a href="{% url 'tasks:categories' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "squares-2x2" %} Task categories</span>
+    <span class="muted mt-1 block">Kinds of work, with a colour each. Templates are edited under each service.</span>
+  </a>
   <a href="{% url 'clients:custom_fields' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
     <span class="flex items-center gap-2 font-semibold">{% icon "adjustments-horizontal" %} Custom fields</span>
     <span class="muted mt-1 block">Extra details held on every client.</span>

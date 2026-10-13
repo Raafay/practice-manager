@@ -1,0 +1,10 @@
+<form method="post" action="{% url 'tasks:description' task.pk %}" hx-post="{% url 'tasks:description' task.pk %}" hx-target="#drawer-body" class="space-y-2">
+  {% csrf_token %}
+  <input type="hidden" name="view" value="drawer">
+  <input type="hidden" name="description" id="id_description" value="{{ task.description }}">
+  <trix-editor input="id_description" class="textarea min-h-32 rich-text" aria-label="Description"></trix-editor>
+  <div class="flex justify-end gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" hx-get="{% url 'tasks:detail' task.pk %}" hx-target="#drawer-body">Cancel</button>
+    <button type="submit" class="btn btn-primary btn-sm">Save description</button>
+  </div>
+</form>
