@@ -13,5 +13,7 @@
 {% elif key == "email" %}{{ client.email }}
 {% elif key == "phone" %}{{ client.phone }}
 {% elif key == "client_since" %}{{ client.client_since|date:"d/m/Y" }}
+{% elif key == "next_deadline" %}{{ client.next_deadline|date:"d/m/Y"|default:"" }}{% if client.has_overdue %} {% include "components/_badge.html" with text="Overdue" tone="red" %}{% endif %}
+{% elif key == "monthly_fee" %}{% if client.monthly_fee %}£{{ client.monthly_fee }}{% endif %}
 {% elif key == "tags" %}{% for tag in client.tags.all %}<span class="badge badge-neutral">{{ tag.name }}</span> {% endfor %}
 {% endif %}

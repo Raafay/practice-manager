@@ -40,7 +40,9 @@
     {% include "components/_field.html" with field=form.partner %}
     {% include "components/_field.html" with field=form.team %}
     {% include "components/_field.html" with field=form.tag %}
+    {% include "components/_field.html" with field=form.service %}
     {% include "components/_field.html" with field=form.archived %}
+    <div class="flex items-end pb-2">{% include "components/_field.html" with field=form.overdue %}</div>
   </div>
   <fieldset>
     <legend class="label">Status</legend>

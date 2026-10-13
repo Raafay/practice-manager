@@ -1,0 +1,42 @@
+{% extends "layouts/app.html" %}
+{% block title %}Deadlines report{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Deadlines" subtitle="Every open deadline in the practice, soonest first." %}
+  <div class="flex gap-2">
+    <a href="{% url 'services:reports' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Reports</a>
+    {% if user|can:"data.export" %}<a href="{% url 'services:report_deadlines_export' %}?{{ keep_query }}" class="btn btn-secondary">{% icon "arrow-down-tray" "size-4" %} Export CSV</a>{% endif %}
+  </div>
+</div>
+<form method="get" class="card card-body mb-4 space-y-3" aria-label="Filter deadlines">
+  <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+    {% include "components/_field.html" with field=form.within %}
+    {% include "components/_field.html" with field=form.service %}
+    {% include "components/_field.html" with field=form.manager %}
+    {% include "components/_field.html" with field=form.client %}
+    <div class="flex items-end pb-2">{% include "components/_field.html" with field=form.overdue %}</div>
+  </div>
+  <div class="flex gap-2">
+    <button type="submit" class="btn btn-primary">{% icon "funnel" "size-4" %} Apply</button>
+    <a href="{% url 'services:report_deadlines' %}" class="btn btn-ghost">Clear</a>
+  </div>
+</form>
+<p class="muted mb-2" role="status">{{ total }} deadline{{ total|pluralize }}{% if overdue_count %}, {{ overdue_count }} overdue{% endif %}.</p>
+{% if page.object_list %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th scope="col">Client</th><th scope="col">Deadline</th><th scope="col">Service</th><th scope="col">Due</th><th scope="col">State</th><th scope="col">Manager</th></tr></thead>
+  <tbody>{% for d in page.object_list %}
+    <tr>
+      <td><a href="{% url 'services:client_deadlines' d.client_id %}" class="font-medium text-slate-900">{{ d.client.name }}</a></td>
+      <td>{{ d.label }}</td>
+      <td>{{ d.rule_title }}</td>
+      <td class="whitespace-nowrap">{{ d.due_date|date:"d/m/Y" }}{% if d.changed_by_hand %} <span class="badge badge-amber">Changed by hand</span>{% endif %}<span class="muted block">{{ d.source_note }}</span></td>
+      <td>{% include "components/_badge.html" with text=d.state_label tone=d.state_tone %}</td>
+      <td>{{ d.client.manager.name|default:"" }}</td>
+    </tr>
+  {% endfor %}</tbody></table></div>
+{% include "components/_pagination.html" %}
+{% else %}
+  {% include "components/_empty.html" with title="No deadlines match" message="Widen the filters, or check that clients have services switched on." icon_name="calendar" %}
+{% endif %}
+{% endblock %}

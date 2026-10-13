@@ -44,13 +44,30 @@ COLUMNS = {
     ),
     "tags": ("Tags", [], lambda c: ", ".join(t.name for t in c.tags.all())),
 }
-# Stage 4 adds next deadline and monthly fee (the fee only with fees.view).
+# Annotated by filtered_clients (apps/services); the fee needs fees.view.
+COLUMNS["next_deadline"] = (
+    "Next deadline",
+    ["next_deadline"],
+    lambda c: c.next_deadline.strftime("%d/%m/%Y") if getattr(c, "next_deadline", None) else "",
+)
+COLUMNS["monthly_fee"] = (
+    "Monthly fee",
+    ["monthly_fee"],
+    lambda c: f"{c.monthly_fee:.2f}" if getattr(c, "monthly_fee", None) else "",
+)
+# Columns that need a right. A user without it never sees them, even in a saved view.
+RESTRICTED = {"monthly_fee": "fees.view"}
 
 DEFAULT_COLUMNS = ["name", "type", "manager", "partner", "year_end", "tags"]
 
 
-def clean_columns(keys) -> list[str]:
-    chosen = [k for k in keys if k in COLUMNS]
+def available_columns(user) -> dict:
+    return {k: v for k, v in COLUMNS.items() if k not in RESTRICTED or user.can(RESTRICTED[k])}
+
+
+def clean_columns(keys, user=None) -> list[str]:
+    allowed = COLUMNS if user is None else available_columns(user)
+    chosen = [k for k in keys if k in allowed]
     if "name" not in chosen:
         chosen.insert(0, "name")
     return list(dict.fromkeys(chosen))

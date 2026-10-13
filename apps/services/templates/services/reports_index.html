@@ -1,0 +1,13 @@
+{% extends "layouts/app.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Reports" subtitle="Lists across the whole practice." %}
+</div>
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <a href="{% url 'services:report_deadlines' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "calendar" %} Deadlines</span>
+    <span class="muted mt-1 block">Every open deadline, with its source. Filter by date, service, manager or client.</span>
+  </a>
+</div>
+{% endblock %}

@@ -136,6 +136,16 @@
   .switch input:checked + .switch-track::after {
     @apply translate-x-4;
   }
+  /* The same switch as a button, for a change that needs a dialog first (aria-checked is the state). */
+  .switch-button {
+    @apply inline-flex cursor-pointer items-center gap-2 rounded-md text-sm text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .switch-button[aria-checked="true"] .switch-track {
+    @apply bg-green-600;
+  }
+  .switch-button[aria-checked="true"] .switch-track::after {
+    @apply translate-x-4;
+  }
   .switch-on {
     @apply hidden peer-checked:inline;
   }

@@ -115,6 +115,12 @@
       {% include "components/_switch.html" with name="sg-switch-2" label="Payroll" %}
       {% include "components/_switch.html" with name="sg-switch-3" label="Locked" checked=True disabled=True %}
     </div>
+    <h3 class="text-sm font-semibold text-slate-700">Switch that asks first</h3>
+    <p class="muted max-w-prose">For a change that needs a dialog (an end date, a start date). The state is drawn from the server, so cancelling the dialog never leaves it wrong.</p>
+    <div class="flex flex-col gap-3">
+      {% include "components/_switch_button.html" with label="Payroll" on=True url="#" %}
+      {% include "components/_switch_button.html" with label="CIS" on=False url="#" %}
+    </div>
   </section>
 
   <section id="dialogs" aria-labelledby="h-dialogs" class="space-y-3">

@@ -1,0 +1,22 @@
+<tr>
+  <td><span class="font-medium text-slate-900">{{ d.label }}</span>
+    {% if d.status == "done" %}<span class="muted block">Done {{ d.done_on|date:"d/m/Y" }}{% if d.done_by %} by {{ d.done_by.name }}{% endif %}{% if d.done_note %}: {{ d.done_note }}{% endif %}{% if d.evidence %}. {{ d.evidence }}{% endif %}</span>
+    {% elif d.status == "not_required" %}<span class="muted block">Not required: {{ d.override_reason }}</span>{% endif %}
+  </td>
+  <td>{{ d.rule_title }}</td>
+  <td class="whitespace-nowrap">{{ d.due_date|date:"d/m/Y" }}
+    {% if d.changed_by_hand %}<span class="badge badge-amber">Changed by hand</span>{% endif %}
+    <span class="muted block">{{ d.source_note }}</span>
+    {% if d.changed_by_hand %}<span class="muted block">Originally {{ d.original_due_date|date:"d/m/Y" }}</span>{% endif %}
+  </td>
+  <td>{% include "components/_badge.html" with text=d.state_label tone=d.state_tone %}</td>
+  <td class="whitespace-nowrap text-right">
+    {% if d.status == "open" %}
+      <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'services:deadline_done' d.client_id d.pk %}" hx-target="#modal-body">Done</button>
+      <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'services:deadline_not_required' d.client_id d.pk %}" hx-target="#modal-body">Not required</button>
+      {% if d.source != "companies_house" %}<button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'services:deadline_date' d.client_id d.pk %}" hx-target="#modal-body">Change date</button>{% endif %}
+    {% else %}
+      <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'services:deadline_reopen' d.client_id d.pk %}" hx-target="#modal-body">Reopen</button>
+    {% endif %}
+  </td>
+</tr>

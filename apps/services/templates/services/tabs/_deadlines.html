@@ -1,0 +1,37 @@
+{% if open_deadlines %}
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th scope="col">Deadline</th><th scope="col">Service</th><th scope="col">Due</th><th scope="col">State</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+    <tbody>
+      {% for d in open_deadlines %}
+      {% include "services/_deadline_row.html" %}
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  {% if client.status == "active" and has_services %}
+    {% include "components/_empty.html" with title="No open deadlines" message="Deadlines appear once the service dates are known. Check VAT, payroll and Companies House details on the Info tab." icon_name="calendar" %}
+  {% elif client.status == "active" %}
+    {% include "components/_empty.html" with title="No services yet" message="Switch a service on in the Services panel on the Info tab, and its deadlines will appear here." icon_name="calendar" %}
+  {% else %}
+    {% include "components/_empty.html" with title="No deadlines yet" message="Deadlines are created when the client is made live (status Active)." icon_name="calendar" %}
+  {% endif %}
+{% endif %}
+{% if closed_deadlines %}
+<details class="panel mt-6">
+  <summary>Past deadlines ({{ closed_deadlines|length }}) {% icon "chevron-right" "panel-chevron size-4 text-slate-400 transition-transform" %}</summary>
+  <div class="panel-body">
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th scope="col">Deadline</th><th scope="col">Service</th><th scope="col">Due</th><th scope="col">State</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+        <tbody>
+          {% for d in closed_deadlines %}
+          {% include "services/_deadline_row.html" %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</details>
+{% endif %}
