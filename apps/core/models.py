@@ -109,3 +109,25 @@ class PracticeSettings(TimeStampedModel):
             settings_row, _ = cls.objects.get_or_create(pk=1)
             cache.set(cls.CACHE_KEY, settings_row, 300)
         return settings_row
+
+
+class StoredBankHolidays(TimeStampedModel):
+    """England and Wales bank holidays fetched from gov.uk by the monthly job.
+
+    One row. Its years replace the bundled list's same years; other years keep
+    the bundled dates. If it is empty or missing, the bundled list is used.
+    """
+
+    dates = models.JSONField(default=list, blank=True)
+    fetched_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "stored bank holidays"
+        verbose_name_plural = "stored bank holidays"
+
+    def __str__(self) -> str:
+        return f"{len(self.dates)} bank holidays"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
