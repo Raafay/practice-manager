@@ -75,6 +75,18 @@ class PracticeSettings(TimeStampedModel):
         validators=[MinValueValidator(1), MaxValueValidator(12)],
     )
 
+    # Retention. Nothing is deleted automatically: these set the dates on a client.
+    retention_years = models.PositiveSmallIntegerField(
+        "Keep client records for (years after the relationship ends)",
+        default=6,
+        validators=[MinValueValidator(1), MaxValueValidator(50)],
+    )
+    aml_retention_years = models.PositiveSmallIntegerField(
+        "Keep AML records for (years after the relationship ends)",
+        default=5,
+        validators=[MinValueValidator(1), MaxValueValidator(50)],
+    )
+
     class Meta:
         verbose_name = "practice settings"
         verbose_name_plural = "practice settings"

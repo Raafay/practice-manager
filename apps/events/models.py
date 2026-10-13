@@ -11,7 +11,7 @@ class EventError(Exception):
 
 
 class ActivityEvent(TimeStampedModel):
-    """The audit trail and (from Stage 2) the client timeline. Never edited or deleted.
+    """The audit trail and the client timeline. Never edited or deleted.
 
     Write one only through `apps.events.services.record`.
     """
@@ -21,6 +21,11 @@ class ActivityEvent(TimeStampedModel):
     )
     actor_label = models.CharField(max_length=200, blank=True)
     verb = models.CharField(max_length=60, db_index=True)
+    client = models.ForeignKey(
+        "clients.Client", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    # Kept if the client is deleted for good, so the history still says whose it was.
+    client_label = models.CharField(max_length=220, blank=True)
     target_type = models.ForeignKey(
         ContentType, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
     )
@@ -37,6 +42,7 @@ class ActivityEvent(TimeStampedModel):
         indexes = [
             models.Index(fields=["created_at"]),
             models.Index(fields=["target_type", "target_id"]),
+            models.Index(fields=["client", "created_at"]),
         ]
 
     def __str__(self) -> str:
