@@ -1,0 +1,2 @@
+{# A status badge. tone: neutral, green, amber, red or accent. The text carries the meaning. #}
+<span class="badge badge-{{ tone|default:'neutral' }}">{% if icon_name %}{% icon icon_name "size-3" "mini" %}{% endif %}{{ text }}</span>

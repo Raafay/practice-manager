@@ -1,0 +1,27 @@
+{% extends "layouts/app.html" %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Notifications" %}
+  {% if unread_notifications %}
+  <form method="post" action="{% url 'events:notifications_read_all' %}">{% csrf_token %}<button type="submit" class="btn btn-secondary">{% icon "check" "size-4" %} Mark all as read</button></form>
+  {% endif %}
+</div>
+{% if page.object_list %}
+<ul class="card divide-y divide-slate-100">
+  {% for note in page.object_list %}
+  <li class="flex items-center gap-3 px-4 py-3 {% if not note.read_at %}bg-accent/5{% endif %}">
+    {% if note.read_at %}<span class="sr-only">Read:</span>{% else %}<span class="size-2 shrink-0 rounded-full bg-accent" aria-hidden="true"></span><span class="sr-only">Unread:</span>{% endif %}
+    <div class="flex-1">
+      <p class="text-sm {% if not note.read_at %}font-medium text-slate-900{% endif %}">{{ note.message }}</p>
+      <p class="text-xs text-slate-500">{{ note.created_at|date:"d/m/Y H:i" }}</p>
+    </div>
+    <form method="post" action="{% url 'events:notification_open' note.pk %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">{% if note.link %}Open{% else %}Mark as read{% endif %}</button></form>
+  </li>
+  {% endfor %}
+</ul>
+{% include "components/_pagination.html" %}
+{% else %}
+  {% include "components/_empty.html" with title="No notifications" message="When something needs your attention, such as a task given to you, it appears here." icon_name="bell" %}
+{% endif %}
+{% endblock %}

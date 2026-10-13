@@ -1,0 +1,16 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Something went wrong</title>
+  <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
+</head>
+<body class="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+  <main class="card card-body max-w-md space-y-3 p-6">
+    <h1>Something went wrong</h1>
+    <p class="text-sm text-slate-600">The problem has been noted. Please try again in a few minutes. Nothing you entered on the last page was saved.</p>
+    <p><a href="/" class="btn btn-secondary">Go to the start page</a></p>
+  </main>
+</body>
+</html>

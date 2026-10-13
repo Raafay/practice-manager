@@ -1,0 +1,15 @@
+{# Django messages as toasts. Success and info hide after a few seconds; errors stay. #}
+<div class="pointer-events-none fixed right-4 bottom-4 z-50 flex w-full max-w-sm flex-col gap-2" role="status" aria-live="polite" id="toasts">
+  {% for message in messages %}
+  {% with tone=message.tags|default:"info" %}
+  <div class="toast pointer-events-auto {% if 'error' in tone %}toast-error{% elif 'success' in tone %}toast-success{% else %}toast-info{% endif %}"
+       x-data="toast" x-show="shown" data-sticky="{% if 'error' in tone %}true{% else %}false{% endif %}">
+    {% if 'error' in tone %}{% icon "exclamation-circle" "size-5 shrink-0 text-red-600" %}<span class="sr-only">Error:</span>
+    {% elif 'success' in tone %}{% icon "check-circle" "size-5 shrink-0 text-green-600" %}<span class="sr-only">Done:</span>
+    {% else %}{% icon "information-circle" "size-5 shrink-0 text-slate-500" %}{% endif %}
+    <p class="flex-1">{{ message }}</p>
+    <button type="button" class="text-slate-400 hover:text-slate-700" @click="dismiss" aria-label="Dismiss">{% icon "x-mark" "size-4" %}</button>
+  </div>
+  {% endwith %}
+  {% endfor %}
+</div>

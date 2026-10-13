@@ -1,0 +1,7 @@
+{% extends "layouts/auth.html" %}
+{% block title %}Already signed in{% endblock %}
+{% block content %}
+<h1>You are already signed in</h1>
+<p class="text-sm text-slate-600">Sign out first if this invitation is for someone else, then open the link again.</p>
+<form method="post" action="{% url 'account_logout' %}">{% csrf_token %}<button type="submit" class="btn btn-secondary">Sign out</button></form>
+{% endblock %}

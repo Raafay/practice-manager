@@ -1,0 +1,19 @@
+{% extends "layouts/app.html" %}
+{% block title %}{% if form.instance.pk %}{{ form.instance.name }}{% else %}New team{% endif %}{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% if form.instance.pk %}{% include "components/_page_header.html" with title=form.instance.name %}{% else %}{% include "components/_page_header.html" with title="New team" %}{% endif %}
+  <a href="{% url 'accounts:teams' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Teams</a>
+</div>
+<form method="post" class="card card-body max-w-xl space-y-4" novalidate>
+  {% csrf_token %}
+  {% include "components/_form_fields.html" %}
+  <div class="flex gap-2"><button type="submit" class="btn btn-primary">Save team</button></div>
+</form>
+{% if form.instance.pk %}
+<form method="post" action="{% url 'accounts:team_delete' form.instance.pk %}" class="mt-4" data-confirm="Delete the team {{ form.instance.name }}? People stay; only the team goes.">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-ghost text-red-700">{% icon "trash" "size-4" %} Delete team</button>
+</form>
+{% endif %}
+{% endblock %}

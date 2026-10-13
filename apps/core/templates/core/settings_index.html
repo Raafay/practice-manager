@@ -1,0 +1,47 @@
+{% extends "layouts/app.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Settings" subtitle="Practice details, people and access." %}
+</div>
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <a href="{% url 'accounts:profile' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "user-circle" %} Your profile</span>
+    <span class="muted mt-1 block">Name, initials, colour, password and two-factor.</span>
+  </a>
+  {% if user|can:"settings.manage" %}
+  <a href="{% url 'core:practice_settings' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "building-office" %} Practice details</span>
+    <span class="muted mt-1 block">Name, address, logo, accent colour and VAT.</span>
+  </a>
+  {% endif %}
+  {% if user|can:"users.manage" %}
+  <a href="{% url 'accounts:users' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "users" %} Users</span>
+    <span class="muted mt-1 block">Invite people, change roles, reset two-factor.</span>
+  </a>
+  <a href="{% url 'accounts:teams' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "user-group" %} Teams</span>
+    <span class="muted mt-1 block">Group people to filter work. Teams do not limit what anyone sees.</span>
+  </a>
+  <a href="{% url 'accounts:roles' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "shield-check" %} Roles</span>
+    <span class="muted mt-1 block">What managers and staff may do.</span>
+  </a>
+  <a href="{% url 'core:security_settings' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "lock-closed" %} Sign-in and sessions</span>
+    <span class="muted mt-1 block">Trust this browser, idle and maximum session length.</span>
+  </a>
+  {% endif %}
+  {% if user|can:"audit.view" %}
+  <a href="{% url 'events:audit_log' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "clipboard-document-list" %} Audit log</span>
+    <span class="muted mt-1 block">Every sign-in and change, who made it and when.</span>
+  </a>
+  {% endif %}
+  <a href="{% url 'core:styleguide' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "swatch" %} Styleguide</span>
+    <span class="muted mt-1 block">The building blocks every page uses.</span>
+  </a>
+</div>
+{% endblock %}

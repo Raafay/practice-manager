@@ -1,0 +1,22 @@
+{% load static tailwind_cli %}<!DOCTYPE html>
+<html lang="en-GB" style="--color-accent: {{ practice.accent_colour|default:'#2f5d8a' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {# 422 means "the form has errors": HTMX swaps it in like a success. #}
+  <meta name="htmx-config" content='{"allowEval": false, "allowScriptTags": false, "includeIndicatorStyles": false, "selfRequestsOnly": true, "responseHandling": [{"code": "204", "swap": false}, {"code": "[23]..", "swap": true}, {"code": "422", "swap": true}, {"code": "[45]..", "swap": false, "error": true}]}'>
+  <title>{% block title %}{% block head_title %}{% endblock head_title %}{% endblock title %} · {{ practice.practice_name|default:"Practice Manager" }}</title>
+  <link rel="icon" href="{% static 'img/favicon.svg' %}" type="image/svg+xml">
+  {% tailwind_css %}
+  <script src="{% static 'vendor/htmx/htmx.min.js' %}" defer></script>
+  <script src="{% static 'js/app.js' %}" defer></script>
+  <script src="{% static 'vendor/alpine/alpine-csp.min.js' %}" defer></script>
+  {% block extra_head %}{% endblock extra_head %}
+</head>
+<body class="min-h-screen" hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+  <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2">Skip to content</a>
+  {% block body %}{% endblock body %}
+  {% include "components/_toasts.html" %}
+  {% block extra_body %}{% endblock extra_body %}
+</body>
+</html>

@@ -1,0 +1,2 @@
+{# An avatar with initials. Usage: {% include "components/_avatar.html" with person=user size="lg" %} #}
+<span class="avatar {% if size == 'lg' %}avatar-lg{% endif %}" style="background-color: {{ person.colour|default:'#64748b' }}" title="{{ person.name }}" aria-label="{{ person.name }}" role="img">{{ person.display_initials }}</span>

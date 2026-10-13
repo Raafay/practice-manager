@@ -1,0 +1,266 @@
+@import "tailwindcss";
+
+@source "../../templates";
+@source "../../apps";
+
+/* The accent colour is overridden from Practice settings on the <html> element. */
+@theme {
+  --color-accent: #2f5d8a;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+@layer base {
+  html {
+    @apply bg-slate-50 text-slate-800 antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+  a {
+    @apply text-accent underline-offset-2 hover:underline;
+  }
+  h1 {
+    @apply text-xl font-semibold text-slate-900;
+  }
+  h2 {
+    @apply text-base font-semibold text-slate-900;
+  }
+  [x-cloak] {
+    display: none !important;
+  }
+}
+
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium no-underline shadow-xs transition-colors hover:no-underline disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply border-accent bg-accent text-white hover:brightness-110;
+  }
+  .btn-secondary {
+    @apply border-slate-300 bg-white text-slate-700 hover:bg-slate-50;
+  }
+  .btn-danger {
+    @apply border-red-700 bg-red-700 text-white hover:bg-red-800;
+  }
+  .btn-ghost {
+    @apply border-transparent bg-transparent text-slate-600 shadow-none hover:bg-slate-100;
+  }
+  .btn-sm {
+    @apply px-2 py-1 text-xs;
+  }
+  .btn-icon {
+    @apply rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-800;
+  }
+
+  /* Badges: colour is never the only signal, so each badge also has words. */
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium whitespace-nowrap;
+  }
+  .badge-neutral {
+    @apply border-slate-200 bg-slate-100 text-slate-700;
+  }
+  .badge-green {
+    @apply border-green-200 bg-green-50 text-green-800;
+  }
+  .badge-amber {
+    @apply border-amber-200 bg-amber-50 text-amber-900;
+  }
+  .badge-red {
+    @apply border-red-200 bg-red-50 text-red-800;
+  }
+  .badge-accent {
+    @apply border-accent/30 bg-accent/10 text-accent;
+  }
+
+  /* Forms */
+  .label {
+    @apply mb-1 block text-sm font-medium text-slate-700;
+  }
+  .input,
+  .select,
+  .textarea {
+    @apply block w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 shadow-xs placeholder:text-slate-400 focus:border-accent focus:ring-2 focus:ring-accent/30 focus:outline-none disabled:bg-slate-100;
+  }
+  .input-colour {
+    @apply h-9 w-16 cursor-pointer rounded-md border border-slate-300 bg-white p-1;
+  }
+  .file-input {
+    @apply block text-sm text-slate-700 file:mr-3 file:rounded-md file:border file:border-slate-300 file:bg-white file:px-3 file:py-1.5 file:text-sm file:font-medium;
+  }
+  .checkbox {
+    @apply size-4 rounded border-slate-300 text-accent accent-accent;
+  }
+  /* Django puts the class on the wrapper and on each input, so the selectors name the element. */
+  div.checkbox-list {
+    @apply grid gap-1.5 sm:grid-cols-2;
+  }
+  div.checkbox-list label {
+    @apply flex items-center gap-2 text-sm text-slate-700;
+  }
+  input.checkbox-list {
+    @apply size-4 accent-accent;
+  }
+  .help {
+    @apply mt-1 text-xs text-slate-500;
+  }
+  .field-error {
+    @apply mt-1 text-xs font-medium text-red-700;
+  }
+  .form-errors {
+    @apply mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800;
+  }
+  .has-error .input,
+  .has-error .select,
+  .has-error .textarea {
+    @apply border-red-500;
+  }
+
+  /* Switch: a checkbox with role="switch". The words beside it say on or off. */
+  .switch {
+    @apply inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700;
+  }
+  /* The input carries the "peer" class in the template so its siblings can react. */
+  .switch input {
+    @apply sr-only;
+  }
+  .switch-track {
+    @apply relative inline-block h-5 w-9 shrink-0 rounded-full bg-slate-300 transition-colors peer-checked:bg-green-600 peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent peer-disabled:opacity-50;
+  }
+  .switch-track::after {
+    content: "";
+    @apply absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform;
+  }
+  .switch input:checked + .switch-track::after {
+    @apply translate-x-4;
+  }
+  .switch-on {
+    @apply hidden peer-checked:inline;
+  }
+  .switch-off {
+    @apply inline peer-checked:hidden;
+  }
+
+  /* Cards, panels and tables */
+  .card {
+    @apply rounded-lg border border-slate-200 bg-white shadow-xs;
+  }
+  .card-body {
+    @apply p-4;
+  }
+  .panel {
+    @apply rounded-lg border border-slate-200 bg-white shadow-xs;
+  }
+  .panel > summary {
+    @apply flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-2.5 text-sm font-semibold text-slate-800 select-none;
+  }
+  .panel > summary::-webkit-details-marker {
+    display: none;
+  }
+  .panel[open] > summary {
+    @apply border-b border-slate-200;
+  }
+  .panel[open] > summary .panel-chevron {
+    @apply rotate-90;
+  }
+  .panel-body {
+    @apply p-4 text-sm;
+  }
+  .table-wrap {
+    @apply overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-xs;
+  }
+  .table {
+    @apply w-full border-collapse text-left text-sm;
+  }
+  .table th {
+    @apply border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold tracking-wide text-slate-600 uppercase;
+  }
+  .table td {
+    @apply border-b border-slate-100 px-3 py-2 align-middle;
+  }
+  .table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+  .table tbody tr:hover {
+    @apply bg-slate-50;
+  }
+
+  /* Tabs */
+  .tabs {
+    @apply flex gap-1 overflow-x-auto border-b border-slate-200;
+  }
+  .tab {
+    @apply -mb-px border-b-2 border-transparent px-3 py-2 text-sm font-medium whitespace-nowrap text-slate-600 no-underline hover:border-slate-300 hover:text-slate-900 hover:no-underline;
+  }
+  .tab[aria-current="page"] {
+    @apply border-accent text-slate-900;
+  }
+
+  /* Top bar */
+  .nav-link {
+    @apply rounded-md px-2.5 py-1.5 text-sm font-medium text-slate-200 no-underline hover:bg-white/10 hover:text-white hover:no-underline;
+  }
+  .nav-link[aria-current="page"] {
+    @apply bg-white/15 text-white;
+  }
+  .menu {
+    @apply absolute right-0 z-30 mt-2 min-w-48 rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg;
+  }
+  .menu-item {
+    @apply flex w-full items-center gap-2 px-3 py-1.5 text-left text-slate-700 no-underline hover:bg-slate-50 hover:no-underline;
+  }
+
+  /* Avatars */
+  .avatar {
+    @apply inline-flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white;
+  }
+  .avatar-lg {
+    @apply size-12 text-base;
+  }
+
+  /* Drawer and modal (native <dialog>) */
+  .dialog::backdrop {
+    background: rgb(15 23 42 / 0.4);
+  }
+  .drawer {
+    @apply fixed inset-y-0 right-0 left-auto m-0 h-full max-h-none w-full max-w-lg border-l border-slate-200 bg-white p-0 shadow-xl;
+  }
+  .modal {
+    @apply m-auto w-full max-w-md rounded-lg border border-slate-200 bg-white p-0 shadow-xl;
+  }
+  .dialog-header {
+    @apply flex items-center justify-between border-b border-slate-200 px-4 py-3;
+  }
+  .dialog-body {
+    @apply p-4;
+  }
+
+  /* Toasts */
+  .toast {
+    @apply flex items-start gap-2 rounded-md border bg-white px-3 py-2 text-sm shadow-lg;
+  }
+  .toast-success {
+    @apply border-green-200 text-green-900;
+  }
+  .toast-error {
+    @apply border-red-200 text-red-900;
+  }
+  .toast-info {
+    @apply border-slate-200 text-slate-800;
+  }
+
+  /* Empty states */
+  .empty {
+    @apply flex flex-col items-center gap-2 rounded-lg border border-dashed border-slate-300 bg-white px-6 py-10 text-center;
+  }
+
+  /* Page header */
+  .page-header {
+    @apply mb-4 flex flex-wrap items-center justify-between gap-3;
+  }
+  .muted {
+    @apply text-sm text-slate-500;
+  }
+}

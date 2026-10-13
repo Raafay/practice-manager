@@ -1,0 +1,5 @@
+{# A folding panel. Pass title and body (or use the panel pattern directly with <details class="panel">). #}
+<details class="panel" {% if open %}open{% endif %}>
+  <summary>{{ title }} {% icon "chevron-right" "panel-chevron size-4 text-slate-400 transition-transform" %}</summary>
+  <div class="panel-body">{{ body }}</div>
+</details>

@@ -1,0 +1,6 @@
+{# Every field of a form, with non-field errors first. #}
+{% if form.non_field_errors %}<div class="form-errors" role="alert">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+{% for field in form.hidden_fields %}{{ field }}{% endfor %}
+<div class="space-y-4">
+  {% for field in form.visible_fields %}{% include "components/_field.html" with field=field %}{% endfor %}
+</div>

@@ -1,0 +1,10 @@
+{# Pagination for a Page object called page. Keeps the other filters in the address. #}
+{% if page.paginator.num_pages > 1 %}
+<nav class="mt-4 flex items-center justify-between text-sm" aria-label="Pages">
+  <p class="muted">Page {{ page.number }} of {{ page.paginator.num_pages }} · {{ page.paginator.count }} in total</p>
+  <div class="flex gap-2">
+    {% if page.has_previous %}<a class="btn btn-secondary btn-sm" href="?{% page_query page.previous_page_number %}">Previous</a>{% endif %}
+    {% if page.has_next %}<a class="btn btn-secondary btn-sm" href="?{% page_query page.next_page_number %}">Next</a>{% endif %}
+  </div>
+</nav>
+{% endif %}

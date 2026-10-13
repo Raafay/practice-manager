@@ -1,0 +1,40 @@
+from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
+from django.db import transaction
+
+from apps.accounts import demo as accounts_demo
+from apps.core.models import PracticeSettings
+
+
+class Command(BaseCommand):
+    help = "Load made-up demo data. Safe to run twice. Refused unless demo data is allowed."
+
+    def handle(self, *args, **options):
+        if not (settings.DEBUG or settings.ALLOW_DEMO_DATA):
+            raise CommandError(
+                "Demo data is not allowed here. Set ALLOW_DEMO_DATA=true only on a test site."
+            )
+        with transaction.atomic():
+            practice = PracticeSettings.objects.get_or_create(pk=1)[0]
+            if practice.practice_name == PracticeSettings._meta.get_field("practice_name").default:
+                practice.practice_name = "Hale & Castell Accountants (demo)"
+                practice.address = "1 Example Street\nSampletown\nZZ1 1ZZ"
+                practice.phone = "01632 960000"
+                practice.email = "office@example.com"
+                practice.vat_registered = True
+                practice.save()
+            people = accounts_demo.seed()
+
+        self.stdout.write(self.style.SUCCESS("Demo data loaded. Everything here is made up."))
+        self.stdout.write("")
+        self.stdout.write("Sign in at /login/ with any of these:")
+        for name, email, role in people:
+            self.stdout.write(f"  {role:<8} {name:<15} {email}")
+        self.stdout.write(f"  Password for all: {accounts_demo.DEMO_PASSWORD}")
+        bypass = getattr(settings, "MFA_TOTP_INSECURE_BYPASS_CODE", None)
+        if bypass:
+            self.stdout.write(f"  Two-factor code (development only): {bypass}")
+        else:
+            self.stdout.write(
+                "  Two-factor: no bypass code is set. Use `manage.py dev_login` in development."
+            )

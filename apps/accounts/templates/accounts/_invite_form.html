@@ -1,0 +1,12 @@
+<div id="invite-form">
+<h2 class="mb-1">Invite someone</h2>
+<p class="muted mb-4">They get an email with a link to set a password and two-factor. The link works once and lasts 72 hours.</p>
+<form method="post" action="{% url 'accounts:invite' %}" hx-post="{% url 'accounts:invite' %}" hx-target="#invite-form" hx-swap="outerHTML" class="space-y-4" novalidate>
+  {% csrf_token %}
+  {% include "components/_form_fields.html" %}
+  <div class="flex gap-2">
+    <button type="submit" class="btn btn-primary">Send invitation</button>
+    <a href="{% url 'accounts:users' %}" class="btn btn-secondary" data-dialog-close>Cancel</a>
+  </div>
+</form>
+</div>

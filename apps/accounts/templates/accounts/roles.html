@@ -1,0 +1,34 @@
+{% extends "layouts/app.html" %}
+{% block title %}Roles{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Roles" subtitle="What each role may do. Every member of staff can see and edit clients, contacts, tasks, deadlines and requests." %}
+  <a href="{% url 'accounts:users' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Users</a>
+</div>
+<form method="post" class="space-y-4">
+  {% csrf_token %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th scope="col">Right</th>{% for role in roles %}<th scope="col" class="text-center">{{ role.name }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {% for row in rows %}
+        <tr>
+          <th scope="row" class="bg-white text-sm font-normal normal-case tracking-normal text-slate-800">{{ row.label }} <code class="muted text-xs">{{ row.right }}</code></th>
+          {% for cell in row.cells %}
+          <td class="text-center">
+            {% if cell.owner %}
+              <input type="checkbox" class="checkbox" checked disabled aria-label="{{ cell.role.name }}: {{ row.label }} (always on)">
+            {% else %}
+              <input type="checkbox" class="checkbox" name="{{ cell.field.html_name }}" id="{{ cell.field.auto_id }}" {% if cell.field.value %}checked{% endif %} aria-label="{{ cell.role.name }}: {{ row.label }}">
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p class="muted">The Owner role always has every right. Single rights for one person are set on their user page. You will be asked for your password before saving.</p>
+  <button type="submit" class="btn btn-primary">Save role rights</button>
+</form>
+{% endblock %}

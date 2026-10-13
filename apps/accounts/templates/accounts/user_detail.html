@@ -1,0 +1,96 @@
+{% extends "layouts/app.html" %}
+{% block title %}{{ person.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="flex items-center gap-3">
+    {% include "components/_avatar.html" with person=person size="lg" %}
+    <div>
+      <h1>{{ person.name }}</h1>
+      <p class="muted">{{ person.email }}{% if person.job_title %} · {{ person.job_title }}{% endif %}</p>
+    </div>
+    {% if not person.is_active %}{% include "components/_badge.html" with text="Deactivated" tone="red" %}{% endif %}
+  </div>
+  <a href="{% url 'accounts:users' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Users</a>
+</div>
+
+<div class="grid gap-4 lg:grid-cols-3">
+  <div class="space-y-4 lg:col-span-2">
+    <section class="card card-body space-y-3" aria-labelledby="h-role">
+      <h2 id="h-role">Role</h2>
+      <form method="post" action="{% url 'accounts:user_role' person.pk %}" class="flex flex-wrap items-end gap-2">
+        {% csrf_token %}
+        <div class="min-w-48">{% include "components/_field.html" with field=role_form.role %}</div>
+        <button type="submit" class="btn btn-primary">Change role</button>
+      </form>
+      <p class="muted">You will be asked for your password first. There must always be one active owner.</p>
+    </section>
+
+    <section class="card card-body space-y-3" aria-labelledby="h-rights">
+      <h2 id="h-rights">Rights</h2>
+      <p class="muted">Ticked and greyed: comes with the role. Tick others to grant them to {{ person.name }} alone.</p>
+      <form method="post" action="{% url 'accounts:user_rights' person.pk %}" class="space-y-3">
+        {% csrf_token %}
+        <ul class="grid gap-1.5 sm:grid-cols-2">
+          {% for code, label in rights.items %}
+          <li>
+            <label class="flex items-start gap-2 text-sm">
+              {% if code in role_rights %}
+                <input type="checkbox" class="checkbox mt-0.5" checked disabled aria-describedby="r-{{ forloop.counter }}">
+                <span class="text-slate-500">{{ label }} <span id="r-{{ forloop.counter }}" class="text-xs">(from role)</span></span>
+              {% else %}
+                <input type="checkbox" class="checkbox mt-0.5" name="extra_rights" value="{{ code }}" {% if code in person.extra_rights %}checked{% endif %}>
+                <span>{{ label }}</span>
+              {% endif %}
+            </label>
+          </li>
+          {% endfor %}
+        </ul>
+        <button type="submit" class="btn btn-secondary">Save single rights</button>
+      </form>
+    </section>
+
+    <section class="card card-body space-y-3" aria-labelledby="h-teams">
+      <h2 id="h-teams">Teams</h2>
+      <form method="post" action="{% url 'accounts:user_teams' person.pk %}" class="space-y-3">
+        {% csrf_token %}
+        {% if teams_form.fields.teams.queryset %}{{ teams_form.teams }}{% else %}<p class="muted">No teams yet. <a href="{% url 'accounts:team_create' %}">Create a team</a>.</p>{% endif %}
+        <button type="submit" class="btn btn-secondary">Save teams</button>
+      </form>
+    </section>
+  </div>
+
+  <aside class="space-y-4">
+    <section class="card card-body space-y-3" aria-labelledby="h-2fa">
+      <h2 id="h-2fa">Two-factor</h2>
+      {% if person.has_mfa %}
+        <p>{% include "components/_badge.html" with text="Set up" tone="green" icon_name="check" %}</p>
+        <form method="post" action="{% url 'accounts:user_reset_mfa' person.pk %}" data-confirm="Reset two-factor for {{ person.name }}? They will set it up again when they next sign in.">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-secondary">{% icon "key" "size-4" %} Reset two-factor</button>
+        </form>
+        <p class="muted">Use this if they lose their phone. You will be asked for your password.</p>
+      {% else %}
+        <p>{% include "components/_badge.html" with text="Not set up" tone="amber" icon_name="exclamation-triangle" %}</p>
+        <p class="muted">They will be asked to set it up when they next sign in.</p>
+      {% endif %}
+    </section>
+
+    <section class="card card-body space-y-3" aria-labelledby="h-access">
+      <h2 id="h-access">Access</h2>
+      {% if person.is_active %}
+        <form method="post" action="{% url 'accounts:user_deactivate' person.pk %}" data-confirm="Deactivate {{ person.name }}? They will be signed out and unable to sign in.">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">{% icon "no-symbol" "size-4" %} Deactivate</button>
+        </form>
+        <p class="muted">Their records and history are kept. Handing over their clients and tasks arrives with those features.</p>
+      {% else %}
+        <p class="muted">Deactivated on {{ person.deactivated_at|date:"d/m/Y" }}.</p>
+        <form method="post" action="{% url 'accounts:user_reactivate' person.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-secondary">Reactivate</button>
+        </form>
+      {% endif %}
+    </section>
+  </aside>
+</div>
+{% endblock %}

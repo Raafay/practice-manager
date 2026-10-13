@@ -1,0 +1,21 @@
+{% extends "layouts/auth.html" %}
+{% block title %}Accept invitation{% endblock %}
+{% block content %}
+{% if form %}
+  <h1>Welcome, {{ invitation.name }}</h1>
+  <p class="text-sm text-slate-600">Choose a password for {{ invitation.email }}. Next you will set up two-factor sign-in with an authenticator app on your phone.</p>
+  <form method="post" class="space-y-4" novalidate>
+    {% csrf_token %}
+    {% include "components/_form_fields.html" %}
+    <button type="submit" class="btn btn-primary w-full">Set password and continue</button>
+  </form>
+{% else %}
+  <h1>This invitation link no longer works</h1>
+  <p class="text-sm text-slate-600">
+    {% if invitation.state == "accepted" %}It has already been used. Sign in with your email and password.
+    {% elif invitation.state == "expired" %}It has expired. Invitation links last 72 hours. Ask the practice owner to send a new one.
+    {% else %}It was cancelled. Ask the practice owner if you think this is a mistake.{% endif %}
+  </p>
+  <p><a href="{% url 'account_login' %}" class="btn btn-secondary">Go to sign in</a></p>
+{% endif %}
+{% endblock %}

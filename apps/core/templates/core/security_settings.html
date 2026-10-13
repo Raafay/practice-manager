@@ -1,0 +1,14 @@
+{% extends "layouts/app.html" %}
+{% block title %}Sign-in and sessions{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Sign-in and sessions" subtitle="Applies to every staff member. You will be asked for your password before saving." %}
+  <a href="{% url 'core:settings' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Settings</a>
+</div>
+<form method="post" class="card card-body max-w-2xl space-y-4" novalidate>
+  {% csrf_token %}
+  {% include "components/_form_fields.html" %}
+  <p class="muted">Two-factor sign-in is always required for staff and cannot be switched off.</p>
+  <div><button type="submit" class="btn btn-primary">Save sign-in settings</button></div>
+</form>
+{% endblock %}
