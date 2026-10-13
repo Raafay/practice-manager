@@ -1,0 +1,55 @@
+{# Officers and owners tables. Used by the preview and the client tab. #}
+<h3 class="mb-2 mt-6 text-sm font-semibold">Officers</h3>
+{% if officers %}
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Appointed</th><th scope="col">Resigned</th><th scope="col">Born</th><th scope="col">Identity</th>{% if show_links %}<th scope="col">On file</th>{% endif %}</tr></thead>
+    <tbody>
+      {% for o in officers %}
+      <tr{% if o.resigned_on %} class="text-slate-500"{% endif %}>
+        <td>{{ o.name }}{% if o.corporate %} {% include "components/_badge.html" with text="Corporate" tone="neutral" %}{% endif %}</td>
+        <td>{{ o.role }}</td>
+        <td class="tabular-nums">{{ o.appointed_on|date:"d/m/Y" }}</td>
+        <td class="tabular-nums">{% if o.resigned_on %}{% include "components/_badge.html" with text="Resigned" tone="neutral" %} {{ o.resigned_on|date:"d/m/Y" }}{% endif %}</td>
+        <td class="tabular-nums">{{ o.born }}</td>
+        <td>
+          {% if o.corporate %}<span class="muted">Not needed</span>
+          {% elif o.verified_on or o.link.contact.ch_identity_verified %}{% include "components/_badge.html" with text="Verified" tone="green" icon_name="check" %} {% firstof o.verified_on|date:"d/m/Y" o.link.contact.ch_identity_verified_on|date:"d/m/Y" %}
+          {% elif o.resigned_on %}
+          {% else %}{% include "components/_badge.html" with text="Not verified" tone="amber" %}{% endif %}
+          {% if show_links and o.link and o.is_director and not o.resigned_on %}
+          <span class="muted block text-xs">Personal code: {% if o.link.contact.ch_personal_code %}on file{% else %}not on file{% endif %}</span>
+          {% endif %}
+        </td>
+        {% if show_links %}<td>{% if o.link %}<a href="{% url 'clients:contact_detail' o.link.contact.pk %}?client={{ client.pk }}">{{ o.link.contact.full_name }}</a>{% elif o.corporate %}<span class="muted">Listed only</span>{% else %}<span class="muted">Not linked</span>{% endif %}</td>{% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="muted">Companies House lists no officers.</p>
+{% endif %}
+
+<h3 class="mb-2 mt-6 text-sm font-semibold">People with significant control</h3>
+{% if owners %}
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th scope="col">Name</th><th scope="col">Kind</th><th scope="col">Control</th><th scope="col">Notified</th><th scope="col">Ceased</th><th scope="col">Identity</th></tr></thead>
+    <tbody>
+      {% for p in owners %}
+      <tr{% if p.ceased_on %} class="text-slate-500"{% endif %}>
+        <td>{{ p.name }}</td>
+        <td>{{ p.kind }}</td>
+        <td class="text-xs">{% for n in p.natures %}{{ n }}{% if not forloop.last %}<br>{% endif %}{% endfor %}</td>
+        <td class="tabular-nums">{{ p.notified_on|date:"d/m/Y" }}</td>
+        <td class="tabular-nums">{% if p.ceased_on %}{% include "components/_badge.html" with text="Ceased" tone="neutral" %} {{ p.ceased_on|date:"d/m/Y" }}{% endif %}</td>
+        <td>{% if not p.person %}<span class="muted">Not needed</span>{% elif p.verified_on %}{% include "components/_badge.html" with text="Verified" tone="green" icon_name="check" %} {{ p.verified_on|date:"d/m/Y" }}{% elif not p.ceased_on %}{% include "components/_badge.html" with text="Not verified" tone="amber" %}{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="muted">Companies House lists no people with significant control.</p>
+{% endif %}

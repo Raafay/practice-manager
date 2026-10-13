@@ -1,0 +1,37 @@
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+  <p class="muted">
+    {% if snapshot %}Last synced {{ snapshot.synced_at|date:"d/m/Y H:i" }}. Officers, owners and filings checked {{ snapshot.people_synced_at|date:"d/m/Y H:i" }}.{% else %}Not synced with Companies House yet.{% endif %}
+    {% if client.company_number %}<a href="{{ client.companies_house_url }}" target="_blank" rel="noopener noreferrer">View on Companies House</a>{% endif %}
+  </p>
+  {% if client.company_number %}
+  <div class="flex gap-2">
+    <form method="post" action="{% url 'companieshouse:sync' client.pk %}">{% csrf_token %}<button type="submit" class="btn btn-secondary">{% icon "arrow-path" "size-4" %} Sync now</button></form>
+    {% if not snapshot %}<form method="post" action="{% url 'companieshouse:fill_in' client.pk %}">{% csrf_token %}<button type="submit" class="btn btn-primary">Fill in from Companies House</button></form>{% endif %}
+  </div>
+  {% endif %}
+</div>
+{% if snapshot.last_error %}
+<div class="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">The last nightly sync failed: {{ snapshot.last_error }}</div>
+{% endif %}
+{% if snapshot %}
+<div class="card card-body">
+  {% include "companieshouse/_profile.html" %}
+  {% with show_links=True %}{% include "companieshouse/_people.html" %}{% endwith %}
+  <h3 class="mb-2 mt-6 text-sm font-semibold">Recent filings</h3>
+  {% if filings %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th scope="col">Date</th><th scope="col">Type</th><th scope="col">Category</th><th scope="col">Description</th></tr></thead>
+      <tbody>
+        {% for f in filings %}<tr><td class="tabular-nums whitespace-nowrap">{{ f.date|date:"d/m/Y" }}</td><td><code class="text-xs">{{ f.type }}</code></td><td>{{ f.category }}</td><td>{{ f.description }}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}<p class="muted">No filings yet.</p>{% endif %}
+</div>
+{% elif client.company_number %}
+  {% include "components/_empty.html" with title="Nothing from Companies House yet" message="Press “Fill in from Companies House” to bring in the filing dates, officers and owners for this company number." icon_name="building-office" %}
+{% else %}
+  {% url 'clients:detail' client.pk as info_url %}
+  {% include "components/_empty.html" with title="No company number" message="Add the company number in Company details on the Info tab, then fill the rest in from here." icon_name="building-office" action_url=info_url action_label="Go to the Info tab" %}
+{% endif %}

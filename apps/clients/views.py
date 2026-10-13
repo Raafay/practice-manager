@@ -271,14 +271,22 @@ TABS = [
 ]
 
 
+# Shown for companies, and for any client with a company number.
+COMPANIES_HOUSE_TAB = ("companies_house", "Companies House", "companieshouse:tab")
+
+
 def tab_nav(client: Client) -> list[tuple[str, str, str]]:
-    return [(label, reverse(name, args=[client.pk]), key) for key, label, name in TABS]
+    tabs = list(TABS)
+    if client.is_company or client.company_number:
+        tabs.insert(2, COMPANIES_HOUSE_TAB)
+    return [(label, reverse(name, args=[client.pk]), key) for key, label, name in tabs]
 
 
 class ClientTabView(StaffRequiredMixin, View):
     """One tab of the client page. Each tab has its own address and loads with HTMX."""
 
     tab = "info"
+    tab_template = ""
 
     def get(self, request, pk):
         client = get_client(pk)
@@ -286,7 +294,7 @@ class ClientTabView(StaffRequiredMixin, View):
             "client": client,
             "tab": self.tab,
             "tabs": tab_nav(client),
-            "tab_template": f"clients/tabs/_{self.tab}.html",
+            "tab_template": self.tab_template or f"clients/tabs/_{self.tab}.html",
             "no_main_contact": not client.client_contacts.filter(is_main=True).exists(),
         }
         context.update(getattr(self, f"context_{self.tab}")(request, client))

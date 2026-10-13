@@ -29,6 +29,7 @@
         </button>
         <div class="menu" x-show="open" x-cloak>
           <a class="menu-item" href="{% url 'clients:new' %}">{% icon "building-office-2" "size-4" %} New client</a>
+          <a class="menu-item" href="{% url 'companieshouse:add' %}">{% icon "magnifying-glass" "size-4" %} Add from Companies House</a>
         </div>
       </div>
       <a href="{% url 'events:notifications' %}" class="relative rounded-md p-1.5 text-slate-200 hover:bg-white/10 hover:text-white"

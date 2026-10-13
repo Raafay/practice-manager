@@ -326,6 +326,14 @@ class Contact(PublicIdModel, TimeStampedModel):
     mobile = models.CharField(max_length=40, blank=True)
     phone = models.CharField(max_length=40, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
+    # Companies House gives only the month and year of birth. Used to match officers.
+    birth_month = models.PositiveSmallIntegerField(
+        "month of birth",
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(12)],
+    )
+    birth_year = models.PositiveSmallIntegerField("year of birth", null=True, blank=True)
     ni_number = EncryptedTextField("National Insurance number", blank=True)
     personal_utr = EncryptedTextField("personal UTR", blank=True)
     home_address = models.TextField(blank=True)

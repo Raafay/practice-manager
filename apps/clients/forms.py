@@ -123,7 +123,7 @@ class ClientPanelForm(TrackedModelForm):
         )
         super().__init__(*args, **kwargs)
         client = self.instance
-        for name in panels.SYNCED_DATE_FIELDS:
+        for name in panels.COMPANIES_HOUSE_FIELDS:
             if name in self.fields and client.company_number:
                 self.fields[name].disabled = True
                 self.fields[name].help_text = "Comes from Companies House and cannot be changed."
