@@ -5,6 +5,7 @@ from django.db import transaction
 from apps.accounts import demo as accounts_demo
 from apps.accounts.models import User
 from apps.clients import demo as clients_demo
+from apps.companieshouse import demo as companieshouse_demo
 from apps.core.models import PracticeSettings
 
 
@@ -28,11 +29,13 @@ class Command(BaseCommand):
             people = accounts_demo.seed()
             staff = {u.email: u for u in User.objects.filter(email__in=[p[1] for p in people])}
             counts = clients_demo.seed(staff)
+            counts.update(companieshouse_demo.seed())
 
         self.stdout.write(self.style.SUCCESS("Demo data loaded. Everything here is made up."))
         self.stdout.write(
             f"  {counts['clients']} clients, {counts['contacts']} people, "
-            f"{counts['documents']} documents."
+            f"{counts['documents']} documents, "
+            f"{counts['snapshots']} new Companies House snapshots."
         )
         self.stdout.write("")
         self.stdout.write("Sign in at /login/ with any of these:")

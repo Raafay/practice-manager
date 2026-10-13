@@ -4,14 +4,14 @@ Keep this file under 150 lines. When it grows, shorten older stages to two lines
 
 ## Where things stand
 
-Next stage to build: 3 (Companies House and jobs). The owner has added a live Companies House key as an environment secret, so Stage 3 uses the real API (see the top of its stage file).
+Next stage to build: 4 (Services and deadlines).
 
 | Stage | State | Merged on |
 |---|---|---|
 | 0 Project pack | Done | 12/10/2026 |
 | 1 Foundation | Done | 13/10/2026 |
 | 2 Clients and contacts | Done | 13/10/2026 |
-| 3 Companies House and jobs | Not started | |
+| 3 Companies House and jobs | Built, in review | |
 | 4 Services and deadlines | Not started | |
 | 5 Tasks, part one | Not started | |
 | 6 Communications | Not started | |
@@ -58,6 +58,15 @@ Checked in a cloud session on 12/10/2026:
 - Settings: Tags, Custom fields. `seed_demo` adds 33 clients, 50 people, links, notes and sample documents.
 - Added 11 outline and 2 mini Heroicons (MIT). No new dependency.
 
+## Stage 3: Companies House and jobs (built 13/10/2026)
+
+- Live check first: profile, officers, owners, filings and search all answered 200 through the session's network secret. Shapes differed from the spec in small ways (officers and owners carry `identity_verification_details`, `person_number`, `etag`; dissolved companies have `date_of_cessation` and no `confirmation_statement`), now handled. Samples are made up.
+- `apps/jobs`: registry (every N minutes, daily, weekly, monthly; Europe/London), `JobRun`, `JobLock` (one conditional UPDATE, stale after 3 h), `worker` (`--once`), `run_job`, owner-only Jobs page (`system.view`) with "Run now" (the worker starts it within a minute), failure notice to owners, retry at the next slot. `make worker`; docker-compose has a worker service.
+- `apps/companieshouse`: one client class over stdlib `urllib` (no new dependency), Basic auth, pacing under 2/s, 429 waits for `X-Ratelimit-Reset`, 5xx retried 3 times (2, 4, 8 s), number padding. A fake serves `tests/samples/` in tests (`COMPANIES_HOUSE_TRANSPORT=fake`).
+- Add from Companies House (search, preview, confirm; an existing number is filled in, not duplicated), "Fill in" and "Sync now" on the client's Companies House tab, nightly sync at 02:00 with `CompanySnapshot`, one timeline event per change, resigned officers marked on the link, non-active status notifies the manager (then partner, then owners). `client_synced` signal for Stage 4.
+- Contacts matched by officer id, then name with month and year of birth (new `birth_month`, `birth_year` on Contact). Corporate officers and owners are listed only. Identity verification mapped from Companies House.
+- Info tab: status, incorporation, office, SIC, reference date and filing dates are read-only once a number is set. `ch_check <number>`. Settings, Integrations (key present, last sync, Run sync now). Monthly bank holiday refresh (`StoredBankHolidays`), fails quietly. Demo snapshots and job runs. 499 tests. Screens in `docs/screens/stage-03/`.
+
 ## Assumptions
 
 Add one line each time a stage makes a choice that the specs and `docs/DECISIONS.md` did not cover. Give the stage number.
@@ -81,6 +90,13 @@ Add one line each time a stage makes a choice that the specs and `docs/DECISIONS
 - 2: Filing dates are read-only once a company number is set, so until Stage 3 they can only be set by the demo seed.
 - 2: Contact changes are logged once on each linked client's timeline.
 
+- 3: Branch is `claude/nifty-knuth-isuax1` (the session's required branch), not `stage-03-companies-house`.
+- 3: A Companies House personal code is 11 letters or digits; Stage 2 had allowed six (that is the company authentication code). Fixed in the contact form.
+- 3: The sync never renames a client unless its name still equals the old registered name. New clients take the registered name as given.
+- 3: The sync also adds newly appointed people as contacts. A person who left before the company was added is listed on the tab but not made a contact.
+- 3: "Run now" and "Run sync now" ask the worker; only "Sync now" on one client runs straight away. Jobs runs need `system.view` (owner); Integrations needs `integrations.manage`.
+- 3: Calls go out without an Authorization header when `COMPANIES_HOUSE_API_KEY` is empty, so a network proxy that adds the key (as in cloud sessions) still works. The page then shows "No key".
+
 ## Known gaps
 
 Things a stage left unfinished or found broken, with the stage number. Remove a line when it is fixed.
@@ -91,3 +107,5 @@ Things a stage left unfinished or found broken, with the stage number. Remove a 
 - 2: Portal share switch on documents and portal access on contacts are stored but do nothing until Stage 10.
 - 2: No quick switches on the Contacts tab; flags are edited in the Edit drawer.
 - 2: Django 6 deprecation warning for URL form fields (assume https) shows in tests.
+- 3: gov.uk is blocked in cloud sessions, so the bank holiday refresh was tested against a sample in the published shape only.
+- 3: Stage 4 must connect the deadline job to `companieshouse.services.client_synced`.

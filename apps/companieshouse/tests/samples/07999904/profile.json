@@ -1,0 +1,40 @@
+{
+  "company_name": "CLOSED DOWN LTD",
+  "company_number": "07999904",
+  "company_status": "dissolved",
+  "type": "ltd",
+  "date_of_creation": "2011-09-09",
+  "jurisdiction": "england-wales",
+  "registered_office_address": {
+    "address_line_1": "1 Example Street",
+    "address_line_2": "Unit 2",
+    "locality": "Sampletown",
+    "region": "Exampleshire",
+    "postal_code": "ZZ1 1ZZ",
+    "country": "England"
+  },
+  "sic_codes": [
+    "62020"
+  ],
+  "has_charges": false,
+  "has_insolvency_history": false,
+  "can_file": false,
+  "etag": "etag-07999904-1",
+  "links": {
+    "self": "/company/07999904",
+    "officers": "/company/07999904/officers",
+    "filing_history": "/company/07999904/filing-history"
+  },
+  "accounts": {
+    "accounting_reference_date": {
+      "day": "30",
+      "month": "09"
+    },
+    "last_accounts": {
+      "made_up_to": "2023-09-30",
+      "period_end_on": "2023-09-30",
+      "type": "dormant"
+    }
+  },
+  "date_of_cessation": "2025-03-18"
+}

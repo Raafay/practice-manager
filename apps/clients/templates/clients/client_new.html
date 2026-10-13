@@ -6,6 +6,7 @@
   {% include "components/_page_header.html" with title="New client" subtitle="The basics. Everything else is filled in on the client page." %}
   <a href="{% url 'clients:list' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Clients</a>
 </div>
+<p class="mb-4 text-sm">A company or LLP? <a href="{% url 'companieshouse:add' %}">Add it from Companies House</a> to bring in its filing dates, directors and owners.</p>
 <form method="post" class="card card-body space-y-4" novalidate>
   {% csrf_token %}
   {% include "components/_form_fields.html" %}

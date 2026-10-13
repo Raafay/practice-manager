@@ -1,0 +1,19 @@
+{% extends "layouts/app.html" %}
+{% block title %}Add from Companies House{% endblock %}
+{% block content_class %}max-w-3xl{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Add from Companies House" subtitle="Find the company by name or number. You see everything before it is saved." %}
+  <a href="{% url 'clients:list' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Clients</a>
+</div>
+<form method="get" action="{% url 'companieshouse:add' %}" class="card card-body mb-4" role="search">
+  <label for="ch-q" class="label">Company name or number</label>
+  <div class="flex gap-2">
+    <input id="ch-q" type="search" name="q" value="{{ q }}" class="input" autocomplete="off" autofocus
+      hx-get="{% url 'companieshouse:add' %}" hx-trigger="input changed delay:400ms, search" hx-target="#ch-results" hx-push-url="true">
+    <button type="submit" class="btn btn-primary">{% icon "magnifying-glass" "size-4" %} Search</button>
+  </div>
+  <p class="help">For example “Example Trading” or “09999901”. Up to ten matches are shown.</p>
+</form>
+<div id="ch-results" aria-live="polite">{% include "companieshouse/_results.html" %}</div>
+{% endblock %}

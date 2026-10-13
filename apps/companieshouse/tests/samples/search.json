@@ -1,0 +1,154 @@
+{
+  "kind": "search#companies",
+  "items_per_page": 10,
+  "page_number": 1,
+  "start_index": 0,
+  "total_results": 5,
+  "items": [
+    {
+      "kind": "searchresults#company",
+      "title": "EXAMPLE TRADING LTD",
+      "company_number": "09999901",
+      "company_status": "active",
+      "company_type": "ltd",
+      "date_of_creation": "2015-03-12",
+      "address_snippet": "1 Example Street, Unit 2, Sampletown, Exampleshire, ZZ1 1ZZ",
+      "description": "09999901 - Incorporated on 2015-03-12",
+      "description_identifier": [
+        "incorporated-on"
+      ],
+      "address": {
+        "premises": "1",
+        "address_line_1": "Example Street",
+        "locality": "Sampletown",
+        "postal_code": "ZZ1 1ZZ"
+      },
+      "links": {
+        "self": "/company/09999901"
+      },
+      "matches": {
+        "title": [
+          1,
+          7
+        ]
+      },
+      "snippet": ""
+    },
+    {
+      "kind": "searchresults#company",
+      "title": "NEWLY FORMED WIDGETS LTD",
+      "company_number": "16999902",
+      "company_status": "active",
+      "company_type": "ltd",
+      "date_of_creation": "2026-07-01",
+      "address_snippet": "1 Example Street, Unit 2, Sampletown, Exampleshire, ZZ1 1ZZ",
+      "description": "16999902 - Incorporated on 2026-07-01",
+      "description_identifier": [
+        "incorporated-on"
+      ],
+      "address": {
+        "premises": "1",
+        "address_line_1": "Example Street",
+        "locality": "Sampletown",
+        "postal_code": "ZZ1 1ZZ"
+      },
+      "links": {
+        "self": "/company/16999902"
+      },
+      "matches": {
+        "title": [
+          1,
+          7
+        ]
+      },
+      "snippet": ""
+    },
+    {
+      "kind": "searchresults#company",
+      "title": "CHANGEOVER SERVICES LIMITED",
+      "company_number": "08999903",
+      "company_status": "active",
+      "company_type": "ltd",
+      "date_of_creation": "2014-02-03",
+      "address_snippet": "1 Example Street, Unit 2, Sampletown, Exampleshire, ZZ1 1ZZ",
+      "description": "08999903 - Incorporated on 2014-02-03",
+      "description_identifier": [
+        "incorporated-on"
+      ],
+      "address": {
+        "premises": "1",
+        "address_line_1": "Example Street",
+        "locality": "Sampletown",
+        "postal_code": "ZZ1 1ZZ"
+      },
+      "links": {
+        "self": "/company/08999903"
+      },
+      "matches": {
+        "title": [
+          1,
+          7
+        ]
+      },
+      "snippet": ""
+    },
+    {
+      "kind": "searchresults#company",
+      "title": "CLOSED DOWN LTD",
+      "company_number": "07999904",
+      "company_status": "dissolved",
+      "company_type": "ltd",
+      "date_of_creation": "2011-09-09",
+      "address_snippet": "1 Example Street, Unit 2, Sampletown, Exampleshire, ZZ1 1ZZ",
+      "description": "07999904 - Incorporated on 2011-09-09",
+      "description_identifier": [
+        "incorporated-on"
+      ],
+      "address": {
+        "premises": "1",
+        "address_line_1": "Example Street",
+        "locality": "Sampletown",
+        "postal_code": "ZZ1 1ZZ"
+      },
+      "links": {
+        "self": "/company/07999904"
+      },
+      "matches": {
+        "title": [
+          1,
+          7
+        ]
+      },
+      "snippet": ""
+    },
+    {
+      "kind": "searchresults#company",
+      "title": "SAMPLE PARTNERS LLP",
+      "company_number": "OC999905",
+      "company_status": "active",
+      "company_type": "llp",
+      "date_of_creation": "2010-04-01",
+      "address_snippet": "1 Example Street, Unit 2, Sampletown, Exampleshire, ZZ1 1ZZ",
+      "description": "OC999905 - Incorporated on 2010-04-01",
+      "description_identifier": [
+        "incorporated-on"
+      ],
+      "address": {
+        "premises": "1",
+        "address_line_1": "Example Street",
+        "locality": "Sampletown",
+        "postal_code": "ZZ1 1ZZ"
+      },
+      "links": {
+        "self": "/company/OC999905"
+      },
+      "matches": {
+        "title": [
+          1,
+          7
+        ]
+      },
+      "snippet": ""
+    }
+  ]
+}

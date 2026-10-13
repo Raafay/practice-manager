@@ -1,0 +1,75 @@
+{
+  "items": [
+    {
+      "kind": "individual-person-with-significant-control",
+      "name": "Mr Daniel Owen Fresh",
+      "notified_on": "2025-06-30",
+      "natures_of_control": [
+        "ownership-of-shares-75-to-100-percent"
+      ],
+      "address": {
+        "premises": "1",
+        "address_line_1": "Example Street",
+        "locality": "Sampletown",
+        "postal_code": "ZZ1 1ZZ",
+        "country": "England"
+      },
+      "links": {
+        "self": "/company/08999903/persons-with-significant-control/individual/PSC311"
+      },
+      "etag": "pscPSC311",
+      "name_elements": {
+        "title": "Mr",
+        "forename": "Daniel",
+        "middle_name": "Owen",
+        "surname": "Fresh"
+      },
+      "date_of_birth": {
+        "month": 9,
+        "year": 1988
+      },
+      "nationality": "British",
+      "country_of_residence": "England"
+    },
+    {
+      "kind": "individual-person-with-significant-control",
+      "name": "Mrs Margaret Leaver",
+      "notified_on": "2016-04-06",
+      "natures_of_control": [
+        "ownership-of-shares-75-to-100-percent"
+      ],
+      "address": {
+        "premises": "1",
+        "address_line_1": "Example Street",
+        "locality": "Sampletown",
+        "postal_code": "ZZ1 1ZZ",
+        "country": "England"
+      },
+      "links": {
+        "self": "/company/08999903/persons-with-significant-control/individual/PSC312"
+      },
+      "etag": "pscPSC312",
+      "name_elements": {
+        "title": "Mrs",
+        "forename": "Margaret",
+        "surname": "Leaver"
+      },
+      "date_of_birth": {
+        "month": 4,
+        "year": 1960
+      },
+      "nationality": "British",
+      "country_of_residence": "England",
+      "ceased_on": "2025-06-30",
+      "ceased": true
+    }
+  ],
+  "items_per_page": 25,
+  "start_index": 0,
+  "total_results": 2,
+  "active_count": 1,
+  "ceased_count": 1,
+  "links": {
+    "self": "/company/08999903/persons-with-significant-control"
+  }
+}

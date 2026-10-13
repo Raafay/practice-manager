@@ -1,0 +1,74 @@
+{
+  "items": [
+    {
+      "kind": "individual-person-with-significant-control",
+      "name": "Mrs Alice Jane Sample",
+      "notified_on": "2016-04-06",
+      "natures_of_control": [
+        "ownership-of-shares-75-to-100-percent",
+        "voting-rights-75-to-100-percent"
+      ],
+      "address": {
+        "premises": "1",
+        "address_line_1": "Example Street",
+        "locality": "Sampletown",
+        "postal_code": "ZZ1 1ZZ",
+        "country": "England"
+      },
+      "links": {
+        "self": "/company/09999901/persons-with-significant-control/individual/PSC111"
+      },
+      "etag": "pscPSC111",
+      "name_elements": {
+        "title": "Mrs",
+        "forename": "Alice",
+        "middle_name": "Jane",
+        "surname": "Sample"
+      },
+      "date_of_birth": {
+        "month": 6,
+        "year": 1980
+      },
+      "nationality": "British",
+      "country_of_residence": "England",
+      "identity_verification_details": {
+        "identity_verified_on": "2026-01-15",
+        "appointment_verification_statement_due_on": "2026-12-01"
+      }
+    },
+    {
+      "kind": "corporate-entity-person-with-significant-control",
+      "name": "Example Holdings Limited",
+      "notified_on": "2019-01-01",
+      "natures_of_control": [
+        "ownership-of-shares-25-to-50-percent"
+      ],
+      "address": {
+        "premises": "1",
+        "address_line_1": "Example Street",
+        "locality": "Sampletown",
+        "postal_code": "ZZ1 1ZZ",
+        "country": "England"
+      },
+      "links": {
+        "self": "/company/09999901/persons-with-significant-control/corporate-entity/PSC112"
+      },
+      "etag": "pscPSC112",
+      "identification": {
+        "legal_form": "Limited company",
+        "legal_authority": "Companies Act 2006",
+        "registration_number": "99999998",
+        "place_registered": "Companies House",
+        "country_registered": "England"
+      }
+    }
+  ],
+  "items_per_page": 25,
+  "start_index": 0,
+  "total_results": 2,
+  "active_count": 2,
+  "ceased_count": 0,
+  "links": {
+    "self": "/company/09999901/persons-with-significant-control"
+  }
+}

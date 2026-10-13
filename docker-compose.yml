@@ -28,5 +28,16 @@ services:
       db:
         condition: service_healthy
 
+  worker:
+    build: .
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.dev
+      DATABASE_URL: postgres://pm:pm@db:5432/pm_dev
+      COMPANIES_HOUSE_API_KEY: ${COMPANIES_HOUSE_API_KEY:-}
+    command: python manage.py worker
+    depends_on:
+      web:
+        condition: service_started
+
 volumes:
   pgdata:

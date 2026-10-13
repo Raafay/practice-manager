@@ -1,0 +1,55 @@
+{
+  "company_name": "CHANGEOVER SERVICES LIMITED",
+  "company_number": "08999903",
+  "company_status": "active",
+  "type": "ltd",
+  "date_of_creation": "2014-02-03",
+  "jurisdiction": "england-wales",
+  "registered_office_address": {
+    "address_line_1": "1 Example Street",
+    "address_line_2": "Unit 2",
+    "locality": "Sampletown",
+    "region": "Exampleshire",
+    "postal_code": "ZZ1 1ZZ",
+    "country": "England"
+  },
+  "sic_codes": [
+    "62020"
+  ],
+  "has_charges": false,
+  "has_insolvency_history": false,
+  "can_file": true,
+  "etag": "etag-08999903-1",
+  "links": {
+    "self": "/company/08999903",
+    "officers": "/company/08999903/officers",
+    "filing_history": "/company/08999903/filing-history"
+  },
+  "accounts": {
+    "accounting_reference_date": {
+      "day": "28",
+      "month": "02"
+    },
+    "last_accounts": {
+      "made_up_to": "2025-02-28",
+      "period_start_on": "2024-03-01",
+      "period_end_on": "2025-02-28",
+      "type": "total-exemption-full"
+    },
+    "next_accounts": {
+      "period_start_on": "2025-03-01",
+      "period_end_on": "2026-02-28",
+      "due_on": "2026-11-30",
+      "overdue": false
+    },
+    "next_made_up_to": "2026-02-28",
+    "next_due": "2026-11-30",
+    "overdue": false
+  },
+  "confirmation_statement": {
+    "last_made_up_to": "2026-02-03",
+    "next_made_up_to": "2027-02-03",
+    "next_due": "2027-02-17",
+    "overdue": false
+  }
+}

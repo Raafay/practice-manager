@@ -1,0 +1,23 @@
+{
+  "items": [
+    {
+      "category": "accounts",
+      "type": "AA",
+      "date": "2025-12-01",
+      "description": "accounts-with-accounts-type-small",
+      "transaction_id": "TXN0501AA",
+      "pages": 3,
+      "barcode": "XTXN0501",
+      "links": {
+        "self": "/company/x/filing-history/TXN0501AA"
+      },
+      "description_values": {
+        "made_up_date": "2025-03-31"
+      }
+    }
+  ],
+  "items_per_page": 25,
+  "start_index": 0,
+  "total_count": 1,
+  "filing_history_status": "filing-history-available"
+}

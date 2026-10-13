@@ -1,0 +1,24 @@
+{% if error %}
+<div class="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert">{{ error }}</div>
+{% elif results %}
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th scope="col">Company</th><th scope="col">Number</th><th scope="col">Status</th><th scope="col">Incorporated</th><th scope="col"><span class="sr-only">Choose</span></th></tr></thead>
+    <tbody>
+      {% for item in results %}
+      <tr>
+        <td><span class="font-medium">{{ item.title }}</span><span class="muted block text-xs">{{ item.address_snippet }}</span></td>
+        <td class="tabular-nums">{{ item.company_number }}</td>
+        <td>{% if item.company_status == "active" %}{% include "components/_badge.html" with text="Active" tone="green" %}{% else %}{% include "components/_badge.html" with text=item.company_status|capfirst tone="amber" %}{% endif %}</td>
+        <td class="tabular-nums">{{ item.date_of_creation|slice:"8:10" }}/{{ item.date_of_creation|slice:"5:7" }}/{{ item.date_of_creation|slice:":4" }}</td>
+        <td class="text-right"><a href="{% url 'companieshouse:preview' item.company_number %}" class="btn btn-secondary btn-sm">Preview</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% elif q|length >= 2 %}
+  {% include "components/_empty.html" with title="No companies found" message="Check the spelling, or search by the eight-character company number instead." icon_name="magnifying-glass" %}
+{% else %}
+  {% include "components/_empty.html" with title="Search Companies House" message="Type at least two letters of the company name, or its number." icon_name="building-office" %}
+{% endif %}

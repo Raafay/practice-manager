@@ -1,5 +1,5 @@
 # Common commands. See CLAUDE.md.
-.PHONY: setup dev test lint format seed css migrate
+.PHONY: setup dev test lint format seed css migrate worker
 
 setup:
 	uv sync
@@ -28,3 +28,6 @@ css:
 
 migrate:
 	uv run python manage.py migrate
+
+worker:
+	uv run python manage.py worker

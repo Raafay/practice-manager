@@ -7,6 +7,7 @@ Only planning dates are moved to a working day, by the caller.
 
 import calendar
 import json
+import time
 from datetime import date, timedelta
 from functools import lru_cache
 from pathlib import Path
@@ -88,9 +89,47 @@ def tax_year_label(end: date | int) -> str:
 
 
 @lru_cache(maxsize=1)
-def bank_holidays() -> frozenset[date]:
+def bundled_bank_holidays() -> frozenset[date]:
     data = json.loads(BANK_HOLIDAYS_FILE.read_text())
     return frozenset(date.fromisoformat(value) for value in data["dates"])
+
+
+# The merged list, kept for a while so each date check does not hit the database.
+_CACHE_SECONDS = 3600
+_cache: dict = {"at": None, "dates": None}
+
+
+def merge_bank_holidays(bundled: frozenset[date], stored: list[str]) -> frozenset[date]:
+    """Stored dates replace the bundled dates of the years they cover."""
+    fetched = {date.fromisoformat(value) for value in stored}
+    years = {d.year for d in fetched}
+    return frozenset({d for d in bundled if d.year not in years} | fetched)
+
+
+def _stored_dates() -> list[str]:
+    from django.conf import settings
+
+    if not getattr(settings, "BANK_HOLIDAYS_FROM_DATABASE", False):
+        return []
+    try:
+        from apps.core.models import StoredBankHolidays
+
+        row = StoredBankHolidays.objects.filter(pk=1).first()
+        return list(row.dates) if row else []
+    except Exception:  # noqa: BLE001 - no database yet (start-up, migrations): use the bundled list
+        return []
+
+
+def bank_holidays() -> frozenset[date]:
+    now = time.monotonic()
+    if _cache["dates"] is None or now - _cache["at"] > _CACHE_SECONDS:
+        _cache["dates"] = merge_bank_holidays(bundled_bank_holidays(), _stored_dates())
+        _cache["at"] = now
+    return _cache["dates"]
+
+
+def clear_bank_holiday_cache() -> None:
+    _cache["dates"] = None
 
 
 def is_working_day(d: date) -> bool:

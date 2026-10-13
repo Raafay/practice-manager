@@ -1,0 +1,68 @@
+{
+  "kind": "officer-list",
+  "items": [
+    {
+      "name": "FRESH, Daniel Owen",
+      "officer_role": "director",
+      "appointed_on": "2025-06-30",
+      "address": {
+        "premises": "1",
+        "address_line_1": "Example Street",
+        "locality": "Sampletown",
+        "postal_code": "ZZ1 1ZZ",
+        "country": "England"
+      },
+      "links": {
+        "self": "/company/08999903/appointments/CCC111",
+        "officer": {
+          "appointments": "/officers/CCC111OFF/appointments"
+        }
+      },
+      "etag": "etagCCC111",
+      "date_of_birth": {
+        "month": 9,
+        "year": 1988
+      },
+      "nationality": "British",
+      "country_of_residence": "England",
+      "occupation": "Director"
+    },
+    {
+      "name": "LEAVER, Margaret",
+      "officer_role": "director",
+      "appointed_on": "2014-02-03",
+      "address": {
+        "premises": "1",
+        "address_line_1": "Example Street",
+        "locality": "Sampletown",
+        "postal_code": "ZZ1 1ZZ",
+        "country": "England"
+      },
+      "links": {
+        "self": "/company/08999903/appointments/CCC222",
+        "officer": {
+          "appointments": "/officers/CCC222OFF/appointments"
+        }
+      },
+      "etag": "etagCCC222",
+      "date_of_birth": {
+        "month": 4,
+        "year": 1960
+      },
+      "nationality": "British",
+      "country_of_residence": "England",
+      "occupation": "Director",
+      "resigned_on": "2025-06-30"
+    }
+  ],
+  "items_per_page": 100,
+  "start_index": 0,
+  "total_results": 2,
+  "active_count": 1,
+  "resigned_count": 1,
+  "inactive_count": 0,
+  "etag": "officers-08999903",
+  "links": {
+    "self": "/company/08999903/officers"
+  }
+}

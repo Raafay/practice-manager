@@ -21,6 +21,19 @@ SYNCED_DATE_FIELDS = (
     "next_statement_due",
 )
 
+# Everything the Companies House sync writes. Read-only once a company number is set
+# (CORRECTIONS 11). Trading name, nature of business and the authentication code stay
+# editable: Companies House does not supply them.
+COMPANIES_HOUSE_FIELDS = (
+    "company_status",
+    "incorporated_on",
+    "registered_office",
+    "sic_codes",
+    "accounting_ref_day",
+    "accounting_ref_month",
+    *SYNCED_DATE_FIELDS,
+)
+
 COMPANY_FIELDS = [
     "company_number",
     "company_status",
@@ -194,7 +207,7 @@ def rows_for(client: Client, key: str, user) -> list[dict]:
         rows.append(row)
     if key == "company" and client.company_number:
         for row in rows:
-            if row["name"] in SYNCED_DATE_FIELDS:
+            if row["name"] in COMPANIES_HOUSE_FIELDS:
                 row["note"] = "From Companies House"
     if key == "internal":
         for definition in CustomFieldDefinition.objects.all():

@@ -16,7 +16,7 @@
         <dt class="muted">Email</dt><dd class="col-span-2">{{ contact.email }}</dd>
         <dt class="muted">Mobile</dt><dd class="col-span-2">{{ contact.mobile }}</dd>
         <dt class="muted">Phone</dt><dd class="col-span-2">{{ contact.phone }}</dd>
-        <dt class="muted">Date of birth</dt><dd class="col-span-2">{{ contact.date_of_birth|date:"d/m/Y" }}</dd>
+        <dt class="muted">Date of birth</dt><dd class="col-span-2">{% if contact.date_of_birth %}{{ contact.date_of_birth|date:"d/m/Y" }}{% elif contact.birth_year %}{{ contact.birth_month|stringformat:"02d" }}/{{ contact.birth_year }} <span class="muted">(month and year, from Companies House)</span>{% endif %}</dd>
         <dt class="muted">Home address</dt><dd class="col-span-2 whitespace-pre-line">{{ contact.home_address }}</dd>
         <dt class="muted">Nationality</dt><dd class="col-span-2">{{ contact.nationality }}</dd>
         <dt class="muted">Country of residence</dt><dd class="col-span-2">{{ contact.country_of_residence }}</dd>

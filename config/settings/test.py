@@ -21,3 +21,8 @@ ALLOW_DEMO_DATA = True
 # A model with an encrypted field, for the field's own tests. No migrations: the
 # test database creates its table directly.
 INSTALLED_APPS = [*INSTALLED_APPS, "apps.core.tests.encrypted_app"]  # noqa: F405
+
+# Tests never call Companies House or gov.uk: they use the saved samples.
+COMPANIES_HOUSE_TRANSPORT = "fake"
+COMPANIES_HOUSE_API_KEY = ""
+BANK_HOLIDAYS_FROM_DATABASE = False

@@ -43,6 +43,18 @@
     <span class="muted mt-1 block">Trust this browser, idle and maximum session length.</span>
   </a>
   {% endif %}
+  {% if user|can:"integrations.manage" %}
+  <a href="{% url 'companieshouse:integrations' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "link" %} Integrations</span>
+    <span class="muted mt-1 block">Companies House: key, last sync and “Run sync now”.</span>
+  </a>
+  {% endif %}
+  {% if user|can:"system.view" %}
+  <a href="{% url 'jobs:list' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "clock" %} Background jobs</span>
+    <span class="muted mt-1 block">What runs on a timetable, its last result, and “Run now”.</span>
+  </a>
+  {% endif %}
   {% if user|can:"audit.view" %}
   <a href="{% url 'events:audit_log' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
     <span class="flex items-center gap-2 font-semibold">{% icon "clipboard-document-list" %} Audit log</span>

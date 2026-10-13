@@ -1,0 +1,90 @@
+{
+  "kind": "officer-list",
+  "items": [
+    {
+      "name": "PARTNER, Fiona",
+      "officer_role": "llp-designated-member",
+      "appointed_on": "2010-04-01",
+      "address": {
+        "premises": "1",
+        "address_line_1": "Example Street",
+        "locality": "Sampletown",
+        "postal_code": "ZZ1 1ZZ",
+        "country": "England"
+      },
+      "links": {
+        "self": "/company/OC999905/appointments/EEE111",
+        "officer": {
+          "appointments": "/officers/EEE111OFF/appointments"
+        }
+      },
+      "etag": "etagEEE111",
+      "date_of_birth": {
+        "month": 3,
+        "year": 1972
+      },
+      "nationality": "British",
+      "country_of_residence": "England",
+      "occupation": "Director"
+    },
+    {
+      "name": "MEMBERSON, George Henry",
+      "officer_role": "llp-member",
+      "appointed_on": "2015-06-01",
+      "address": {
+        "premises": "1",
+        "address_line_1": "Example Street",
+        "locality": "Sampletown",
+        "postal_code": "ZZ1 1ZZ",
+        "country": "England"
+      },
+      "links": {
+        "self": "/company/OC999905/appointments/EEE222",
+        "officer": {
+          "appointments": "/officers/EEE222OFF/appointments"
+        }
+      },
+      "etag": "etagEEE222",
+      "date_of_birth": {
+        "month": 8,
+        "year": 1981
+      },
+      "nationality": "British",
+      "country_of_residence": "England",
+      "occupation": "Director"
+    },
+    {
+      "name": "SAMPLE CORPORATE MEMBER LIMITED",
+      "officer_role": "corporate-llp-designated-member",
+      "appointed_on": "2010-04-01",
+      "address": {
+        "premises": "1",
+        "address_line_1": "Example Street",
+        "locality": "Sampletown",
+        "postal_code": "ZZ1 1ZZ",
+        "country": "England"
+      },
+      "links": {
+        "self": "/company/OC999905/appointments/EEE333",
+        "officer": {
+          "appointments": "/officers/EEE333OFF/appointments"
+        }
+      },
+      "etag": "etagEEE333",
+      "identification": {
+        "identification_type": "uk-limited-company",
+        "registration_number": "99999999"
+      }
+    }
+  ],
+  "items_per_page": 100,
+  "start_index": 0,
+  "total_results": 3,
+  "active_count": 3,
+  "resigned_count": 0,
+  "inactive_count": 0,
+  "etag": "officers-OC999905",
+  "links": {
+    "self": "/company/OC999905/officers"
+  }
+}

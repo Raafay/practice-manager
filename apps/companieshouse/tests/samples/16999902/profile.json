@@ -1,0 +1,48 @@
+{
+  "company_name": "NEWLY FORMED WIDGETS LTD",
+  "company_number": "16999902",
+  "company_status": "active",
+  "type": "ltd",
+  "date_of_creation": "2026-07-01",
+  "jurisdiction": "england-wales",
+  "registered_office_address": {
+    "address_line_1": "1 Example Street",
+    "address_line_2": "Unit 2",
+    "locality": "Sampletown",
+    "region": "Exampleshire",
+    "postal_code": "ZZ1 1ZZ",
+    "country": "England"
+  },
+  "sic_codes": [
+    "62020"
+  ],
+  "has_charges": false,
+  "has_insolvency_history": false,
+  "can_file": true,
+  "etag": "etag-16999902-1",
+  "links": {
+    "self": "/company/16999902",
+    "officers": "/company/16999902/officers",
+    "filing_history": "/company/16999902/filing-history"
+  },
+  "accounts": {
+    "accounting_reference_date": {
+      "day": "31",
+      "month": "07"
+    },
+    "next_accounts": {
+      "period_start_on": "2026-07-01",
+      "period_end_on": "2027-07-31",
+      "due_on": "2028-04-01",
+      "overdue": false
+    },
+    "next_made_up_to": "2027-07-31",
+    "next_due": "2028-04-01",
+    "overdue": false
+  },
+  "confirmation_statement": {
+    "next_made_up_to": "2027-06-30",
+    "next_due": "2027-07-14",
+    "overdue": false
+  }
+}

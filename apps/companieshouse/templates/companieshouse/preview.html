@@ -1,0 +1,36 @@
+{% extends "layouts/app.html" %}
+{% block title %}Check the company{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Check the company" subtitle="Nothing is saved until you confirm." %}
+  <a href="{% url 'companieshouse:add' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Search again</a>
+</div>
+{% if error %}
+<div class="rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert">{{ error }}</div>
+{% else %}
+<div class="grid gap-6 lg:grid-cols-3">
+  <div class="card card-body lg:col-span-2">
+    {% with profile=data.profile fields=data.fields status_label=data.status_label type_label=data.type_label %}{% include "companieshouse/_profile.html" %}{% endwith %}
+    {% with officers=data.officers owners=data.owners %}{% include "companieshouse/_people.html" %}{% endwith %}
+  </div>
+  <div>
+    {% if data.existing %}
+    <div class="card card-body">
+      <p class="font-semibold">Already a client</p>
+      <p class="muted mt-1">{{ data.existing.name }} ({{ data.existing.reference }}) has this company number. Confirming fills it in again; it does not make a second client.</p>
+      <form method="post" class="mt-3">{% csrf_token %}<input type="hidden" name="status" value="{{ data.existing.status }}"><button type="submit" class="btn btn-primary">Fill in {{ data.existing.name }}</button></form>
+      <a href="{% url 'clients:detail' data.existing.pk %}" class="btn btn-ghost mt-2">Open the client</a>
+    </div>
+    {% else %}
+    <form method="post" class="card card-body space-y-4" novalidate>
+      {% csrf_token %}
+      <p class="font-semibold">Add as a new client</p>
+      {% include "components/_form_fields.html" %}
+      <p class="help">Each current officer and owner who is a person becomes a contact, linked with their roles. People already on file are matched, not copied.</p>
+      <button type="submit" class="btn btn-primary">Confirm and add</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

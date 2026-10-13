@@ -1,0 +1,22 @@
+{# The company profile as Companies House gives it. Needs profile, fields, status_label, type_label. #}
+<dl class="grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+  <div class="grid grid-cols-2 gap-2"><dt class="muted">Name</dt><dd class="font-medium">{{ profile.company_name }}</dd></div>
+  <div class="grid grid-cols-2 gap-2"><dt class="muted">Number</dt><dd class="tabular-nums">{{ profile.company_number }}</dd></div>
+  <div class="grid grid-cols-2 gap-2"><dt class="muted">Status</dt><dd>{% if profile.company_status == "active" %}{% include "components/_badge.html" with text=status_label tone="green" %}{% else %}{% include "components/_badge.html" with text=status_label tone="amber" icon_name="exclamation-triangle" %}{% endif %}</dd></div>
+  <div class="grid grid-cols-2 gap-2"><dt class="muted">Type</dt><dd>{{ type_label }}</dd></div>
+  <div class="grid grid-cols-2 gap-2"><dt class="muted">Incorporated on</dt><dd class="tabular-nums">{{ fields.incorporated_on|date:"d/m/Y" }}</dd></div>
+  {% if profile.date_of_cessation %}<div class="grid grid-cols-2 gap-2"><dt class="muted">Closed on</dt><dd class="tabular-nums">{{ profile.date_of_cessation|slice:"8:10" }}/{{ profile.date_of_cessation|slice:"5:7" }}/{{ profile.date_of_cessation|slice:":4" }}</dd></div>{% endif %}
+  <div class="grid grid-cols-2 gap-2"><dt class="muted">Registered office</dt><dd class="whitespace-pre-line">{{ fields.registered_office }}</dd></div>
+  <div class="grid grid-cols-2 gap-2"><dt class="muted">SIC codes</dt><dd>{{ fields.sic_codes|default:"None" }}</dd></div>
+  <div class="grid grid-cols-2 gap-2"><dt class="muted">Accounting reference date</dt><dd class="tabular-nums">{% if fields.accounting_ref_day %}{{ fields.accounting_ref_day|stringformat:"02d" }}/{{ fields.accounting_ref_month|stringformat:"02d" }}{% else %}Not given{% endif %}</dd></div>
+</dl>
+<h3 class="mb-2 mt-6 text-sm font-semibold">Filing dates</h3>
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th scope="col"></th><th scope="col">Last made up to</th><th scope="col">Next made up to</th><th scope="col">Next due</th></tr></thead>
+    <tbody>
+      <tr><th scope="row" class="font-medium">Accounts</th><td class="tabular-nums">{{ fields.last_accounts_made_up_to|date:"d/m/Y"|default:"None filed" }}</td><td class="tabular-nums">{{ fields.next_accounts_made_up_to|date:"d/m/Y"|default:"—" }}</td><td class="tabular-nums">{{ fields.next_accounts_due|date:"d/m/Y"|default:"—" }}{% if profile.accounts.overdue %} {% include "components/_badge.html" with text="Overdue" tone="red" %}{% endif %}</td></tr>
+      <tr><th scope="row" class="font-medium">Confirmation statement</th><td class="tabular-nums">{{ fields.last_statement_made_up_to|date:"d/m/Y"|default:"None filed" }}</td><td class="tabular-nums">{{ fields.next_statement_made_up_to|date:"d/m/Y"|default:"—" }}</td><td class="tabular-nums">{{ fields.next_statement_due|date:"d/m/Y"|default:"—" }}{% if profile.confirmation_statement.overdue %} {% include "components/_badge.html" with text="Overdue" tone="red" %}{% endif %}</td></tr>
+    </tbody>
+  </table>
+</div>
