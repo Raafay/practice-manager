@@ -3,6 +3,8 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from apps.accounts import demo as accounts_demo
+from apps.accounts.models import User
+from apps.clients import demo as clients_demo
 from apps.core.models import PracticeSettings
 
 
@@ -24,8 +26,14 @@ class Command(BaseCommand):
                 practice.vat_registered = True
                 practice.save()
             people = accounts_demo.seed()
+            staff = {u.email: u for u in User.objects.filter(email__in=[p[1] for p in people])}
+            counts = clients_demo.seed(staff)
 
         self.stdout.write(self.style.SUCCESS("Demo data loaded. Everything here is made up."))
+        self.stdout.write(
+            f"  {counts['clients']} clients, {counts['contacts']} people, "
+            f"{counts['documents']} documents."
+        )
         self.stdout.write("")
         self.stdout.write("Sign in at /login/ with any of these:")
         for name, email, role in people:

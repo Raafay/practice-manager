@@ -102,7 +102,7 @@ def test_every_allowed_type_has_a_content_type():
         "eml",
         "msg",
     }
-    assert documents.ALLOWED_EXTENSIONS == expected
+    assert expected == documents.ALLOWED_EXTENSIONS
 
 
 def test_identity_and_proof_of_address_are_sensitive_by_default(client):

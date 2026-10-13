@@ -45,6 +45,10 @@ SENSITIVE_FIELDS = {
 }
 
 
+def who(actor) -> str:
+    return str(actor) if actor is not None else "The system"
+
+
 def require(actor, right: str) -> None:
     if not actor.can(right):
         raise PermissionDenied
@@ -95,7 +99,7 @@ def create_client(
     events.record(
         actor,
         "client.created",
-        f"{actor} created client {client.name} ({client.reference}).",
+        f"{who(actor)} created client {client.name} ({client.reference}).",
         client=client,
         target=client,
     )
@@ -125,7 +129,8 @@ def update_client(actor, client: Client, form, *, section: str) -> Client:
     events.record(
         actor,
         "client.changed",
-        f"{actor} changed {section.lower()} for {client.name}: {', '.join(sorted(set(labels)))}.",
+        f"{who(actor)} changed {section.lower()} for {client.name}: "
+        f"{', '.join(sorted(set(labels)))}.",
         client=client,
         target=client,
         section=section,
@@ -158,7 +163,7 @@ def change_status(
     events.record(
         actor,
         "client.status_changed",
-        f"{actor} changed {client.name} from {Client.Status(old).label} to "
+        f"{who(actor)} changed {client.name} from {Client.Status(old).label} to "
         f"{Client.Status(new_status).label}.",
         client=client,
         target=client,
@@ -181,7 +186,7 @@ def archive_client(actor, client: Client, reason: str) -> Client:
     events.record(
         actor,
         "client.archived",
-        f"{actor} archived {client.name}: {reason}",
+        f"{who(actor)} archived {client.name}: {reason}",
         client=client,
         target=client,
         reason=reason,
@@ -196,7 +201,11 @@ def restore_client(actor, client: Client) -> Client:
     client.archive_reason = ""
     client.save(update_fields=["archived_at", "archived_by", "archive_reason", "updated_at"])
     events.record(
-        actor, "client.restored", f"{actor} restored {client.name}.", client=client, target=client
+        actor,
+        "client.restored",
+        f"{who(actor)} restored {client.name}.",
+        client=client,
+        target=client,
     )
     return client
 
@@ -228,7 +237,7 @@ def delete_client(actor, client: Client, typed_name: str) -> None:
         events.record(
             actor,
             "client.deleted",
-            f"{actor} deleted client {label} for good.",
+            f"{who(actor)} deleted client {label} for good.",
             client_label=label,
         )
         client.delete()
@@ -288,7 +297,7 @@ def create_contact(actor, **fields) -> Contact:
     events.record(
         actor,
         "contact.created",
-        f"{actor} added the person {contact.full_name}.",
+        f"{who(actor)} added the person {contact.full_name}.",
         target=contact,
     )
     return contact
@@ -313,7 +322,7 @@ def update_contact(actor, contact: Contact, form) -> Contact:
         actor,
         contact,
         "contact.changed",
-        f"{actor} changed details for {contact.full_name}: {', '.join(labels)}.",
+        f"{who(actor)} changed details for {contact.full_name}: {', '.join(labels)}.",
         fields=changes(form.before, form.after()),
     )
     return contact
@@ -336,7 +345,7 @@ def add_contact(
     events.record(
         actor,
         "contact.linked",
-        f"{actor} linked {contact.full_name} to {client.name}"
+        f"{who(actor)} linked {contact.full_name} to {client.name}"
         f"{' as main contact' if is_main else ''}.",
         client=client,
         target=contact,
@@ -357,7 +366,8 @@ def save_client_contact(actor, link: ClientContact, form) -> ClientContact:
         events.record(
             actor,
             "contact.link_changed",
-            f"{actor} changed {link.contact.full_name} at {link.client.name}: {', '.join(labels)}.",
+            f"{who(actor)} changed {link.contact.full_name} at {link.client.name}: "
+            f"{', '.join(labels)}.",
             client=link.client,
             target=link.contact,
             fields=changes(form.before, form.after()),
@@ -372,7 +382,7 @@ def unlink_contact(actor, link: ClientContact) -> None:
     events.record(
         actor,
         "contact.unlinked",
-        f"{actor} unlinked {contact.full_name} from {client.name}.",
+        f"{who(actor)} unlinked {contact.full_name} from {client.name}.",
         client=client,
         target=contact,
     )
@@ -430,7 +440,7 @@ def add_link(actor, client: Client, other: Client, relationship: str, note: str 
         events.record(
             actor,
             "link.added",
-            f"{actor} linked {side.name} and {far.name} ({label}).",
+            f"{who(actor)} linked {side.name} and {far.name} ({label}).",
             client=side,
             target=link,
         )
@@ -444,7 +454,7 @@ def remove_link(actor, link: ClientLink) -> None:
         events.record(
             actor,
             "link.removed",
-            f"{actor} removed the link between {a.name} and {b.name}.",
+            f"{who(actor)} removed the link between {a.name} and {b.name}.",
             client=side,
         )
 
@@ -468,9 +478,9 @@ def add_note(actor, client: Client, text: str, *, kind: str = Note.Kind.NOTE, pi
         client=client, kind=kind, text=text, author=actor, pinned=pinned and kind == Note.Kind.NOTE
     )
     if kind == Note.Kind.CALL:
-        verb, summary = "call.logged", f"{actor} logged a call with {client.name}."
+        verb, summary = "call.logged", f"{who(actor)} logged a call with {client.name}."
     else:
-        verb, summary = "note.added", f"{actor} added a note to {client.name}."
+        verb, summary = "note.added", f"{who(actor)} added a note to {client.name}."
     events.record(
         actor, verb, summary, client=client, target=note, note_id=note.pk, text=text[:1000]
     )
@@ -483,7 +493,7 @@ def toggle_pin(actor, note: Note) -> Note:
     events.record(
         actor,
         "note.pinned" if note.pinned else "note.unpinned",
-        f"{actor} {'pinned' if note.pinned else 'unpinned'} a note on {note.client.name}.",
+        f"{who(actor)} {'pinned' if note.pinned else 'unpinned'} a note on {note.client.name}.",
         client=note.client,
         target=note,
     )
@@ -505,7 +515,7 @@ def reveal_value(actor, instance, field_name: str, *, client: Client | None = No
     events.record(
         actor,
         "sensitive.revealed",
-        f"{actor} showed the {field.verbose_name} of {owner_label}.",
+        f"{who(actor)} showed the {field.verbose_name} of {owner_label}.",
         client=instance if kind == "client" else client,
         target=instance,
         field=field_name,
@@ -541,7 +551,8 @@ def store_document(
     events.record(
         actor,
         "document.uploaded",
-        f"{actor} uploaded {document.title} to {client.name}{' (sensitive)' if sensitive else ''}.",
+        f"{who(actor)} uploaded {document.title} to {client.name}"
+        f"{' (sensitive)' if sensitive else ''}.",
         client=client,
         target=document,
         category=category,
@@ -557,7 +568,7 @@ def update_document(actor, document: Document, form) -> Document:
         events.record(
             actor,
             "document.changed",
-            f"{actor} changed {document.title} on {document.client.name}.",
+            f"{who(actor)} changed {document.title} on {document.client.name}.",
             client=document.client,
             target=document,
             fields=changes(form.before, form.after()),
@@ -577,7 +588,7 @@ def record_document_access(actor, document: Document, *, download: bool) -> None
     events.record(
         actor,
         verb,
-        f"{actor} {'downloaded' if download else 'viewed'} the sensitive document "
+        f"{who(actor)} {'downloaded' if download else 'viewed'} the sensitive document "
         f"{document.title} for {document.client.name}.",
         client=document.client,
         target=document,
@@ -589,7 +600,8 @@ def delete_document(actor, document: Document) -> None:
     events.record(
         actor,
         "document.deleted",
-        f"{actor} deleted {document.title} from {document.client.name}. It is hidden, not erased.",
+        f"{who(actor)} deleted {document.title} from {document.client.name}. "
+        "It is hidden, not erased.",
         client=document.client,
         target=document,
     )
@@ -609,7 +621,7 @@ def purge_document(actor, document: Document) -> None:
     events.record(
         actor,
         "document.purged",
-        f"{actor} removed {title} from {client.name} for good.",
+        f"{who(actor)} removed {title} from {client.name} for good.",
         client=client,
     )
 
@@ -641,7 +653,8 @@ def hand_over_clients(actor, from_user, to_user) -> int:
         events.record(
             actor,
             "client.handed_over",
-            f"{actor} handed {client.name} from {from_user} to {to_user} ({' and '.join(roles)}).",
+            f"{who(actor)} handed {client.name} from {from_user} to {to_user} "
+            f"({' and '.join(roles)}).",
             client=client,
             target=client,
         )

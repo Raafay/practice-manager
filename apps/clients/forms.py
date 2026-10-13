@@ -473,14 +473,25 @@ class SavedViewForm(StyledFormMixin, forms.ModelForm):
         fields = ["name", "shared"]
 
 
-class TagForm(StyledFormMixin, forms.ModelForm):
+class UniqueNameMixin:
+    """Names are unique regardless of capital letters."""
+
+    def clean_name(self):
+        name = self.cleaned_data["name"].strip()
+        clash = self._meta.model.objects.filter(name__iexact=name).exclude(pk=self.instance.pk)
+        if clash.exists():
+            raise ValidationError("There is already one with this name.")
+        return name
+
+
+class TagForm(UniqueNameMixin, StyledFormMixin, forms.ModelForm):
     class Meta:
         model = Tag
         fields = ["name", "colour"]
         widgets = {"colour": forms.TextInput(attrs={"type": "color"})}
 
 
-class CustomFieldForm(StyledFormMixin, forms.ModelForm):
+class CustomFieldForm(UniqueNameMixin, StyledFormMixin, forms.ModelForm):
     class Meta:
         model = CustomFieldDefinition
         fields = ["name", "kind", "position"]
