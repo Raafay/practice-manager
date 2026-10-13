@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from datetime import date
 
+import django.dispatch
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Q
@@ -27,6 +28,11 @@ from .models import (
     Document,
     Note,
 )
+
+# Sent after a client's details change (client) and after a status change (client, old, new).
+# Stage 4 listens so that deadlines follow the client's dates, settings and status.
+client_updated = django.dispatch.Signal()
+status_changed = django.dispatch.Signal()
 
 # What each status may become by hand. Later stages add the proper routes
 # (the onboarding gate in Stage 7, proposal acceptance in Stage 9).
@@ -134,6 +140,7 @@ def update_client(actor, client: Client, form, *, section: str) -> Client:
         section=section,
         fields=diff,
     )
+    client_updated.send(sender=Client, client=client, actor=actor)
     return client
 
 
@@ -169,6 +176,7 @@ def change_status(
         new=new_status,
         reason=reason,
     )
+    status_changed.send(sender=Client, client=client, old=old, new=new_status, actor=actor)
     return client
 
 
