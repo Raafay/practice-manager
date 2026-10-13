@@ -60,7 +60,13 @@ class TemplateEditView(SettingsMixin, View):
             return None
         ctx = services.build_context(client)
         subject, html, text, problems = services.render_template(instance, ctx)
-        return {"client": client, "subject": subject, "html": html, "text": text, "problems": problems}
+        return {
+            "client": client,
+            "subject": subject,
+            "html": html,
+            "text": text,
+            "problems": problems,
+        }
 
     def get(self, request, pk=None):
         instance = get_object_or_404(MessageTemplate, pk=pk) if pk else MessageTemplate()
@@ -98,7 +104,9 @@ class TemplateDeleteView(SettingsMixin, View):
         template = get_object_or_404(MessageTemplate, pk=pk)
         if template.system:
             messages.error(request, "System templates cannot be deleted. Switch it off instead.")
-        elif template.schedules.exists() or QueuedMessage.objects.filter(template=template).exists():
+        elif (
+            template.schedules.exists() or QueuedMessage.objects.filter(template=template).exists()
+        ):
             messages.error(request, "This template has been used. Switch it off instead.")
         else:
             name = template.name
@@ -115,7 +123,8 @@ class TemplateToggleView(SettingsMixin, View):
         template.save(update_fields=["active", "updated_at"])
         _log(
             request,
-            f"switched the message template “{template.name}” {'on' if template.active else 'off'}.",
+            f"switched the message template “{template.name}” "
+            f"{'on' if template.active else 'off'}.",
             "message_template",
         )
         return redirect("comms:templates")
@@ -156,7 +165,8 @@ class ScheduleEditView(SettingsMixin, View):
             saved.template.save(update_fields=["send_mode", "updated_at"])
             _log(
                 request,
-                f"set the template “{saved.template.name}” to {saved.template.get_send_mode_display().lower()}.",
+                f"set the template “{saved.template.name}” to "
+                f"{saved.template.get_send_mode_display().lower()}.",
                 "message_template",
             )
         _log(request, f"changed the reminder “{saved.name}”.", "reminder_schedule")

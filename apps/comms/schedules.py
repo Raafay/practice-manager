@@ -27,7 +27,9 @@ def fire_dates(schedule: ReminderSchedule, base: date) -> list[date]:
     `repeat_every_days` for up to `max_repeats` times.
     """
     first: list[date] = []
-    for offset in sorted({int(o) for o in schedule.offsets}, reverse=schedule.trigger == "before_deadline"):
+    for offset in sorted(
+        {int(o) for o in schedule.offsets}, reverse=schedule.trigger == "before_deadline"
+    ):
         if schedule.trigger in ("before_deadline", "before_target"):
             if schedule.working_days:
                 first.append(add_working_days(base, -offset))
@@ -101,7 +103,9 @@ def _make(schedule, client, *, key, reason, deadline=None, task=None):
         message.state = QueuedMessage.State.APPROVED
         message.approved_at = timezone.now()
         message.send_after = message.approved_at
-        message.reason = f"{message.reason} (sent automatically: the template is set to automatic)"[:300]
+        message.reason = f"{message.reason} (sent automatically: the template is set to automatic)"[
+            :300
+        ]
         message.save()
     return message
 
@@ -117,7 +121,9 @@ def run_schedule(schedule: ReminderSchedule, today: date | None = None) -> int:
             rule=schedule.rule, status=Deadline.Status.OPEN
         ).select_related("client", "client__manager", "client__partner", "client_service")
         for deadline in deadlines:
-            base = deadline.due_date if schedule.trigger == "before_deadline" else deadline.period_end
+            base = (
+                deadline.due_date if schedule.trigger == "before_deadline" else deadline.period_end
+            )
             if base is None:
                 continue
             made += _schedule_dates(schedule, deadline.client, base, today, deadline=deadline)
@@ -150,6 +156,8 @@ def _schedule_dates(schedule, client, base, today, *, deadline=None, task=None) 
 def _run_task_based(schedule, today) -> int:
     from apps.tasks.models import Task, TaskStep
 
+    if schedule.task_template_id is None:
+        return 0  # without a task template there is nothing to match
     tasks = Task.objects.filter(
         template=schedule.task_template, client__isnull=False, cancelled_at__isnull=True
     ).select_related("client", "client__manager", "client__partner", "status", "deadline")

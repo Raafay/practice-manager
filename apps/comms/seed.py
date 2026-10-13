@@ -13,8 +13,8 @@ TEMPLATES = [
         "name": "Accounts: records request",
         "group": "records",
         "subject": "Records needed for {{ client.name }}'s year-end accounts",
-        "body": HELLO
-        + "<p>{{ client.name }}'s financial year ended on {{ deadline.period_end }}. To prepare the "
+        "body": HELLO + "<p>{{ client.name }}'s financial year ended on {{ deadline.period_end }}. "
+        "To prepare the "
         "accounts we need your bank statements, sales and purchase records, and any loan or "
         "asset paperwork for the year.</p><p>The accounts are due at Companies House by "
         "{{ deadline.due_date }}. You can send everything through the link below.</p>"
@@ -57,7 +57,8 @@ TEMPLATES = [
         "group": "records",
         "subject": "Payroll changes for {{ deadline.due_date }}",
         "body": HELLO
-        + "<p>The next payroll for {{ client.name }} runs on {{ deadline.due_date }}. Please tell us "
+        + "<p>The next payroll for {{ client.name }} runs on {{ deadline.due_date }}. "
+        "Please tell us "
         "about new starters, leavers, pay rises, overtime and any absence before then.</p>" + BYE,
     },
     {
@@ -83,8 +84,7 @@ TEMPLATES = [
         "name": "PAYE: payment reminder",
         "group": "reminder",
         "subject": "PAYE payment due {{ deadline.due_date }}",
-        "body": HELLO
-        + "<p>{{ client.name }}'s PAYE and National Insurance is due to HMRC by "
+        "body": HELLO + "<p>{{ client.name }}'s PAYE and National Insurance is due to HMRC by "
         "{{ deadline.due_date }}.</p>" + BYE,
     },
 ]

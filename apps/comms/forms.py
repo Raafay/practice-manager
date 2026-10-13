@@ -19,7 +19,7 @@ TRIGGER_HELP = {
 
 def channel_choices():
     """Text messages are offered only when a provider is configured."""
-    return [(v, l) for v, l in Channel.choices if v != Channel.SMS or sms_enabled()]
+    return [(v, label) for v, label in Channel.choices if v != Channel.SMS or sms_enabled()]
 
 
 class RichBodyMixin:
@@ -46,11 +46,13 @@ class TemplateForm(StyledFormMixin, RichBodyMixin, forms.ModelForm):
             self.fields["send_mode"].choices = [
                 (MessageTemplate.SendMode.HOLD, MessageTemplate.SendMode.HOLD.label)
             ]
-            self.fields["send_mode"].help_text = "Only the owner can switch a template to automatic."
+            self.fields[
+                "send_mode"
+            ].help_text = "Only the owner can switch a template to automatic."
         else:
-            self.fields["send_mode"].help_text = (
-                "“Send automatically” lets a reminder leave without anyone approving it."
-            )
+            self.fields[
+                "send_mode"
+            ].help_text = "“Send automatically” lets a reminder leave without anyone approving it."
         self.fields["subject"].widget.attrs["data-merge-subject"] = "true"
         if self.instance.pk and self.instance.system:
             self.fields["channel"].disabled = True
@@ -66,9 +68,9 @@ class TemplateForm(StyledFormMixin, RichBodyMixin, forms.ModelForm):
 
     def clean_send_mode(self):
         mode = self.cleaned_data["send_mode"]
-        if mode == MessageTemplate.SendMode.AUTO and not self.can_set_auto:
-            if not (self.instance.pk and self.instance.send_mode == mode):
-                raise ValidationError("Only the owner can switch a template to automatic.")
+        unchanged = bool(self.instance.pk and self.instance.send_mode == mode)
+        if mode == MessageTemplate.SendMode.AUTO and not self.can_set_auto and not unchanged:
+            raise ValidationError("Only the owner can switch a template to automatic.")
         return mode
 
 
@@ -195,7 +197,10 @@ class ComposeForm(MessageEditForm):
         )
         links = client.client_contacts.filter(resigned_on__isnull=True).select_related("contact")
         self.fields["contacts"].choices = [
-            (link.contact.email, f"{link.contact.first_name} {link.contact.last_name} <{link.contact.email}>")
+            (
+                link.contact.email,
+                f"{link.contact.first_name} {link.contact.last_name} <{link.contact.email}>",
+            )
             for link in links
             if link.contact.email
         ]

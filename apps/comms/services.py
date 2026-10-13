@@ -63,9 +63,9 @@ def reminder_recipients(client, *, main_only: bool = False):
     links = client.client_contacts.filter(resigned_on__isnull=True).select_related("contact")
     people = []
     for link in links:
-        if link.is_main or (link.receives_reminders and not main_only):
-            if link.contact.email:
-                people.append((link, link.contact))
+        wanted = link.is_main or (link.receives_reminders and not main_only)
+        if wanted and link.contact.email:
+            people.append((link, link.contact))
     people.sort(key=lambda item: (not item[0].is_main, item[1].last_name))
     return [contact for _, contact in people]
 
@@ -135,7 +135,8 @@ def create_message(
         existing = QueuedMessage.objects.filter(duplicate_key=duplicate_key).first()
         if existing is not None:
             return existing
-    check_addresses(to, cc, bcc)
+    if channel == Channel.EMAIL:
+        check_addresses(to, cc, bcc)
     body_html = clean_html(body_html) if body_html else ""
     if not body_text and body_html:
         body_text = merge.html_to_text(body_html)
@@ -204,9 +205,7 @@ def can_approve(user, message: QueuedMessage) -> bool:
     if not user.can("comms.approve"):
         return False
     group = message.template.group if message.template else ""
-    if group == MessageTemplate.Group.FEES and not user.can("comms.approve_fees"):
-        return False
-    return True
+    return not (group == MessageTemplate.Group.FEES and not user.can("comms.approve_fees"))
 
 
 @transaction.atomic
@@ -343,7 +342,9 @@ def build_email(message: QueuedMessage) -> EmailMultiAlternatives:
     person = sender_for(message)
     display = f"{person.name} ({practice.practice_name})" if person else practice.practice_name
     from_header = formataddr((display, sending_address(practice)))
-    reply_to = [person.email] if person and person.email else ([practice.email] if practice.email else [])
+    reply_to = (
+        [person.email] if person and person.email else ([practice.email] if practice.email else [])
+    )
     bcc = split_addresses(message.bcc)
     if practice.bcc_practice:
         copy = practice.email or sending_address(practice)
@@ -351,11 +352,11 @@ def build_email(message: QueuedMessage) -> EmailMultiAlternatives:
             bcc.append(copy)
     text = message.body_text
     html = message.body_html
-    if message.uses_signature and person is not None and person.email_signature:
-        if person.email_signature not in text:
-            text = f"{text}\n\n-- \n{person.email_signature}"
-            sig_html = "<p>" + "<br>".join(_escape(person.email_signature).splitlines()) + "</p>"
-            html = f"{html}{sig_html}" if html else ""
+    wants_signature = message.uses_signature and person is not None and person.email_signature
+    if wants_signature and person.email_signature not in text:
+        text = f"{text}\n\n-- \n{person.email_signature}"
+        sig_html = "<p>" + "<br>".join(_escape(person.email_signature).splitlines()) + "</p>"
+        html = f"{html}{sig_html}" if html else ""
     email = EmailMultiAlternatives(
         subject=message.subject,
         body=text,

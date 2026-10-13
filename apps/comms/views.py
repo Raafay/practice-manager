@@ -263,12 +263,12 @@ class ComposeView(StaffRequiredMixin, View):
         client = get_client(pk)
         form = self._form(request, client, request.POST, request.FILES)
         if request.POST.get("action") == "load_template":
-            template = form.fields["template"].queryset.filter(
-                pk=request.POST.get("template") or 0
-            ).first()
-            return self._render(
-                request, client, self._form(request, client, template=template)
+            template = (
+                form.fields["template"]
+                .queryset.filter(pk=request.POST.get("template") or 0)
+                .first()
             )
+            return self._render(request, client, self._form(request, client, template=template))
         if not form.is_valid():
             return self._render(request, client, form, 422)
         data = form.cleaned_data
@@ -339,7 +339,9 @@ class LogEmailView(StaffRequiredMixin, View):
         from django.utils import timezone
 
         client = get_client(pk)
-        return self._render(request, client, EmailLogForm(initial={"on_date": timezone.localdate()}))
+        return self._render(
+            request, client, EmailLogForm(initial={"on_date": timezone.localdate()})
+        )
 
     def post(self, request, pk):
         client = get_client(pk)
@@ -348,7 +350,11 @@ class LogEmailView(StaffRequiredMixin, View):
             return self._render(request, client, form, 422)
         data = form.cleaned_data
         services.log_email(
-            request.user, client, on_date=data["on_date"], who_with=data["who"], summary=data["summary"]
+            request.user,
+            client,
+            on_date=data["on_date"],
+            who_with=data["who"],
+            summary=data["summary"],
         )
         return done(request, reverse("clients:timeline", args=[client.pk]))
 
@@ -387,15 +393,12 @@ class SmsView(StaffRequiredMixin, View):
     """Send SMS. Hidden, and a 404, unless a provider is configured."""
 
     def _render(self, request, client, status=200, error=""):
-        return render(
-            request, "comms/sms.html", {"client": client, "error": error}, status=status
-        )
+        return render(request, "comms/sms.html", {"client": client, "error": error}, status=status)
 
-    def dispatch(self, request, *args, **kwargs):
+    def has_access(self, request) -> bool:
         if not sms_enabled():
-            if request.user.is_authenticated:
-                raise Http404
-        return super().dispatch(request, *args, **kwargs)
+            raise Http404
+        return True
 
     def get(self, request, pk):
         return self._render(request, get_client(pk))
@@ -491,5 +494,3 @@ class BulkEmailView(StaffRequiredMixin, View):
             made += 1
         messages.success(request, f"{made} message{'s' if made != 1 else ''} queued for approval.")
         return redirect("comms:queue")
-
-

@@ -12,7 +12,7 @@ from datetime import date
 
 import nh3
 from django.utils import timezone
-from django.utils.html import escape, format_html, linebreaks
+from django.utils.html import escape, format_html, format_html_join, linebreaks
 from django.utils.safestring import mark_safe
 
 from apps.core.money import format_money
@@ -168,9 +168,7 @@ def _plain_values(ctx: Context) -> dict[str, str]:
             }
         )
     if task is not None:
-        values.update(
-            {"task.title": task.title, "task.target_date": _fmt_date(task.target_date)}
-        )
+        values.update({"task.title": task.title, "task.target_date": _fmt_date(task.target_date)})
     if client is not None and client.pk:
         from apps.services.services import summary
 
@@ -189,8 +187,9 @@ def _services_block(client):
         ]
     if not names:
         return "", ""
+    items = format_html_join("", "<li>{}</li>", ((n,) for n in names))
     return (
-        format_html("<ul>{}</ul>", mark_safe("".join(format_html("<li>{}</li>", n) for n in names))),
+        format_html("<ul>{}</ul>", items),
         "\n".join(f"• {n}" for n in names),
     )
 
@@ -227,7 +226,8 @@ def _cs01_block(client):
         lines.append(
             (
                 role.capitalize(),
-                f"{officer.get('name', '')}, appointed {_fmt_date(_parse(since)) or 'date not held'}",
+                f"{officer.get('name', '')}, appointed "
+                f"{_fmt_date(_parse(since)) or 'date not held'}",
             )
         )
     for owner in snapshot.owners or []:
@@ -249,7 +249,7 @@ def _cs01_block(client):
         escape(ask),
     )
     text = "\n".join(f"• {k}: {v}" for k, v in lines) + "\n\n" + ask
-    return mark_safe(html), text
+    return mark_safe(html), text  # noqa: S308 - every value above was escaped
 
 
 def _parse(value):
@@ -313,7 +313,7 @@ def render(source: str, ctx: Context, *, html: bool = True) -> Rendered:
                 if as_html:
                     return format_html(
                         '<a href="{}" style="display:inline-block;padding:8px 14px;'
-                        'background:#2f5d8a;color:#fff;border-radius:4px;'
+                        "background:#2f5d8a;color:#fff;border-radius:4px;"
                         'text-decoration:none">{}</a>',
                         url,
                         label,
