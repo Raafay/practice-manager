@@ -26,13 +26,18 @@ NI_NUMBER = re.compile(r"^[A-Z]{2}[0-9]{6}[A-D]$")
 UTR = re.compile(r"^[0-9]{10}$")
 COMPANY_NUMBER = re.compile(r"^[A-Z0-9]{6,8}$")
 CH_CODE = re.compile(r"^[A-Z0-9]{6}$")
+# The personal code a person gets when Companies House verifies their identity.
+CH_PERSONAL_CODE = re.compile(r"^[A-Z0-9]{11}$")
 
 ENCRYPTED_CLEANERS = {
     "ni_number": (NI_NUMBER, "Enter a National Insurance number such as QQ123456C."),
     "personal_utr": (UTR, "A UTR is ten digits."),
     "company_utr": (UTR, "A UTR is ten digits."),
     "ch_auth_code": (CH_CODE, "A Companies House authentication code is six letters or digits."),
-    "ch_personal_code": (CH_CODE, "A Companies House personal code is six letters or digits."),
+    "ch_personal_code": (
+        CH_PERSONAL_CODE,
+        "A Companies House personal code is 11 letters or digits.",
+    ),
 }
 
 
@@ -263,6 +268,8 @@ class ContactForm(TrackedModelForm):
             "mobile",
             "phone",
             "date_of_birth",
+            "birth_month",
+            "birth_year",
             "ni_number",
             "personal_utr",
             "home_address",

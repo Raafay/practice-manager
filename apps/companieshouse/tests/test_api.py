@@ -172,3 +172,20 @@ def test_a_long_list_is_read_page_by_page():
     client, _ = client_with(transport)
     assert len(client.officers("09999901")) == 2
     assert "start_index=1" in transport.urls[1]
+
+
+def test_ch_check_prints_the_filing_dates(capsys):
+    from django.core.management import call_command
+
+    call_command("ch_check", "9999901")
+    out = capsys.readouterr().out
+    assert "EXAMPLE TRADING LTD" in out
+    assert "Next accounts due:" in out and "31/12/2026" in out
+    assert "Next statement due:" in out and "03/11/2026" in out
+
+
+def test_ch_check_reports_an_unknown_company():
+    from django.core.management import CommandError, call_command
+
+    with pytest.raises(CommandError, match="no company with that number"):
+        call_command("ch_check", "12345678")

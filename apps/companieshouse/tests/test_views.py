@@ -156,3 +156,22 @@ def test_the_read_only_list_matches_what_the_sync_writes():
     from apps.clients import panels
 
     assert set(panels.COMPANIES_HOUSE_FIELDS) == set(services.CH_FIELDS)
+
+
+def test_a_personal_code_is_eleven_characters_and_shows_as_on_file(client):
+    from apps.clients.forms import ContactForm
+    from apps.clients.models import Contact
+
+    company, _ = services.import_company(None, "09999901")
+    alice = Contact.objects.get(ch_officer_id="AAA111OFF")
+    data = {"first_name": "Alice", "last_name": "Sample", "ch_officer_id": "AAA111OFF"}
+    data["ch_personal_code"] = "ABC123"
+    assert not ContactForm(data=data, instance=alice).is_valid()
+    data["ch_personal_code"] = "abc12345xyz"
+    form = ContactForm(data=data, instance=alice)
+    assert form.is_valid(), form.errors
+    form.save()
+    sign_in(client, staff())
+    tab = client.get(reverse("companieshouse:tab", args=[company.pk])).content.decode()
+    assert "Personal code: on file" in tab
+    assert "ABC12345XYZ" not in tab
