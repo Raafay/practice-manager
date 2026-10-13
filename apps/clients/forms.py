@@ -114,6 +114,9 @@ class ClientPanelForm(TrackedModelForm):
     panel_key = ""
 
     def __init__(self, *args, **kwargs):
+        self.custom = (
+            list(CustomFieldDefinition.objects.all()) if self.panel_key == "internal" else []
+        )
         super().__init__(*args, **kwargs)
         client = self.instance
         for name in panels.SYNCED_DATE_FIELDS:
@@ -127,13 +130,14 @@ class ClientPanelForm(TrackedModelForm):
             if name in self.fields:
                 self.fields[name].queryset = staff_choices()
                 self.fields[name].empty_label = "Nobody"
-        self.custom = []
-        if self.panel_key == "internal":
-            for definition in CustomFieldDefinition.objects.all():
-                self.custom.append(definition)
-                self.fields[f"cf_{definition.pk}"] = custom_form_field(
-                    definition, client.custom_values.get(str(definition.pk), "")
-                )
+        if "website" in self.fields:
+            self.fields["website"] = forms.URLField(
+                label="Website", required=False, assume_scheme="https"
+            )
+        for definition in self.custom:
+            self.fields[f"cf_{definition.pk}"] = custom_form_field(
+                definition, client.custom_values.get(str(definition.pk), "")
+            )
 
     def _tracked(self):
         names = super()._tracked()

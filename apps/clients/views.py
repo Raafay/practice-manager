@@ -121,6 +121,7 @@ def _export_query(form, chosen_columns, sort) -> str:
 class ClientExportView(CapabilityRequiredMixin, View):
     required_rights = ("data.export",)
     require_reauth = True
+    reauth_allow_get = False  # a download is a GET, so the password is asked for on GET too
 
     def get(self, request):
         params = request.GET

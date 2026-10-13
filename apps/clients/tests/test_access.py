@@ -114,7 +114,14 @@ def test_every_address_refuses_portal_users(client, world):
 )
 def test_pages_that_need_a_right_refuse_everyone_without_it(client, world, name, method, who):
     sign_in(client, who())
-    args = [world["client"].pk] if name.startswith("clients:") and "tags" not in name and "custom" not in name and "export" not in name else []
+    args = (
+        [world["client"].pk]
+        if name.startswith("clients:")
+        and "tags" not in name
+        and "custom" not in name
+        and "export" not in name
+        else []
+    )
     assert getattr(client, method)(reverse(name, args=args)).status_code == 403
 
 

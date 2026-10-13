@@ -17,6 +17,7 @@ from apps import events
 from apps.core.dates import add_months
 from apps.core.fields import EncryptedTextField
 from apps.core.models import PracticeSettings
+from apps.events.services import changes
 
 from .models import (
     Client,
@@ -120,7 +121,7 @@ def update_client(actor, client: Client, form, *, section: str) -> Client:
             labels.append(str(form.fields[name].label or name).capitalize())
     with transaction.atomic():
         client = form.save()
-    diff = events.changes(form.before, form.after())
+    diff = changes(form.before, form.after())
     events.record(
         actor,
         "client.changed",
@@ -313,7 +314,7 @@ def update_contact(actor, contact: Contact, form) -> Contact:
         contact,
         "contact.changed",
         f"{actor} changed details for {contact.full_name}: {', '.join(labels)}.",
-        fields=events.changes(form.before, form.after()),
+        fields=changes(form.before, form.after()),
     )
     return contact
 
@@ -359,7 +360,7 @@ def save_client_contact(actor, link: ClientContact, form) -> ClientContact:
             f"{actor} changed {link.contact.full_name} at {link.client.name}: {', '.join(labels)}.",
             client=link.client,
             target=link.contact,
-            fields=events.changes(form.before, form.after()),
+            fields=changes(form.before, form.after()),
         )
     return link
 
@@ -559,7 +560,7 @@ def update_document(actor, document: Document, form) -> Document:
             f"{actor} changed {document.title} on {document.client.name}.",
             client=document.client,
             target=document,
-            fields=events.changes(form.before, form.after()),
+            fields=changes(form.before, form.after()),
         )
     return document
 
