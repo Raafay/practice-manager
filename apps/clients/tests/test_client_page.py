@@ -163,6 +163,10 @@ def test_encrypted_fields_are_masked_and_show_is_logged(client):
     assert "1234567890" not in whole and "AB12CD" not in whole
     assert not ActivityEvent.objects.filter(verb="sensitive.revealed").exists()
 
+    for key in ("tax", "company"):
+        edit = client.get(reverse("clients:panel_edit", args=[target.pk, key])).content.decode()
+        assert "1234567890" not in edit and "AB12CD" not in edit
+
     revealed = client.post(reverse("clients:client_reveal", args=[target.pk, "company_utr"]))
     assert b"1234567890" in revealed.content
     assert revealed["Cache-Control"] == "no-store"

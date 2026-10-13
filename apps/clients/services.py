@@ -612,3 +612,38 @@ def purge_document(actor, document: Document) -> None:
         f"{actor} removed {title} from {client.name} for good.",
         client=client,
     )
+
+
+# ---------------------------------------------------------------- hand-over
+
+
+def clients_of(user):
+    """Live clients (not archived, not former or lost) where this person is partner or manager."""
+    return (
+        Client.objects.not_archived()
+        .exclude(status__in=[Client.Status.FORMER, Client.Status.LOST])
+        .filter(Q(partner=user) | Q(manager=user))
+    )
+
+
+def hand_over_clients(actor, from_user, to_user) -> int:
+    """Give a leaving person's partner and manager roles to someone else. Returns how many."""
+    count = 0
+    for client in clients_of(from_user):
+        roles = []
+        if client.partner_id == from_user.pk:
+            client.partner = to_user
+            roles.append("partner")
+        if client.manager_id == from_user.pk:
+            client.manager = to_user
+            roles.append("manager")
+        client.save(update_fields=["partner", "manager", "updated_at"])
+        events.record(
+            actor,
+            "client.handed_over",
+            f"{actor} handed {client.name} from {from_user} to {to_user} ({' and '.join(roles)}).",
+            client=client,
+            target=client,
+        )
+        count += 1
+    return count

@@ -226,21 +226,33 @@ def reset_mfa(actor, user: User) -> None:
     )
 
 
-def deactivate_user(actor, user: User) -> None:
+def deactivate_user(actor, user: User, hand_over_to: User | None = None) -> None:
+    """Deactivate a person. Their clients must be handed to someone who stays."""
+    from apps.clients import services as client_services
+
     _require(actor, "users.manage")
     if actor.pk == user.pk:
         raise ValidationError("You cannot deactivate your own account.")
     if not user.is_active:
         return
-    user.is_active = False
-    user.deactivated_at = timezone.now()
-    try:
-        user.save(update_fields=["is_active", "deactivated_at", "updated_at"])
-    except LastOwnerError:
-        user.is_active = True
-        user.deactivated_at = None
-        raise
-    events.record(actor, "user.deactivated", f"{actor} deactivated {user}.", target=user)
+    open_clients = client_services.clients_of(user).count()
+    if open_clients and (hand_over_to is None or hand_over_to.pk == user.pk):
+        raise ValidationError(
+            f"{user} looks after {open_clients} client{'s' if open_clients != 1 else ''}. "
+            "Choose who takes them over."
+        )
+    with transaction.atomic():
+        user.is_active = False
+        user.deactivated_at = timezone.now()
+        try:
+            user.save(update_fields=["is_active", "deactivated_at", "updated_at"])
+        except LastOwnerError:
+            user.is_active = True
+            user.deactivated_at = None
+            raise
+        handed = client_services.hand_over_clients(actor, user, hand_over_to) if open_clients else 0
+    note = f" Their {handed} clients went to {hand_over_to}." if handed else ""
+    events.record(actor, "user.deactivated", f"{actor} deactivated {user}.{note}", target=user)
 
 
 def reactivate_user(actor, user: User) -> None:

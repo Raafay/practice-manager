@@ -54,6 +54,7 @@ class TrackedModelForm(StyledFormMixin, forms.ModelForm):
         for name in self.encrypted:
             current = getattr(self.instance, name, "") if self.instance.pk else ""
             model_field = self._meta.model._meta.get_field(name)
+            self.initial[name] = ""  # the saved value must never be written into the page
             self.fields[name] = forms.CharField(
                 label=str(model_field.verbose_name).capitalize(),
                 required=False,
