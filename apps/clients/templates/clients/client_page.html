@@ -14,11 +14,15 @@
     </p>
   </div>
   <div class="flex flex-wrap items-center gap-2">
+    <button type="button" class="btn btn-secondary" hx-get="{% url 'comms:compose' client.pk %}" hx-target="#drawer-body">{% icon "envelope" "size-4" %} Send email</button>
     <button type="button" class="btn btn-secondary" hx-get="{% url 'clients:add_note' client.pk %}" hx-target="#drawer-body">{% icon "pencil-square" "size-4" %} Add note</button>
     <div class="relative" x-data="dropdown" @keydown.escape="close" @click.outside="close">
       <button type="button" class="btn btn-secondary" @click="toggle" :aria-expanded="open" aria-haspopup="true">More {% icon "chevron-down" "size-3" %}</button>
       <div class="menu right-0" x-show="open" x-cloak>
         <a class="menu-item" href="{% url 'clients:log_call' client.pk %}" hx-get="{% url 'clients:log_call' client.pk %}" hx-target="#drawer-body">{% icon "phone" "size-4" %} Log a call</a>
+        <a class="menu-item" href="{% url 'comms:log_email' client.pk %}" hx-get="{% url 'comms:log_email' client.pk %}" hx-target="#drawer-body">{% icon "envelope" "size-4" %} Log an email</a>
+        <a class="menu-item" href="{% url 'comms:letter' client.pk %}" hx-get="{% url 'comms:letter' client.pk %}" hx-target="#drawer-body">{% icon "document-text" "size-4" %} Create a letter</a>
+        {% if sms_enabled %}<a class="menu-item" href="{% url 'comms:sms' client.pk %}" hx-get="{% url 'comms:sms' client.pk %}" hx-target="#drawer-body">{% icon "phone" "size-4" %} Send SMS</a>{% endif %}
         {% if user|can:"clients.status" %}<a class="menu-item" href="{% url 'clients:status' client.pk %}" hx-get="{% url 'clients:status' client.pk %}" hx-target="#modal-body">{% icon "arrow-path" "size-4" %} Change status</a>{% endif %}
         {% if user|can:"clients.archive" %}
           {% if client.is_archived %}

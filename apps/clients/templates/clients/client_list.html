@@ -27,6 +27,7 @@
       </div>
     </div>
     {% if user|can:"data.export" %}<a href="{% url 'clients:export' %}?{{ export_query }}" class="btn btn-secondary">{% icon "arrow-down-tray" "size-4" %} Export CSV</a>{% endif %}
+    <a href="{% url 'comms:bulk_email' %}?{{ export_query }}" class="btn btn-secondary">{% icon "envelope" "size-4" %} Email these clients</a>
     <a href="{% url 'companieshouse:add' %}" class="btn btn-secondary">{% icon "magnifying-glass" "size-4" %} Add from Companies House</a>
     <a href="{% url 'clients:new' %}" class="btn btn-primary">{% icon "plus" "size-4" %} New client</a>
   </div>

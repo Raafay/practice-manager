@@ -1,0 +1,30 @@
+{% extends "layouts/app.html" %}
+{% block title %}Reminders{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Reminders" subtitle="Schedules that draft messages into the Queued list. All start switched off." %}
+  <a href="{% url 'core:settings' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Settings</a>
+</div>
+<div class="table-wrap"><table class="table">
+  <thead><tr><th scope="col">Reminder</th><th scope="col">When</th><th scope="col">Repeats</th><th scope="col">Template</th><th scope="col">Its message</th><th scope="col">State</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+  <tbody>{% for s in items %}
+    <tr>
+      <td class="font-medium text-slate-900">{{ s.name }}</td>
+      <td>{{ s.description }}</td>
+      <td>{% if s.repeat_every_days and s.max_repeats %}Every {{ s.repeat_every_days }} days, up to {{ s.max_repeats }} more{% else %}Not repeated{% endif %}</td>
+      <td><a href="{% url 'comms:template_edit' s.template.pk %}">{{ s.template.name }}</a></td>
+      <td>{% if s.template.send_mode == "auto" %}{% include "components/_badge.html" with text="Sends automatically" tone="amber" icon_name="arrow-path" %}{% else %}Waits for approval{% endif %}</td>
+      <td>
+        <form method="post" action="{% url 'comms:reminder_toggle' s.pk %}">{% csrf_token %}
+          <button type="submit" role="switch" class="switch-button" aria-checked="{% if s.active %}true{% else %}false{% endif %}" aria-label="{{ s.name }}">
+            <span class="switch-track" aria-hidden="true"></span>
+            <span class="text-xs font-medium {% if s.active %}text-green-700{% else %}text-slate-500{% endif %}">{% if s.active %}On{% else %}Off{% endif %}</span>
+          </button>
+        </form>
+      </td>
+      <td class="text-right"><a href="{% url 'comms:reminder_edit' s.pk %}" class="btn btn-ghost btn-sm">Edit</a></td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="7">{% include "components/_empty.html" with title="No reminders" message="Reminder schedules are set up when the app is installed." icon_name="bell" %}</td></tr>
+  {% endfor %}</tbody></table></div>
+{% endblock %}

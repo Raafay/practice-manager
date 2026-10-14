@@ -195,3 +195,34 @@ document.addEventListener("DOMContentLoaded", openDrawerOnLoad);
 
 // Rich text takes no files: a paste or drop of a file into Trix is refused.
 document.addEventListener("trix-file-accept", (event) => event.preventDefault());
+
+// Click-to-insert merge fields: the field goes into the subject if that was the last
+// box used, otherwise into the rich text editor on the same form.
+let lastMergeBox = null;
+document.addEventListener("focusin", (event) => {
+  if (event.target.matches && event.target.matches("[data-merge-subject]")) lastMergeBox = event.target;
+  else if (event.target.closest && event.target.closest("trix-editor")) lastMergeBox = null;
+});
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-insert-field]");
+  if (!button) return;
+  event.preventDefault();
+  const text = "{{ " + button.dataset.insertField + " }}";
+  const form = button.closest("form");
+  if (lastMergeBox && form && form.contains(lastMergeBox)) {
+    const box = lastMergeBox;
+    const start = box.selectionStart ?? box.value.length;
+    box.value = box.value.slice(0, start) + text + box.value.slice(box.selectionEnd ?? start);
+    box.focus();
+    box.setSelectionRange(start + text.length, start + text.length);
+    return;
+  }
+  const editor = form && form.querySelector("trix-editor");
+  if (editor && editor.editor) {
+    editor.focus();
+    editor.editor.insertString(text);
+  } else if (form) {
+    const plain = form.querySelector("[data-merge-body]");
+    if (plain) plain.value += text;
+  }
+});

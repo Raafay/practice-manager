@@ -1,0 +1,29 @@
+{% extends "layouts/app.html" %}
+{% block title %}Message templates{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Message templates" subtitle="Wording for emails, texts and letters. Merge fields such as {{ client.name }} are filled in for each client." %}
+  <div class="flex gap-2">
+    <a href="{% url 'core:settings' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Settings</a>
+    <a href="{% url 'comms:template_add' %}" class="btn btn-primary">{% icon "plus" "size-4" %} New template</a>
+  </div>
+</div>
+<div class="table-wrap"><table class="table">
+  <thead><tr><th scope="col">Template</th><th scope="col">Kind</th><th scope="col">Group</th><th scope="col">When it is created</th><th scope="col">State</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+  <tbody>{% for t in items %}
+    <tr>
+      <td><a href="{% url 'comms:template_edit' t.pk %}" class="font-medium">{{ t.name }}</a>{% if t.system %} <span class="badge badge-neutral">Starter</span>{% endif %}</td>
+      <td>{{ t.get_channel_display }}</td>
+      <td>{{ t.get_group_display }}</td>
+      <td>{% if t.send_mode == "auto" %}{% include "components/_badge.html" with text="Sends automatically" tone="amber" icon_name="arrow-path" %}{% else %}Waits for approval{% endif %}</td>
+      <td>{% if t.active %}{% include "components/_badge.html" with text="In use" tone="green" %}{% else %}{% include "components/_badge.html" with text="Off" tone="neutral" %}{% endif %}</td>
+      <td class="whitespace-nowrap text-right">
+        <a href="{% url 'comms:template_edit' t.pk %}" class="btn btn-ghost btn-sm">Edit</a>
+        <form method="post" action="{% url 'comms:template_toggle' t.pk %}" class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">{% if t.active %}Switch off{% else %}Switch on{% endif %}</button></form>
+        {% if not t.system %}<form method="post" action="{% url 'comms:template_delete' t.pk %}" class="inline" data-confirm="Delete the template {{ t.name }}?">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm text-red-700">Delete</button></form>{% endif %}
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="6">{% include "components/_empty.html" with title="No templates yet" message="Add a template to start writing to clients faster." icon_name="envelope" %}</td></tr>
+  {% endfor %}</tbody></table></div>
+{% endblock %}

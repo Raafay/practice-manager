@@ -1,0 +1,12 @@
+<h2 class="mb-3">Text {{ client.name }}</h2>
+{% if error %}<div class="form-errors" role="alert"><p>{{ error }}</p></div>{% endif %}
+<form method="post" action="{% url 'comms:sms' client.pk %}" hx-post="{% url 'comms:sms' client.pk %}" hx-target="#drawer-body" class="space-y-4">
+  {% csrf_token %}
+  <div><label class="label" for="sms-to">Mobile number</label><input class="input" id="sms-to" name="to" required></div>
+  <div><label class="label" for="sms-text">Message</label><textarea class="textarea" id="sms-text" name="text" rows="4" maxlength="480" required data-merge-body></textarea></div>
+  <div class="flex justify-end gap-2">
+    <button type="button" class="btn btn-secondary" data-dialog-close>Cancel</button>
+    <button type="submit" name="action" value="queue" class="btn btn-secondary">Save to queue</button>
+    {% if user|can:"comms.approve" %}<button type="submit" name="action" value="send" class="btn btn-primary">Send now</button>{% endif %}
+  </div>
+</form>

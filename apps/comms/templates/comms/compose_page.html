@@ -1,0 +1,6 @@
+{% extends "layouts/app.html" %}
+{% block title %}Email {{ client.name }}{% endblock %}
+{% block content %}
+<div class="mb-3"><a href="{% url 'clients:detail' client.pk %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} {{ client.name }}</a></div>
+<div class="card card-body max-w-3xl">{% include "comms/compose.html" %}</div>
+{% endblock %}

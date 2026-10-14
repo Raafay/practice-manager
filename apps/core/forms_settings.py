@@ -19,6 +19,8 @@ class PracticeDetailsForm(StyledFormMixin, forms.ModelForm):
             "vat_rate",
             "retention_years",
             "aml_retention_years",
+            "sending_address",
+            "bcc_practice",
         ]
         widgets = {
             "address": forms.Textarea(attrs={"rows": 3}),

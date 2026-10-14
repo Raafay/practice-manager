@@ -9,6 +9,7 @@
   </form>
   <div class="flex gap-2">
     <button type="button" class="btn btn-secondary btn-sm" hx-get="{% url 'clients:add_note' client.pk %}" hx-target="#drawer-body">{% icon "pencil-square" "size-4" %} Add note</button>
+    <button type="button" class="btn btn-secondary btn-sm" hx-get="{% url 'comms:log_email' client.pk %}" hx-target="#drawer-body">{% icon "envelope" "size-4" %} Log an email</button>
     <button type="button" class="btn btn-secondary btn-sm" hx-get="{% url 'clients:log_call' client.pk %}" hx-target="#drawer-body">{% icon "phone" "size-4" %} Log a call</button>
   </div>
 </div>

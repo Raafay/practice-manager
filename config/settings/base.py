@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "apps.companieshouse",
     "apps.services",
     "apps.tasks",
+    "apps.comms",
 ]
 
 MIDDLEWARE = [
@@ -193,6 +194,8 @@ FIELD_ENCRYPTION_KEYS = env_list("FIELD_ENCRYPTION_KEYS")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "Practice Manager <no-reply@example.com>")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 EMAIL_BACKEND = env("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+# Text messages stay off until a provider class is named here (Stage 6, spec 07 section 7).
+SMS_BACKEND = env("SMS_BACKEND", "")
 
 INVITATION_VALID_HOURS = 72
 ALLOW_DEMO_DATA = env_bool("ALLOW_DEMO_DATA", False)

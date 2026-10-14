@@ -1,0 +1,5 @@
+{% extends "layouts/app.html" %}
+{% block title %}Text {{ client.name }}{% endblock %}
+{% block content %}
+<div class="card card-body max-w-xl">{% include "comms/sms.html" %}</div>
+{% endblock %}

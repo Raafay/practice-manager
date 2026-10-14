@@ -451,6 +451,7 @@ class Note(TimeStampedModel):
     class Kind(models.TextChoices):
         NOTE = "note", "Note"
         CALL = "call", "Call"
+        EMAIL = "email", "Email"
 
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="notes")
     kind = models.CharField(max_length=5, choices=Kind.choices, default=Kind.NOTE)
