@@ -1,6 +1,7 @@
 from allauth.mfa.models import Authenticator
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Count, Exists, OuterRef, Prefetch
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -55,6 +56,8 @@ class UserListView(ManageUsersMixin, TemplateView):
 
 
 class InviteView(ManageUsersMixin, View):
+    # Inviting someone gives them access, so the password is asked for again.
+    require_reauth = True
     template_name = "accounts/invite.html"
     partial_template_name = "accounts/_invite_form.html"
 
@@ -70,13 +73,17 @@ class InviteView(ManageUsersMixin, View):
         form = InviteForm(request.POST)
         if not form.is_valid():
             return self.render_form(request, form, status=422)
-        invitation = services.invite_user(
-            request.user,
-            email=form.cleaned_data["email"],
-            name=form.cleaned_data["name"],
-            role=form.cleaned_data["role"],
-            request=request,
-        )
+        try:
+            invitation = services.invite_user(
+                request.user,
+                email=form.cleaned_data["email"],
+                name=form.cleaned_data["name"],
+                role=form.cleaned_data["role"],
+                request=request,
+            )
+        except ValidationError as error:
+            form.add_error("role", error)
+            return self.render_form(request, form, status=422)
         messages.success(
             request,
             f"Invitation sent to {invitation.email}. The link works once and lasts 72 hours.",
@@ -257,8 +264,13 @@ class RolesView(ManageUsersMixin, View):
         form = RoleRightsForm(request.POST, roles=roles)
         if not form.is_valid():  # pragma: no cover - tick boxes cannot be invalid
             return render(request, self.template_name, self.context(form, roles), status=422)
-        for role in form.roles:
-            services.set_role_rights(request.user, role, form.rights_for(role))
+        try:
+            with transaction.atomic():
+                for role in form.roles:
+                    services.set_role_rights(request.user, role, form.rights_for(role))
+        except ValidationError as error:
+            messages.error(request, " ".join(error.messages))
+            return redirect("accounts:roles")
         messages.success(request, "Role rights saved.")
         return redirect("accounts:roles")
 

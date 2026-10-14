@@ -20,12 +20,35 @@ def _require(actor, right: str) -> None:
         raise PermissionDenied
 
 
+def _no_escalation(actor, *, target: User | None = None, role: Role | None = None, granting=()):
+    """`users.manage` held by someone other than an owner never gives more than they hold.
+
+    They cannot change their own access, touch an owner's account, hand out the Owner
+    role, or grant a right they do not have themselves. Owners are not limited.
+    """
+    if actor.is_owner:
+        return
+    if target is not None and target.pk == actor.pk:
+        raise ValidationError("Ask an owner to change your own access.")
+    if target is not None and target.role is not None and target.role.is_owner_role:
+        raise ValidationError("Only an owner can change an owner's account.")
+    if role is not None and role.is_owner_role:
+        raise ValidationError("Only an owner can give someone the Owner role.")
+    wanted = set(granting) | (role.effective_rights() if role is not None else set())
+    beyond = sorted(wanted - actor.effective_rights())
+    if beyond:
+        raise ValidationError(
+            "You cannot give rights you do not hold yourself: " + ", ".join(beyond) + "."
+        )
+
+
 # Invitations
 
 
 def invite_user(actor, *, email: str, name: str, role: Role, request=None) -> Invitation:
     """Create an invitation and email the link straight to the person (never queued)."""
     _require(actor, "users.manage")
+    _no_escalation(actor, role=role)
     with transaction.atomic():
         invitation, raw_token = Invitation.issue(
             email=email, name=name, role=role, invited_by=actor
@@ -93,6 +116,7 @@ def accept_invitation(invitation: Invitation, password: str, request=None) -> Us
 
 def change_role(actor, user: User, role: Role) -> None:
     _require(actor, "users.manage")
+    _no_escalation(actor, target=user, role=role)
     old = user.role
     if old == role:
         return
@@ -115,6 +139,7 @@ def set_extra_rights(actor, user: User, rights: list[str]) -> None:
     _require(actor, "users.manage")
     new = sorted(set(rights) & set(RIGHTS))
     old = sorted(user.extra_rights or [])
+    _no_escalation(actor, target=user, granting=set(new) - set(old))
     if new == old:
         return
     user.extra_rights = new
@@ -135,6 +160,7 @@ def set_role_rights(actor, role: Role, rights: list[str]) -> None:
         raise ValidationError("The Owner role always has every right.")
     new = [right for right in RIGHTS if right in set(rights)]
     old = list(role.rights)
+    _no_escalation(actor, granting=set(new) - set(old))
     if set(new) == set(old):
         return
     role.rights = new
@@ -214,6 +240,7 @@ def delete_team(actor, team: Team) -> None:
 def reset_mfa(actor, user: User) -> None:
     """Remove someone's authenticator app and recovery codes. They set it up again at sign-in."""
     _require(actor, "users.manage")
+    _no_escalation(actor, target=user)
     from allauth.mfa.models import Authenticator
 
     removed = Authenticator.objects.filter(user=user).delete()[0]
@@ -233,6 +260,7 @@ def deactivate_user(actor, user: User, hand_over_to: User | None = None) -> None
     _require(actor, "users.manage")
     if actor.pk == user.pk:
         raise ValidationError("You cannot deactivate your own account.")
+    _no_escalation(actor, target=user)
     if not user.is_active:
         return
     open_clients = client_services.clients_of(user).count()
@@ -257,6 +285,7 @@ def deactivate_user(actor, user: User, hand_over_to: User | None = None) -> None
 
 def reactivate_user(actor, user: User) -> None:
     _require(actor, "users.manage")
+    _no_escalation(actor, target=user)
     if user.is_active:
         return
     user.is_active = True
@@ -270,6 +299,7 @@ def update_profile(actor, form) -> User:
     user = form.instance
     if actor.pk != user.pk:
         _require(actor, "users.manage")
+        _no_escalation(actor, target=user)
     fields = list(form.changed_data)
     before = {name: form.initial.get(name) for name in fields}
     user = form.save()
