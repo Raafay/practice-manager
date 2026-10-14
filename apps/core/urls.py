@@ -5,6 +5,8 @@ from . import views
 app_name = "core"
 
 urlpatterns = [
+    # Answered by HealthCheckMiddleware; the address is listed here so it is known.
+    path("healthz/", views.healthz, name="healthz"),
     path("styleguide/", views.StyleguideView.as_view(), name="styleguide"),
     path(
         "styleguide/demo/<slug:kind>/", views.StyleguideDemoView.as_view(), name="styleguide_demo"

@@ -163,3 +163,10 @@ def server_error(request):
     from django.template import loader
 
     return HttpResponseServerError(loader.get_template("500.html").render())
+
+
+def healthz(request):
+    """For the host's health check: is the database answering? Public, says nothing else."""
+    from .middleware import health_response
+
+    return health_response()

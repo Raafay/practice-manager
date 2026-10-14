@@ -57,3 +57,35 @@ class RequestSizeLimitMiddleware:
                 content_type="text/plain; charset=utf-8",
             )
         return self.get_response(request)
+
+
+def health_response():
+    """200 if the database answers, else 503. Says nothing else."""
+    from django.db import connection
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+    except Exception:  # noqa: BLE001 - any failure means "not healthy"
+        response = HttpResponse("database unavailable", status=503, content_type="text/plain")
+    else:
+        response = HttpResponse("ok", content_type="text/plain")
+    response["Cache-Control"] = "no-store"
+    return response
+
+
+class HealthCheckMiddleware:
+    """Answer /healthz/ before anything else runs.
+
+    The host's health check may come over plain HTTP and with an internal host
+    name, so it is answered ahead of the HTTPS redirect and the host check.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if request.path in ("/healthz", "/healthz/") and request.method in ("GET", "HEAD"):
+            return health_response()
+        return self.get_response(request)

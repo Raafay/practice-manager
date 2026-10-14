@@ -106,6 +106,7 @@ mfa_view_recovery_codes             account
 mfa_generate_recovery_codes         account
 mfa_download_recovery_codes         account
 
+core:healthz                        public
 core:styleguide                     staff
 core:styleguide_demo                staff
 core:settings                       staff
