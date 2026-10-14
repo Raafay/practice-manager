@@ -104,3 +104,19 @@ def pretty_json(value) -> str:
     import json
 
     return json.dumps(value, indent=2, ensure_ascii=False, sort_keys=True, default=str)
+
+
+@register.filter
+def duration(minutes):
+    """90 becomes 1h 30m. Empty for nothing."""
+    from apps.timekeeping.services import format_minutes
+
+    return format_minutes(minutes)
+
+
+@register.filter
+def clock(minutes):
+    """90 becomes 1:30, for time boxes."""
+    from apps.timekeeping.services import clock_text
+
+    return clock_text(minutes)

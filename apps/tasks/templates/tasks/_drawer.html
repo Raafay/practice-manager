@@ -32,6 +32,8 @@
   </div>
   {% endif %}
 
+  {% include "timekeeping/_task_time.html" %}
+
   <section aria-label="Details" class="grid gap-3 sm:grid-cols-2">
     {% with t=task %}
     <div><label class="label" for="d-status">Status</label>

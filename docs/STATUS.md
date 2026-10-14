@@ -4,7 +4,7 @@ Keep this file under 150 lines. When it grows, shorten older stages to two lines
 
 ## Where things stand
 
-Next stage to build: 11 (Time, fees, Xero and forecast).
+Next stage to build: 12 (Import and reports).
 
 | Stage | State | Merged on |
 |---|---|---|
@@ -19,7 +19,7 @@ Next stage to build: 11 (Time, fees, Xero and forecast).
 | 8 Tasks, part two | Built, in review | |
 | 9 Prospects and proposals | Built, in review | |
 | 10 Portal and requests | Built, in review | |
-| 11 Time, fees, Xero and forecast | Not started | |
+| 11 Time, fees, Xero and forecast | Built, in review | |
 | 12 Import and reports | Not started | |
 | 13 Hardening and deployment | Not started | |
 
@@ -104,6 +104,13 @@ See `docs/screens/stage-03/`. 499 tests at the time.
 - Requests: public form `/r/<token>/` (bot trap, 10/hour per address, 30/day per link, 3 files of 10 MB), client Requests tab (copy, QR code, Replace link), inbox with convert, link, reply (queued), close, spam, reopen, "Log a request" in the New menu, nav count, Overview panel, proposal questions. Optional acknowledgement template, off.
 - New dependency: `segno` (pure-Python QR code, no other use). Screens in `docs/screens/stage-10/`. 
 
+## Stage 11: time, fees, Xero and forecast (built 14/10/2026)
+
+- `apps/timekeeping`: TimeEntry, Timer (one-to-one with the user, so one running timer; starting another saves the first). Timer in the top bar, from the task drawer and Log time; weekly timesheet (boxes save on change), client Time tab, time against estimate in the drawer, hours this week in Workload.
+- `apps/finance` (all pages need `finance.owner`, checked in view and template): Fees (splits, changes, hourly return), Invoices (overdue, not invoiced, check fee, Draft chase emails), Targets (by hand, yearly spread, straight line), Forecast (`forecast.py` plain functions, server-drawn SVG, feedback lines), Summary (page, and email job `owner_summary` to owners only), Settings, Xero contacts matching.
+- Xero: OAuth, tokens encrypted, refresh inside a row lock, 429 `Retry-After`, paging, changed-since; job `xero_sync` 02:30; reads only except Send to Xero. Fake transport and samples in `apps/finance/tests/samples/`. Setup steps: `docs/XERO_SETUP.md`. Client "Fees and invoices" tab needs `fees.view`.
+- Chase templates `fees_chase_7/14/30` (migration `finance.0002`), `outstanding_invoices` merge block (a list, because the cleaner drops table tags). Drafts always wait; approving needs `comms.approve_fees`. Demo data: time, made-up Xero invoices, targets (no fake connection). Screens in `docs/screens/stage-11/`. No new dependency; six Heroicons added.
+
 ## Assumptions
 
 Add one line each time a stage makes a choice that the specs and `docs/DECISIONS.md` did not cover. Give the stage number.
@@ -173,6 +180,13 @@ Add one line each time a stage makes a choice that the specs and `docs/DECISIONS
 - 9: A proposal link lasts to the end of the valid-until day. Wrong, expired and cancelled links all give the same plain 404 page. Won cards cannot be dragged back. Accepting does not draft the engagement letter; staff prepare it on the Engagement tab. Link buttons in the email arrive as plain links (nh3).
 - 9: Board drops other than Lost and Won reload the page so column totals stay right.
 
+- 11: Hourly return uses today's agreed monthly fee times the months in the window (not Xero invoices). The window is N calendar months ending with this one.
+- 11: Check fee compares a client's whole month of invoiced net with the agreed fee (two invoices add up). Not invoiced counts any non-void invoice dated this month, once the set day (10) has passed.
+- 11: Contracted for past months uses today's records, so clients who have since left are missing. Ended services count up to their end date. A setup fee counts only for onboarding clients, in their expected start month.
+- 11: "Ending by month" counts services that end before the last day of that month. Proposed services of an onboarding client with no expected start start 60 days from today (setting).
+- 11: Time boxes holding several entries are read-only on the timesheet; edit them from the client Time tab. Time cannot be logged for a future day.
+- 11: Send to Xero, matching and the Xero buttons need `finance.owner`. The owner summary email is internal, not queued. One task-table query budget test raised from 30 to 32 for the timer lookup.
+
 ## Known gaps
 
 Things a stage left unfinished or found broken, with the stage number. Remove a line when it is fixed.
@@ -213,3 +227,4 @@ Things a stage left unfinished or found broken, with the stage number. Remove a 
 - Demo data has three portal users (Copperleaf, Harbour Bakes, Wren and Finch) so every item kind is open. The portal code appears in the runserver console.
 - Known gaps: no email-in or WhatsApp-in (not in stage); portal items are not auto-withdrawn when a records task is cancelled.
 - Stage 6 assumption 6 and Stage 7 gap 7 are resolved by this stage.
+- 11: Live Xero connection untested (cloud cannot reach Xero); built and tested against the samples. Disconnect only forgets the tokens; remove the app in Xero too.

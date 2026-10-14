@@ -1,0 +1,32 @@
+<section class="card card-body mt-6" aria-labelledby="xero-heading">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <h2 id="xero-heading" class="text-base font-semibold">Xero</h2>
+    {% if xero_panel.state.state == "ok" %}{% include "components/_badge.html" with text="Connected" tone="green" icon_name="check" %}
+    {% elif xero_panel.state.state == "broken" %}{% include "components/_badge.html" with text="Needs attention" tone="red" icon_name="exclamation-triangle" %}
+    {% else %}{% include "components/_badge.html" with text="Not connected" tone="neutral" %}{% endif %}
+  </div>
+  <dl class="mt-3 grid grid-cols-3 gap-x-4 gap-y-2 text-sm">
+    <dt class="muted">App keys</dt>
+    <dd class="col-span-2">{% if xero_panel.keys %}Set in the environment (XERO_CLIENT_ID and XERO_CLIENT_SECRET). They are never shown here.{% else %}Not set. Add XERO_CLIENT_ID and XERO_CLIENT_SECRET to the server's environment and restart.{% endif %}</dd>
+    <dt class="muted">Redirect address</dt>
+    <dd class="col-span-2"><code class="text-xs">{{ xero_panel.redirect_uri }}</code> <span class="muted block text-xs">Enter this exactly as the redirect URI when you register the app at developer.xero.com.</span></dd>
+    {% if xero_panel.state.connection %}
+    <dt class="muted">Organisation</dt><dd class="col-span-2">{{ xero_panel.state.connection.tenant_name|default:"Connected organisation" }}{% if xero_panel.state.connection.connected_at %} <span class="muted text-xs">since {{ xero_panel.state.connection.connected_at|date:"d/m/Y" }}</span>{% endif %}</dd>
+    <dt class="muted">Last sync</dt>
+    <dd class="col-span-2">
+      {% if xero_panel.state.connection.last_good_sync_at %}Last good sync {{ xero_panel.state.connection.last_good_sync_at|date:"d/m/Y H:i" }}.{% else %}No sync has worked yet.{% endif %}
+      {% if xero_panel.state.state == "broken" %}<span class="block text-xs text-red-700">{{ xero_panel.state.error }}</span>{% endif %}
+      {% if xero_panel.last_log and xero_panel.last_log.counts %}<span class="muted block text-xs">Last run: {% for key, value in xero_panel.last_log.counts.items %}{{ key }} {{ value }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>{% endif %}
+    </dd>
+    <dt class="muted">Nightly sync</dt><dd class="col-span-2">Every day at 02:30. It reads customers, sales invoices and credit notes, and keeps the connection alive. It never changes anything in Xero.</dd>
+    {% endif %}
+  </dl>
+  <div class="mt-4 flex flex-wrap gap-2">
+    {% if xero_panel.state.connection %}
+    <form method="post" action="{% url 'finance:xero_sync' %}">{% csrf_token %}<button type="submit" class="btn btn-secondary">{% icon "arrow-path" "size-4" %} Sync now</button></form>
+    <form method="post" action="{% url 'finance:xero_disconnect' %}" data-confirm="Disconnect Xero? The invoices already read are kept, but no new ones arrive.">{% csrf_token %}<button type="submit" class="btn btn-ghost text-red-700">Disconnect</button></form>
+    {% endif %}
+    {% if xero_panel.keys %}<a href="{% url 'finance:xero_connect' %}" class="btn btn-primary">{% if xero_panel.state.connection %}Connect again{% else %}Connect Xero{% endif %}</a>{% endif %}
+  </div>
+  <p class="help mt-2">Sync now starts within a minute, when the worker next checks.</p>
+</section>

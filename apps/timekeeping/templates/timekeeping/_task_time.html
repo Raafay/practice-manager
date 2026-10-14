@@ -1,0 +1,15 @@
+{# Time on the task drawer: logged against the estimate, a timer and a log button. #}
+<section aria-labelledby="time-h" class="rounded-md border border-slate-200 px-3 py-2 text-sm">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <h3 id="time-h" class="text-sm font-semibold">Time</h3>
+    <div class="flex gap-2">
+      {% if timer_on_task %}
+      <form method="post" action="{% url 'timekeeping:timer_stop' %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button type="submit" class="btn btn-secondary btn-sm">{% icon "stop" "size-4" %} Stop timer</button></form>
+      {% else %}
+      <form method="post" action="{% url 'timekeeping:timer_start' %}">{% csrf_token %}<input type="hidden" name="task" value="{{ task.pk }}"><input type="hidden" name="next" value="{{ request.path }}"><button type="submit" class="btn btn-secondary btn-sm">{% icon "play" "size-4" %} Start timer</button></form>
+      {% endif %}
+      <a href="{% url 'timekeeping:log' %}?task={{ task.pk }}" class="btn btn-ghost btn-sm" hx-get="{% url 'timekeeping:log' %}?task={{ task.pk }}" hx-target="#modal-body">Log time</a>
+    </div>
+  </div>
+  <p class="mt-1">{{ time_logged|duration|default:"Nothing logged yet" }}{% if task.estimate_minutes %} of {{ task.estimate_minutes|duration }} estimated{% if time_logged > task.estimate_minutes %} {% include "components/_badge.html" with text="Over estimate" tone="amber" %}{% endif %}{% else %}. No estimate set.{% endif %}</p>
+</section>

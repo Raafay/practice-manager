@@ -25,4 +25,7 @@ INSTALLED_APPS = [*INSTALLED_APPS, "apps.core.tests.encrypted_app"]  # noqa: F40
 # Tests never call Companies House or gov.uk: they use the saved samples.
 COMPANIES_HOUSE_TRANSPORT = "fake"
 COMPANIES_HOUSE_API_KEY = ""
+XERO_TRANSPORT = "fake"
+XERO_CLIENT_ID = "test-client-id"
+XERO_CLIENT_SECRET = "test-client-secret"
 BANK_HOLIDAYS_FROM_DATABASE = False

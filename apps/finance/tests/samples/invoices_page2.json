@@ -1,0 +1,73 @@
+{
+  "Invoices": [
+    {
+      "InvoiceID": "0f4a3c1e-0000-4000-8000-000000000006",
+      "Type": "ACCREC",
+      "InvoiceNumber": "INV-0106",
+      "Reference": "Deleted",
+      "Contact": {
+        "ContactID": "7c1f0000-0000-4000-8000-000000000005",
+        "Name": "Zed Unknown Co"
+      },
+      "Status": "DELETED",
+      "SubTotal": 100.0,
+      "TotalTax": 20.0,
+      "Total": 120.0,
+      "AmountDue": 0.0,
+      "AmountPaid": 0.0,
+      "AmountCredited": 0.0,
+      "CurrencyCode": "GBP",
+      "UpdatedDateUTC": "/Date(1790899200000+0000)/",
+      "DateString": "2026-10-01T00:00:00",
+      "DueDateString": "2026-10-15T00:00:00"
+    },
+    {
+      "InvoiceID": "0f4a3c1e-0000-4000-8000-000000000007",
+      "Type": "ACCREC",
+      "InvoiceNumber": "INV-0107",
+      "Reference": "August fee",
+      "Contact": {
+        "ContactID": "7c1f0000-0000-4000-8000-000000000003",
+        "Name": "Harbour Cafe Limited"
+      },
+      "Status": "AUTHORISED",
+      "SubTotal": 250.0,
+      "TotalTax": 50.0,
+      "Total": 300.0,
+      "AmountDue": 300.0,
+      "AmountPaid": 0.0,
+      "AmountCredited": 0.0,
+      "CurrencyCode": "GBP",
+      "UpdatedDateUTC": "/Date(1790899200000+0000)/",
+      "DateString": "2026-08-01T00:00:00",
+      "DueDateString": "2026-08-15T00:00:00"
+    },
+    {
+      "InvoiceID": "0f4a3c1e-0000-4000-8000-000000000008",
+      "Type": "ACCREC",
+      "InvoiceNumber": "INV-0108",
+      "Reference": "September fee",
+      "Contact": {
+        "ContactID": "7c1f0000-0000-4000-8000-000000000004",
+        "Name": "Marlow & Pine LLP"
+      },
+      "Status": "PAID",
+      "SubTotal": 400.0,
+      "TotalTax": 80.0,
+      "Total": 480.0,
+      "AmountDue": 0.0,
+      "AmountPaid": 480.0,
+      "AmountCredited": 0.0,
+      "CurrencyCode": "GBP",
+      "UpdatedDateUTC": "/Date(1790899200000+0000)/",
+      "DateString": "2026-09-01T00:00:00",
+      "DueDateString": "2026-09-15T00:00:00"
+    }
+  ],
+  "pagination": {
+    "page": 2,
+    "pageSize": 5,
+    "pageCount": 2,
+    "itemCount": 8
+  }
+}

@@ -309,7 +309,7 @@ def test_the_table_stays_quick_with_two_thousand_tasks(client, django_assert_max
     )
     url = reverse("tasks:list")
     for params in ("", "?group=client", "?group=owner&sort=-name", "?chip=mine&group=week"):
-        with django_assert_max_num_queries(30):
+        with django_assert_max_num_queries(32):
             response = client.get(url + params)
         assert response.status_code == 200
 

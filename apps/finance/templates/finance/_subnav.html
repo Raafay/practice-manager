@@ -1,0 +1,8 @@
+{% include "components/_tabs.html" with tabs=sections current=section label="Finance sections" %}
+{% if xero.state == "broken" %}
+<div class="mb-4 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert">
+  <strong>The Xero connection has a problem.</strong> {{ xero.error }}
+  {% if xero.last_good %}The last good sync was on {{ xero.last_good|date:"d/m/Y H:i" }}, so the invoice figures below may be out of date.{% else %}No sync has worked yet.{% endif %}
+  <a href="{% url 'companieshouse:integrations' %}">Open Integrations</a>
+</div>
+{% endif %}

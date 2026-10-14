@@ -1,0 +1,41 @@
+<section class="mb-6" aria-labelledby="cf-agreed">
+  <h2 id="cf-agreed" class="mb-2 text-base">Agreed fees</h2>
+  {% if fee_rows %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th scope="col">Service</th><th scope="col">State</th><th scope="col" class="text-right">Fee</th><th scope="col" class="text-right">Monthly equivalent</th></tr></thead>
+    <tbody>{% for r in fee_rows %}<tr><th scope="row" class="font-medium">{{ r.service.name }}</th><td>{{ r.get_state_display }}</td>
+      <td class="text-right">{% if r.fee_amount is not None %}{{ r.fee_amount|money }} {{ r.get_fee_frequency_display|lower }}{% else %}–{% endif %}</td>
+      <td class="text-right">{% if r.fee_frequency == "one_off" %}one-off{% elif r.monthly_equivalent is not None %}{{ r.monthly_equivalent|money }}{% else %}–{% endif %}</td></tr>{% endfor %}</tbody>
+    <tfoot><tr class="font-semibold"><th scope="row" colspan="3">Monthly recurring total (active services)</th><td class="text-right">{{ monthly|money }}</td></tr>
+    {% if one_off %}<tr><th scope="row" colspan="3">One-off fees</th><td class="text-right">{{ one_off|money }}</td></tr>{% endif %}</tfoot>
+  </table></div>
+  {% else %}{% include "components/_empty.html" with title="No services yet" message="Switch a service on in the Services panel on the Info tab." icon_name="banknotes" %}{% endif %}
+</section>
+<section aria-labelledby="cf-inv">
+  <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+    <h2 id="cf-inv" class="text-base">Invoices from Xero</h2>
+    {% if can_xero and xero_state.state != "none" and not xero_contacts %}
+    <form method="post" action="{% url 'finance:send_to_xero' client.pk %}">{% csrf_token %}<button type="submit" class="btn btn-secondary">{% icon "arrow-up-tray" "size-4" %} Send to Xero</button></form>{% endif %}
+  </div>
+  {% if xero_state.state == "none" %}
+    <p class="muted">Xero is not connected. The owner can connect it in Settings, Integrations.</p>
+  {% elif not xero_contacts %}
+    <p class="muted">This client is not linked to a Xero contact yet.{% if can_xero %} Match it under <a href="{% url 'finance:matching' %}">Finance, Xero contacts</a>, or press Send to Xero to create it there.{% else %} The owner links it in Finance.{% endif %}</p>
+  {% else %}
+  {% if xero_state.state == "broken" %}<p class="mb-2 text-sm text-red-800">The Xero connection has a problem. These figures are from the last good sync{% if xero_state.last_good %} on {{ xero_state.last_good|date:"d/m/Y H:i" }}{% endif %}.</p>{% endif %}
+  <p class="muted mb-2 text-sm">Linked to {% for c in xero_contacts %}“{{ c.name }}”{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+  <div class="mb-3 grid gap-3 sm:grid-cols-3">
+    <div class="card card-body"><p class="text-sm text-slate-600">Invoiced, last 12 months (net)</p><p class="text-xl font-semibold">{{ invoiced_12|money }}</p></div>
+    <div class="card card-body"><p class="text-sm text-slate-600">Outstanding</p><p class="text-xl font-semibold">{{ outstanding|money }}</p></div>
+    <div class="card card-body"><p class="text-sm text-slate-600">Overdue</p><p class="text-xl font-semibold {% if overdue %}text-red-700{% endif %}">{{ overdue|money }}</p></div>
+  </div>
+  {% if invoices %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th scope="col">Number</th><th scope="col">Date</th><th scope="col">Due</th><th scope="col" class="text-right">Net</th><th scope="col" class="text-right">VAT</th><th scope="col" class="text-right">Total</th><th scope="col" class="text-right">Amount due</th><th scope="col">State</th></tr></thead>
+    <tbody>{% for i in invoices %}<tr><th scope="row" class="font-medium">{{ i.number }}</th><td>{{ i.date|date:"d/m/Y" }}</td><td>{{ i.due_date|date:"d/m/Y" }}</td>
+      <td class="text-right">{{ i.sub_total|money }}</td><td class="text-right">{{ i.total_tax|money }}</td><td class="text-right">{{ i.total|money }}</td><td class="text-right">{{ i.amount_due|money }}</td>
+      <td>{% if i.overdue_days %}{% include "components/_badge.html" with text=i.overdue_text tone="red" icon_name="exclamation-triangle" %}{% elif i.status == "PAID" %}{% include "components/_badge.html" with text="Paid" tone="green" icon_name="check" %}{% else %}{% include "components/_badge.html" with text=i.get_status_display tone="neutral" %}{% endif %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="muted">No invoices have been read for this contact yet.</p>{% endif %}
+  {% endif %}
+</section>

@@ -1,0 +1,36 @@
+{
+  "Contacts": [
+    {
+      "ContactID": "7c1f0000-0000-4000-8000-000000000002",
+      "Name": "Example Trading Ltd",
+      "EmailAddress": "accounts@example.com",
+      "ContactStatus": "ACTIVE",
+      "IsCustomer": true,
+      "UpdatedDateUTC": "/Date(1788220800000+0000)/"
+    },
+    {
+      "ContactID": "7c1f0000-0000-4000-8000-000000000003",
+      "Name": "Harbour Cafe Limited",
+      "EmailAddress": "hello@example.com",
+      "ContactStatus": "ACTIVE",
+      "IsCustomer": true,
+      "UpdatedDateUTC": "/Date(1788220800000+0000)/"
+    },
+    {
+      "ContactID": "7c1f0000-0000-4000-8000-000000000004",
+      "Name": "Marlow & Pine LLP",
+      "EmailAddress": "office@example.com",
+      "ContactStatus": "ACTIVE",
+      "IsCustomer": true,
+      "UpdatedDateUTC": "/Date(1788220800000+0000)/"
+    },
+    {
+      "ContactID": "7c1f0000-0000-4000-8000-000000000005",
+      "Name": "Zed Unknown Co",
+      "EmailAddress": "",
+      "ContactStatus": "ACTIVE",
+      "IsCustomer": true,
+      "UpdatedDateUTC": "/Date(1788220800000+0000)/"
+    }
+  ]
+}

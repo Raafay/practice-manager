@@ -33,4 +33,5 @@
   </form>
   {% endif %}
 </section>
+{% if xero_panel and user|can:"finance.owner" %}{% include "finance/_integrations_xero.html" %}{% endif %}
 {% endblock %}

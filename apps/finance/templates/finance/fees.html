@@ -1,0 +1,76 @@
+{% extends "layouts/app.html" %}
+{% load l10n %}
+{% block title %}Finance: Fees{% endblock %}
+{% block content %}
+{% if user|can:"finance.owner" %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Finance" subtitle="Fees, invoices and income for the owner. Nobody else sees these pages." %}
+</div>
+{% include "finance/_subnav.html" %}
+<div class="mb-6 grid gap-4 md:grid-cols-4">
+  <section class="card card-body md:col-span-1" aria-labelledby="f-total">
+    <h2 id="f-total" class="text-sm font-medium text-slate-600">Recurring fees now</h2>
+    <p class="mt-1 text-2xl font-semibold">{{ summary.total|money }}<span class="text-sm font-normal text-slate-500"> a month</span></p>
+    <p class="muted text-xs">{{ clients|length }} live client{{ clients|length|pluralize }}, excluding VAT and one-off fees.</p>
+  </section>
+  <section class="card card-body" aria-labelledby="f-service"><h2 id="f-service" class="mb-1 text-sm font-medium text-slate-600">By service</h2>
+    <ul class="text-sm">{% for name, amount in summary.by_service %}<li class="flex justify-between py-0.5"><span>{{ name }}</span><span>{{ amount|money }}</span></li>{% empty %}<li class="muted">No fees yet.</li>{% endfor %}</ul></section>
+  <section class="card card-body" aria-labelledby="f-manager"><h2 id="f-manager" class="mb-1 text-sm font-medium text-slate-600">By manager</h2>
+    <ul class="text-sm">{% for name, amount in summary.by_manager %}<li class="flex justify-between py-0.5"><span>{{ name }}</span><span>{{ amount|money }}</span></li>{% empty %}<li class="muted">No fees yet.</li>{% endfor %}</ul></section>
+  <section class="card card-body" aria-labelledby="f-type"><h2 id="f-type" class="mb-1 text-sm font-medium text-slate-600">By client type</h2>
+    <ul class="text-sm">{% for name, amount in summary.by_type %}<li class="flex justify-between py-0.5"><span>{{ name }}</span><span>{{ amount|money }}</span></li>{% empty %}<li class="muted">No fees yet.</li>{% endfor %}</ul></section>
+</div>
+
+<section class="mb-6" aria-labelledby="f-changes">
+  <h2 id="f-changes" class="mb-2 text-base">Changes to fees</h2>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th scope="col">Month</th><th scope="col" class="text-right">New</th><th scope="col" class="text-right">Increased</th><th scope="col" class="text-right">Reduced</th><th scope="col" class="text-right">Ended</th></tr></thead>
+    <tbody>
+      <tr><th scope="row">{{ this_month|date:"F Y" }}</th>
+        <td class="text-right">{{ changes_this.new.count }} ({{ changes_this.new.amount|money }})</td><td class="text-right">{{ changes_this.increased.count }} ({{ changes_this.increased.amount|money }})</td>
+        <td class="text-right">{{ changes_this.reduced.count }} ({{ changes_this.reduced.amount|money }})</td><td class="text-right">{{ changes_this.ended.count }} ({{ changes_this.ended.amount|money }})</td></tr>
+      <tr><th scope="row">{{ last_month|date:"F Y" }}</th>
+        <td class="text-right">{{ changes_last.new.count }} ({{ changes_last.new.amount|money }})</td><td class="text-right">{{ changes_last.increased.count }} ({{ changes_last.increased.amount|money }})</td>
+        <td class="text-right">{{ changes_last.reduced.count }} ({{ changes_last.reduced.amount|money }})</td><td class="text-right">{{ changes_last.ended.count }} ({{ changes_last.ended.amount|money }})</td></tr>
+    </tbody>
+  </table></div>
+  <p class="help mt-1">Amounts are the change in the monthly figure.</p>
+</section>
+
+<section class="mb-6" aria-labelledby="f-return">
+  <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+    <h2 id="f-return" class="text-base">Hourly return</h2>
+    <nav class="flex gap-1" aria-label="Period">
+      <a class="btn btn-sm {% if window == 3 %}btn-primary{% else %}btn-secondary{% endif %}" href="?window=3" {% if window == 3 %}aria-current="page"{% endif %}>Last 3 months</a>
+      <a class="btn btn-sm {% if window == 12 %}btn-primary{% else %}btn-secondary{% endif %}" href="?window=12" {% if window == 12 %}aria-current="page"{% endif %}>Last 12 months</a>
+    </nav>
+  </div>
+  <p class="muted mb-2 text-sm">Agreed fees for {{ returns.months }} months divided by hours logged since {{ returns.since|date:"d/m/Y" }}. Lowest first. The target is {{ target_rate|money }} an hour (change it in <a href="{% url 'finance:settings' %}">Settings</a>).</p>
+  {% if returns.rows %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th scope="col">Client</th><th scope="col" class="text-right">Fees</th><th scope="col" class="text-right">Hours</th><th scope="col" class="text-right">Per hour</th><th scope="col">Against target</th></tr></thead>
+    <tbody>{% for r in returns.rows %}
+      <tr><th scope="row" class="font-medium"><a href="{% url 'clients:detail' r.client.pk %}">{{ r.client.name }}</a></th><td class="text-right">{{ r.fees|money }}</td><td class="text-right">{{ r.hours }}</td><td class="text-right">{{ r.rate|money }}</td>
+      <td>{% if r.below %}{% include "components/_badge.html" with text="Below target" tone="red" icon_name="exclamation-triangle" %}{% else %}{% include "components/_badge.html" with text="At or above" tone="green" icon_name="check" %}{% endif %}</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}{% include "components/_empty.html" with title="No time logged against fee-paying clients" message="Log time on the Time page and the hourly return will appear here." icon_name="clock" %}{% endif %}
+  {% if returns.no_time %}<details class="panel mt-3"><summary>No time logged ({{ returns.no_time|length }}) {% icon "chevron-right" "panel-chevron size-4 text-slate-400 transition-transform" %}</summary>
+    <div class="panel-body"><ul class="text-sm">{% for r in returns.no_time %}<li><a href="{% url 'clients:detail' r.client.pk %}">{{ r.client.name }}</a> <span class="muted">{{ r.monthly_fee|money }} a month</span></li>{% endfor %}</ul></div></details>{% endif %}
+</section>
+
+<section aria-labelledby="f-clients">
+  <h2 id="f-clients" class="mb-2 text-base">Every live client</h2>
+  <div class="table-wrap"><table class="table">
+    <thead><tr>
+      <th scope="col" {% if sort == "name" %}aria-sort="ascending"{% endif %}><a href="?sort=name&window={{ window }}">Client</a></th>
+      <th scope="col" class="text-right">Services</th>
+      <th scope="col" class="text-right" {% if sort == "fee" %}aria-sort="descending"{% endif %}><a href="?sort=fee&window={{ window }}">Monthly fee</a></th>
+    </tr></thead>
+    <tbody>{% for e in clients %}
+      <tr><th scope="row" class="font-medium"><a href="{% url 'finance:client_fees' e.client.pk %}">{{ e.client.name }}</a></th><td class="text-right">{{ e.services }}</td><td class="text-right">{{ e.monthly|money }}</td></tr>
+    {% empty %}<tr><td colspan="3" class="muted">No live clients with a fee yet. Set fees in the Services panel on a client.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% endif %}
+{% endblock %}

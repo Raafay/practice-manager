@@ -15,10 +15,13 @@
       <a href="{% url 'portal:inbox' %}" class="nav-link" {% if request.path|slice:":10" == "/requests/" %}aria-current="page"{% endif %}>Requests{% if requests_new %} <span class="rounded-full bg-accent px-1.5 text-[10px] font-semibold leading-4 text-white" aria-label="{{ requests_new }} new">{{ requests_new }}</span>{% endif %}</a>
       <a href="{% url 'pipeline:prospects' %}" class="nav-link" data-go="p" {% if request.path|slice:":11" == "/prospects/" %}aria-current="page"{% endif %}>Prospects</a>
       <a href="{% url 'clients:list' %}" class="nav-link" data-go="c" {% if request.path|slice:":9" == "/clients/" or request.path|slice:":10" == "/contacts/" or request.path == "/search/" %}aria-current="page"{% endif %}>Clients</a>
+      <a href="{% url 'timekeeping:sheet' %}" class="nav-link" {% if request.path|slice:":6" == "/time/" %}aria-current="page"{% endif %}>Time</a>
+      {% if user|can:"finance.owner" %}<a href="{% url 'finance:fees' %}" class="nav-link" {% if request.path|slice:":9" == "/finance/" %}aria-current="page"{% endif %}>Finance</a>{% endif %}
       <a href="{% url 'services:reports' %}" class="nav-link" {% if request.path|slice:":9" == "/reports/" %}aria-current="page"{% endif %}>Reports</a>
       <a href="{% url 'core:settings' %}" class="nav-link" {% if request.path|slice:":10" == "/settings/" %}aria-current="page"{% endif %}>Settings</a>
     </nav>
     <div class="ml-auto flex items-center gap-2">
+      {% include "timekeeping/_timer.html" %}
       <div role="search" class="relative hidden md:block" data-search>
         <form action="{% url 'clients:search' %}" method="get">
           <label for="global-search" class="sr-only">Search clients (press / to jump here)</label>

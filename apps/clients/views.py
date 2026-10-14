@@ -335,7 +335,7 @@ TABS = [
 COMPANIES_HOUSE_TAB = ("companies_house", "Companies House", "companieshouse:tab")
 
 
-def tab_nav(client: Client) -> list[tuple[str, str, str]]:
+def tab_nav(client: Client, user=None) -> list[tuple[str, str, str]]:
     tabs = list(TABS)
     if client.is_company or client.company_number:
         tabs.insert(2, COMPANIES_HOUSE_TAB)
@@ -346,6 +346,9 @@ def tab_nav(client: Client) -> list[tuple[str, str, str]]:
     tabs.append(("risk", "Risk", "aml:tab"))
     tabs.append(("hmrc", "HMRC", "onboarding:hmrc"))
     tabs.append(("requests", "Requests", "portal:client_requests"))
+    tabs.append(("time", "Time", "timekeeping:client_tab"))
+    if user is not None and user.can("fees.view"):
+        tabs.append(("fees", "Fees and invoices", "finance:client_fees"))
     return [(label, reverse(name, args=[client.pk]), key) for key, label, name in tabs]
 
 
@@ -360,7 +363,7 @@ class ClientTabView(StaffRequiredMixin, View):
         context = {
             "client": client,
             "tab": self.tab,
-            "tabs": tab_nav(client),
+            "tabs": tab_nav(client, request.user),
             "tab_template": self.tab_template or f"clients/tabs/_{self.tab}.html",
             "no_main_contact": not client.client_contacts.filter(is_main=True).exists(),
         }

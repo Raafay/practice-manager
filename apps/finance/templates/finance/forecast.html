@@ -1,0 +1,45 @@
+{% extends "layouts/app.html" %}
+{% block title %}Finance: Forecast{% endblock %}
+{% block content %}
+{% if user|can:"finance.owner" %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Finance" subtitle="How far off your target you are, and what would close the gap." %}
+</div>
+{% include "finance/_subnav.html" %}
+{% if not has_targets %}
+<div class="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">No targets are set, so there is no gap to show. <a href="{% url 'finance:targets' %}">Set targets</a>.</div>
+{% endif %}
+<section class="card card-body mb-6" aria-labelledby="fc-feedback">
+  <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+    <h2 id="fc-feedback" class="text-base">What this means for {{ picked.month|date:"F Y" }}</h2>
+    <form method="get" class="flex items-center gap-2">
+      <label for="fc-month" class="text-sm">Month</label>
+      <select id="fc-month" name="month" class="select">{% for m in month_choices %}<option value="{{ m|date:'Y-m' }}" {% if m == picked.month %}selected{% endif %}>{{ m|date:"F Y" }}</option>{% endfor %}</select>
+      <button type="submit" class="btn btn-secondary btn-sm">Show</button>
+    </form>
+  </div>
+  {% if feedback.lines %}<ul class="list-disc space-y-1 pl-5 text-sm">{% for line in feedback.lines %}<li>{{ line }}</li>{% endfor %}</ul>
+  {% else %}<p class="muted">Nothing to say yet. Set a target and add fees to get feedback.</p>{% endif %}
+  <p class="muted mt-2 text-xs">Contracted today: {{ contracted_now|money }} a month.</p>
+</section>
+<section class="card card-body mb-6" aria-labelledby="fc-chart"><h2 id="fc-chart" class="sr-only">Chart</h2>{{ chart }}</section>
+<section aria-labelledby="fc-table">
+  <h2 id="fc-table" class="mb-2 text-base">Month by month</h2>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th scope="col">Month</th><th scope="col" class="text-right">Target</th><th scope="col" class="text-right">Contracted</th><th scope="col" class="text-right">Weighted pipeline</th><th scope="col" class="text-right">Forecast</th><th scope="col" class="text-right">Gap</th><th scope="col" class="text-right">One-off income</th>{% if has_xero %}<th scope="col" class="text-right">Invoiced (Xero)</th>{% endif %}</tr></thead>
+    <tbody>{% for r in rows %}
+      <tr {% if r.past %}class="text-slate-500"{% endif %}>
+        <th scope="row" class="font-medium">{{ r.month|date:"M Y" }}{% if r.past %} <span class="badge badge-neutral">Actual</span>{% endif %}</th>
+        <td class="text-right">{% if r.target is not None %}{{ r.target|money }}{% else %}–{% endif %}</td>
+        <td class="text-right">{{ r.contracted|money }}</td>
+        <td class="text-right">{% if r.past %}–{% else %}{{ r.weighted|money }}{% endif %}</td>
+        <td class="text-right font-medium">{% if r.past %}–{% else %}{{ r.forecast|money }}{% endif %}</td>
+        <td class="text-right">{% if r.past or r.gap is None %}–{% elif r.gap > 0 %}<span class="text-red-700">{{ r.gap|money }} short</span>{% else %}<span class="text-green-700">{{ r.ahead|money }} ahead</span>{% endif %}</td>
+        <td class="text-right">{{ r.one_off|money }}</td>
+        {% if has_xero %}<td class="text-right">{% if r.invoiced is not None %}{{ r.invoiced|money }}{% else %}–{% endif %}</td>{% endif %}
+      </tr>{% endfor %}</tbody>
+  </table></div>
+  <p class="help mt-2">Contracted counts services that start by the last day of the month and have not ended before it. Weighted pipeline is each open prospect's expected fee times the chance for its stage, from its expected start. One-off income is not part of the forecast. Past months use today's records, so a client who has since left is not counted.</p>
+</section>
+{% endif %}
+{% endblock %}
