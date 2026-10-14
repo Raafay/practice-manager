@@ -151,3 +151,13 @@ def test_removing_a_person_takes_their_records_and_files(client, world):
     assert not storage.exists(stored)
     event = ActivityEvent.objects.get(verb="contact.purged")
     assert "Gone" not in event.summary and "Robin" not in event.summary
+
+
+def test_the_remove_page_says_why_it_is_blocked_or_asks_for_the_name(client, world):
+    sign_in(client, owner())
+    page = client.get(reverse("clients:contact_purge", args=[world["person_live"].pk]))
+    text = page.content.decode()
+    assert "cannot be done yet" in text and "Still Here Ltd is still a client" in text
+    page = client.get(reverse("clients:contact_purge", args=[world["person_gone"].pk]))
+    text = page.content.decode()
+    assert "cannot be done yet" not in text and 'name="typed_name"' in text

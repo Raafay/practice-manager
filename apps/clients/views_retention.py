@@ -43,7 +43,11 @@ class ContactPurgeView(RetentionAccess, View):
     template_name = "clients/contact_purge.html"
 
     def _render(self, request, contact, error="", status=200):
-        context = {"contact": contact, "block": retention.purge_block(contact), "error": error}
+        context = {
+            "contact": contact,
+            "blocked_reason": retention.purge_block(contact),
+            "error": error,
+        }
         return render(request, self.template_name, context, status=status)
 
     def get(self, request, pk):

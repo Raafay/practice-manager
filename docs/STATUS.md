@@ -4,7 +4,7 @@ Keep this file under 150 lines. When it grows, shorten older stages to two lines
 
 ## Where things stand
 
-Next stage to build: 13 (Hardening and deployment).
+Next: choose a host, deploy (`docs/DEPLOY.md`) and work through `docs/GO-LIVE.md`. All thirteen stages are built.
 
 | Stage | State | Merged on |
 |---|---|---|
@@ -21,9 +21,9 @@ Next stage to build: 13 (Hardening and deployment).
 | 10 Portal and requests | Built, in review | |
 | 11 Time, fees, Xero and forecast | Built, in review | |
 | 12 Import and reports | Built, in review | |
-| 13 Hardening and deployment | Not started | |
+| 13 Hardening and deployment | Built, in review | |
 
-## Stages 0 to 11 in short
+## Stages 0 to 12 in short
 
 Older stages are shortened to two lines each. Details are in git history and each stage's pull request.
 
@@ -51,14 +51,19 @@ Older stages are shortened to two lines each. Details are in git history and eac
   Every portal query starts from `for_portal_user`.
 - 11 Time, fees, Xero and forecast: time entries and timer, timesheet; Finance pages for `finance.owner` (fees, invoices, targets, forecast, summary); Xero read-only sync.
   Setup steps in `docs/XERO_SETUP.md`. Screens for each stage in `docs/screens/stage-NN/`.
+- 12 Import and reports: CSV import with column matching, check, undo and Companies House fetch; one Reports page with six new reports and safe CSV export; client summary PDF.
+  Every CSV goes through `safe_cell` in `apps/core/csvexport.py`.
 
-## Stage 12: import and reports (built 14/10/2026)
+## Stage 13: hardening and deployment (built 14/10/2026)
 
-- `apps/imports`: Settings, Import (needs `data.import`): upload (UTF-8 with or without BOM, else Windows-1252; comma, semicolon, tab or bar), match columns (suggested from headings, saved matchings offered again for the same headings), check (counts and row-by-row problems, nothing saved), import in one transaction with bulk writes, failures as CSV.
-- Matching to existing records and cleaning rules as spec 11. ImportRun, SavedMatching, ImportedRecord (tags each created record). Undo deletes what is untouched and lists what it kept. "Fetch from Companies House" runs as job `import_fetch` with a progress panel. "Clear old deadlines" helper.
-- `apps/reports`: one Reports page; shared pattern (`apps/reports/base.py`): filter form, figures, table, CSV export with `data.export`, logged. New: Tasks, Services, Time, Requests, Pipeline, Communications. Deadlines, Client list and AML register are listed there too. Client summary PDF ("Generate report" on the client page).
-- `apps/core/csvexport.py`: every CSV export goes through `safe_cell`, so a cell starting = + - @ gets a quote mark. Clients, deadlines and AML register moved onto it.
-- Wizard steps component added to the styleguide. Demo data: a past import with one failed row and a saved matching. Screens in `docs/screens/stage-12/`. No new dependency. 1475 tests.
+- Security review in `docs/SECURITY-REVIEW.md`: three independent passes, 19 findings (no critical), all fixed with tests; accepted items listed there. `pip-audit` clean.
+- URL walk (`apps/core/tests/test_url_walk.py`): every address, six kinds of user, real demo records, an expected table; a new address without a line fails.
+- `config/settings/prod.py` refuses to start without what it needs or with anything unsafe; private S3 bucket (`STORAGE_*`), `EMAIL_PROVIDER` (ses, postmark, brevo), JSON logs with tokens redacted, optional scrubbed Sentry, `/healthz`, live check `manage.py check_headers`.
+- Docker image: build-only settings, non-root, CSS and static built in, `scripts/release.sh` (migrate, cache table, deploy checks), `gunicorn.conf.py`, `Procfile`. Built and run here against a fresh database: migrations ran, `/healthz` ok, headers right, worker ran.
+- Email delivery webhook `/email/events/` (anymail, shared secret); bounces and spam complaints on the Queued page and to the approver.
+- Retention report (Settings) and monthly job, lists only; subject access ZIP and "Remove for good" on the contact page for the owner. Settings, System page. `reset_two_factor` command.
+- Guides: DEPLOY (generic container host), RUNBOOK, BACKUPS, SUBPROCESSORS, STAFF-GUIDE, GO-LIVE. README rewritten. Screens in `docs/screens/stage-13/`. 1584 tests.
+- New dependencies: `sentry-sdk` (optional error reports), `boto3` and `django-storages[s3]` (the bucket and SES never worked without them).
 
 ## Assumptions
 
@@ -73,16 +78,9 @@ Add one line each time a stage makes a choice that the specs and `docs/DECISIONS
 - 3: The sync also adds newly appointed people as contacts. A person who left before the company was added is listed on the tab but not made a contact. "Run now" and "Run sync now" ask the worker; only "Sync now" on one client runs straight away. Jobs runs need `system.view` (owner); Integrations needs `integrations.manage`. Calls go out without an Authorization header when `COMPANIES_HOUSE_API_KEY` is empty, so a network proxy that adds the key (as in cloud sessions) still works. The page then shows "No key".
 - 4: Periods due more than 60 days ago are not created (so a service started years ago gets no history). Spec only gave the start-date rule. Open calculated deadlines are re-calculated when inputs change (for example a new pay day); ones changed by hand are left alone. Reminder-only rules (ct_payment, paye_payment, sa_payment, p11d Class 1A) and tax-year rules with no horizon are created 60 days ahead (CORRECTIONS 10). "Created N days ahead" for payroll, CIS and regular work is counted before the due date; VAT and MTD before the period end.
 - 4: Going live (status Active) turns proposed services active, starting today. Paused clients keep active services but get nothing new. Reports live in `apps/services` with a small Reports index; Stage 12 can add to it. Two icons missing from the set were replaced by `calendar` and `rectangle-stack`.
-- 6: Branch is `claude/trusting-feynman-fm97v2` (the session's required branch), not `stage-06-communications`. No pull request opened: the session rules say only on request.
-- 6: Build item 12 (move the daily email and invitations onto the sending path) is left out, as CORRECTIONS 4 says. Sign-in emails stay direct (CORRECTIONS 17).
-- 6: "Repeats N times" means N more messages after the first. A date missed by more than 3 days is skipped, not sent late. One message per client goes to the main contact and contacts marked "receives reminders".
-- 6: "Stops when" is any step flagged "stops reminders" and ticked on a task linked to the deadline, or on the task itself. A done or not-required deadline stops its reminders.
-- 6: A schedule's template send mode is set from the Reminders page; only the owner can set automatic. An automatic message that has a blocking problem still waits for a person.
-- 6: The starter wording asks clients to reply with records attached, because upload and portal pages arrive in Stage 10. Switch to `{{ upload_link }}` then.
-- 6: Message bodies are cleaned with nh3, which drops inline styles, so link buttons arrive as plain links. Sensitive documents cannot be attached to an email.
-- 6: Hand-written messages to a former or lost client show a warning and cannot be approved. Compose fills deadline fields from the client's nearest open deadline and warns if there is none.
-- 6: `setup_fee` merges the client's one-off fees (no separate setup fee exists yet). The signature is the existing `email_signature` on the user profile.
-- 6: Log an email adds a note of kind "email" (clients migration 0004).
+- 6: Branch `claude/trusting-feynman-fm97v2`. Item 12 left out (CORRECTIONS 4); sign-in emails go direct (CORRECTIONS 17). "Repeats N times" means N more after the first; a date missed by over 3 days is skipped. One message per client to the main contact and "receives reminders" contacts.
+- 6: "Stops when": a ticked "stops reminders" step on a linked task, or a done/not-required deadline. Only the owner sets a template to automatic; a blocked automatic message waits. nh3 drops inline styles, so link buttons arrive as plain links; sensitive documents are never attached.
+- 6: Hand-written messages to former or lost clients cannot be approved. Compose fills deadline fields from the nearest open deadline. `setup_fee` merges one-off fees. Log an email adds a note of kind "email".
 - 7: Branch is `claude/hopeful-gates-4pfqis` (the session's required branch). No pull request opened: the session rules say only on request.
 - 7: The register export needs `data.export` (CORRECTIONS 16), not "owner only" as the stage file says; the owner and managers hold it.
 - 7: Make live needs `clients.status`; going live with items open also needs `onboarding.override` and a reason.
@@ -115,11 +113,17 @@ Add one line each time a stage makes a choice that the specs and `docs/DECISIONS
 - 12: The migration helper lists all open deadlines overdue or due within 30 days (not only imported clients), and can also complete their open tasks (ticked by default).
 - 12: A practice-wide monthly total on the Services report needs `finance.owner`; each row's fee needs `fees.view`. Request "first action" is the first set client, convert, link, answer, close or spam. Time report defaults to this month and the two before.
 
+- 13: Branch is `claude/sharp-keller-d89e2x` (the session's required branch). No host was named, so DEPLOY.md is for a generic container host. Email defaults to Amazon SES in London (CORRECTIONS 28).
+- 13: The bucket and email keys are required in production; Companies House and Xero keys are optional (the System page shows "No key"). HSTS preload left off. Request bodies capped at 100 MB, 10 files.
+- 13: Proposals and engagement letters need `fees.view` (they show fees). Open pipeline value and column totals now need `finance.owner` (CORRECTIONS 15), replacing the Stage 9 choice.
+- 13: A person may be removed only when every client that holds anything about them is former or lost and past both dates. The removal event keeps no name. Retention "people" are those no live or in-date client keeps.
+- 13: Delivery reports keep delivered, bounced and complained only; opens and clicks are not tracked.
+
 ## Known gaps
 
 Things a stage left unfinished or found broken, with the stage number. Remove a line when it is fixed.
 
-- 1: The Docker image was not built in the cloud session: Docker Hub refused the base image pull (429). Build with `docker build -t practice-manager .` or `docker compose up`. Lockout, rate limits and the audit log use `REMOTE_ADDR`. Behind the production proxy, Stage 13 must take the client address from the trusted proxy header.
+- 13: In the cloud session Docker Hub (429), ghcr.io and the Debian mirror were blocked; the image was built from a mirrored base through the proxy without the WeasyPrint system libraries step. Build once on a normal machine or the host before go-live: `docker build -t practice-manager .`. Live SES, bucket, Companies House and Xero untested from here.
 - 1: Date filter boxes use the browser's own date picker, which shows the browser's date order (dd/mm/yyyy on a UK computer).
 - 2: No quick switches on the Contacts tab; flags are edited in the Edit drawer. Django 6 deprecation warning for URL form fields (assume https) shows in tests.
 - 3: gov.uk is blocked in cloud sessions, so the bank holiday refresh was tested against a sample in the published shape only.
@@ -128,19 +132,19 @@ Things a stage left unfinished or found broken, with the stage number. Remove a 
 - 5: A fourth target rule, "working days before the due date", exists for Payroll (2 working days before pay date); the spec names three kinds. "Fixed day before the due date" means the latest such day strictly before the due date, moved back to a working day.
 - 5: Manager default owner falls back to partner, then an owner. Documents attach only to tasks that have a client, as plain form posts. The project filter works from the address (`project=`) but has no box in the panel until Stage 8. "Week due" groups by deadline, else target date.
 - 5: Unticking a filing step does not reopen the deadline. My work sections use the target date, else the deadline; "waiting" status takes precedence. Mention notices use the existing bell; the other notification triggers are Stage 8. Core's placeholder Overview page was removed; the home page is My work.
-- 6: Delivery reports (delivered, bounced) have a function but no webhook until Stage 13. No provider is chosen, so only the console and in-memory backends are tested. Text messages have no provider; the Send SMS button and text templates are hidden until `SMS_BACKEND` names one.
+- 6: Only the console and in-memory email backends are tested live; the providers are tested through anymail's webhook payloads. Text messages have no provider; the Send SMS button and text templates are hidden until `SMS_BACKEND` names one.
 - 6: Letters use the practice logo and address only. The clearance letter wording is Stage 7's.
-- 7: The practice owner must read the risk questions and score bands before they are relied on. Letter wording is starter text. The 30-day postal code expiry needs confirming with the practice. `SITE_URL` must be set in production (Stage 13).
+- 7: The practice owner must read the risk questions and score bands before they are relied on. Letter wording is starter text. The 30-day postal code expiry needs confirming with the practice.
 - 8: Project templates cannot be edited in Settings. The calendar's deadline markers follow the client (and fixed client) only, not the other filters. Drag and drop was checked through the endpoints and page markup, not in a live browser.
 - 9: Drag and drop was checked through the endpoints and markup, not in a live browser. The Prospects list has no CSV export.
 
 ### Stage 10 assumptions and gaps
-
 - Portal sign-in is our own small code flow, not allauth's login by code, because that would also apply to staff at `/login/`. Sign-in and invitation emails go straight out (CORRECTIONS 17), not through the queue.
-- The details form never shows another person's date of birth, address or tax references to a portal user (a privacy test caught this); staff see everything on the review screen.
+- The details form never shows another person's date of birth, address, tax references or saved draft answers to a portal user; staff see everything on the review screen.
 - Items made by `upload_link`/`confirm_link` are created when the email is rendered, once per task. A recipient with no portal access cannot open them until invited. Rendering a preview also creates the item.
 - Request attachments stay as private `RequestFile`s until converted or linked, then become Documents. Requests closed by a done task become "closed". A reply to a request is queued and marks it "answered".
 - Demo data has three portal users (Copperleaf, Harbour Bakes, Wren and Finch) so every item kind is open. The portal code appears in the runserver console.
 - Known gaps: no email-in or WhatsApp-in (not in stage); portal items are not auto-withdrawn when a records task is cancelled.
 - 12: No real BrightManager export has been seen; the headings suggested are guesses and the owner checks the matching on screen. Live Companies House fetch was tested against the fake only.
 - 11: Live Xero connection untested (cloud cannot reach Xero); built and tested against the samples. Disconnect only forgets the tokens; remove the app in Xero too.
+- 13: Password reset pages use allauth's plain layout. Virus scanning, SNS signature checks and fully atomic rate-limit counters are accepted gaps (`docs/SECURITY-REVIEW.md`).
