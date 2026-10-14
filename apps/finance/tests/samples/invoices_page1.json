@@ -1,0 +1,115 @@
+{
+  "Invoices": [
+    {
+      "InvoiceID": "0f4a3c1e-0000-4000-8000-000000000001",
+      "Type": "ACCREC",
+      "InvoiceNumber": "INV-0101",
+      "Reference": "October fee",
+      "Contact": {
+        "ContactID": "7c1f0000-0000-4000-8000-000000000002",
+        "Name": "Example Trading Ltd"
+      },
+      "Status": "AUTHORISED",
+      "SubTotal": 300.0,
+      "TotalTax": 60.0,
+      "Total": 360.0,
+      "AmountDue": 360.0,
+      "AmountPaid": 0.0,
+      "AmountCredited": 0.0,
+      "CurrencyCode": "GBP",
+      "UpdatedDateUTC": "/Date(1790899200000+0000)/",
+      "DateString": "2026-10-01T00:00:00",
+      "DueDateString": "2026-10-15T00:00:00"
+    },
+    {
+      "InvoiceID": "0f4a3c1e-0000-4000-8000-000000000002",
+      "Type": "ACCREC",
+      "InvoiceNumber": "INV-0102",
+      "Reference": "September fee",
+      "Contact": {
+        "ContactID": "7c1f0000-0000-4000-8000-000000000002",
+        "Name": "Example Trading Ltd"
+      },
+      "Status": "PAID",
+      "SubTotal": 300.0,
+      "TotalTax": 60.0,
+      "Total": 360.0,
+      "AmountDue": 0.0,
+      "AmountPaid": 360.0,
+      "AmountCredited": 0.0,
+      "CurrencyCode": "GBP",
+      "UpdatedDateUTC": "/Date(1790899200000+0000)/",
+      "DateString": "2026-09-01T00:00:00",
+      "DueDateString": "2026-09-15T00:00:00"
+    },
+    {
+      "InvoiceID": "0f4a3c1e-0000-4000-8000-000000000003",
+      "Type": "ACCREC",
+      "InvoiceNumber": "INV-0103",
+      "Reference": "October fee",
+      "Contact": {
+        "ContactID": "7c1f0000-0000-4000-8000-000000000003",
+        "Name": "Harbour Cafe Limited"
+      },
+      "Status": "AUTHORISED",
+      "SubTotal": 250.0,
+      "TotalTax": 50.0,
+      "Total": 300.0,
+      "AmountDue": 300.0,
+      "AmountPaid": 0.0,
+      "AmountCredited": 0.0,
+      "CurrencyCode": "GBP",
+      "UpdatedDateUTC": "/Date(1790899200000+0000)/",
+      "Date": "/Date(1790812800000+0000)/",
+      "DueDate": "/Date(1792022400000+0000)/"
+    },
+    {
+      "InvoiceID": "0f4a3c1e-0000-4000-8000-000000000004",
+      "Type": "ACCREC",
+      "InvoiceNumber": "INV-0104",
+      "Reference": "Draft",
+      "Contact": {
+        "ContactID": "7c1f0000-0000-4000-8000-000000000004",
+        "Name": "Marlow & Pine LLP"
+      },
+      "Status": "DRAFT",
+      "SubTotal": 400.0,
+      "TotalTax": 80.0,
+      "Total": 480.0,
+      "AmountDue": 480.0,
+      "AmountPaid": 0.0,
+      "AmountCredited": 0.0,
+      "CurrencyCode": "GBP",
+      "UpdatedDateUTC": "/Date(1790899200000+0000)/",
+      "DateString": "2026-10-01T00:00:00",
+      "DueDateString": "2026-10-15T00:00:00"
+    },
+    {
+      "InvoiceID": "0f4a3c1e-0000-4000-8000-000000000005",
+      "Type": "ACCREC",
+      "InvoiceNumber": "INV-0105",
+      "Reference": "Voided",
+      "Contact": {
+        "ContactID": "7c1f0000-0000-4000-8000-000000000004",
+        "Name": "Marlow & Pine LLP"
+      },
+      "Status": "VOIDED",
+      "SubTotal": 400.0,
+      "TotalTax": 80.0,
+      "Total": 480.0,
+      "AmountDue": 0.0,
+      "AmountPaid": 0.0,
+      "AmountCredited": 0.0,
+      "CurrencyCode": "GBP",
+      "UpdatedDateUTC": "/Date(1790899200000+0000)/",
+      "DateString": "2026-09-01T00:00:00",
+      "DueDateString": "2026-09-15T00:00:00"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "pageSize": 5,
+    "pageCount": 2,
+    "itemCount": 8
+  }
+}

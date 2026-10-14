@@ -1,0 +1,26 @@
+{
+  "CreditNotes": [
+    {
+      "CreditNoteID": "0f4a3c1e-0000-4000-8000-000000000021",
+      "Type": "ACCRECCREDIT",
+      "CreditNoteNumber": "CN-0001",
+      "Contact": {
+        "ContactID": "7c1f0000-0000-4000-8000-000000000002",
+        "Name": "Example Trading Ltd"
+      },
+      "DateString": "2026-09-20T00:00:00",
+      "Status": "AUTHORISED",
+      "SubTotal": 50.0,
+      "TotalTax": 10.0,
+      "Total": 60.0,
+      "RemainingCredit": 60.0,
+      "UpdatedDateUTC": "/Date(1789862400000+0000)/"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "pageSize": 100,
+    "pageCount": 1,
+    "itemCount": 1
+  }
+}

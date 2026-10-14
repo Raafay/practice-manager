@@ -10,7 +10,6 @@ from apps.clients.tests.factories import ClientFactory
 from apps.finance import forecast
 from apps.finance.models import FinanceSettings, Target
 from apps.finance.tests.helpers import (
-    aware,
     decided,
     give_service,
     live_client,

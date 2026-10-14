@@ -1,0 +1,11 @@
+{
+  "Contacts": [
+    {
+      "ContactID": "7c1f0000-0000-4000-8000-000000000099",
+      "Name": "New Client Ltd",
+      "EmailAddress": "new@example.com",
+      "ContactStatus": "ACTIVE",
+      "IsCustomer": true
+    }
+  ]
+}

@@ -8,7 +8,7 @@ from django.utils import timezone
 from apps.clients.models import Client
 from apps.clients.tests.factories import ClientFactory
 from apps.pipeline import services as pipeline_services
-from apps.pipeline.models import PipelineStage, Proposal, ProspectDetails
+from apps.pipeline.models import PipelineStage, Proposal
 from apps.services.models import ClientService, Service
 
 
@@ -16,7 +16,9 @@ def aware(day: date, hour: int = 12) -> datetime:
     return timezone.make_aware(datetime.combine(day, time(hour)))
 
 
-def give_service(client, code, amount, frequency="monthly", *, state="active", starts=None, ends=None):
+def give_service(
+    client, code, amount, frequency="monthly", *, state="active", starts=None, ends=None
+):
     return ClientService.objects.create(
         client=client,
         service=Service.objects.get(code=code),

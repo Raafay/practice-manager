@@ -212,6 +212,11 @@ ALLOW_DEMO_DATA = env_bool("ALLOW_DEMO_DATA", False)
 COMPANIES_HOUSE_API_KEY = env("COMPANIES_HOUSE_API_KEY")
 # "live" calls the real service. "fake" serves the saved samples (tests and CI).
 COMPANIES_HOUSE_TRANSPORT = env("COMPANIES_HOUSE_TRANSPORT", "live")
+# Xero (Stage 11). Register an app at developer.xero.com; the redirect address is
+# {SITE_URL}/integrations/xero/callback. "fake" serves the saved samples (tests and demo data).
+XERO_CLIENT_ID = env("XERO_CLIENT_ID")
+XERO_CLIENT_SECRET = env("XERO_CLIENT_SECRET")
+XERO_TRANSPORT = env("XERO_TRANSPORT", "live")
 # Read refreshed bank holidays from the database as well as the bundled list.
 BANK_HOLIDAYS_FROM_DATABASE = True
 
