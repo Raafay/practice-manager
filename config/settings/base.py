@@ -65,6 +65,7 @@ MIDDLEWARE = [
     "apps.events.middleware.RequestContextMiddleware",
     "apps.accounts.middleware.SessionLimitsMiddleware",
     "apps.accounts.middleware.RequireTwoFactorMiddleware",
+    "apps.accounts.middleware.PortalBoundaryMiddleware",
     # Axes must come last so it can replace the response when an account is locked.
     "axes.middleware.AxesMiddleware",
 ]
