@@ -6,6 +6,7 @@ from django.db.models import Case, IntegerField, Q, Value, When
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 
 from apps.accounts.models import User
@@ -161,9 +162,12 @@ class MessageView(StaffRequiredMixin, View):
                 )
             data = form.cleaned_data
             if message.channel == Channel.SMS:
-                message.body_text = data["body"] and services.merge.html_to_text(data["body"])
-                message.to = data["to"]
-                message.save()
+                services.update_text(
+                    message,
+                    request.user,
+                    to=data["to"],
+                    body_text=data["body"] and services.merge.html_to_text(data["body"]),
+                )
             else:
                 services.update_draft(
                     message,
@@ -223,7 +227,10 @@ class PauseView(StaffRequiredMixin, View):
             if paused
             else "Sending has resumed.",
         )
-        return redirect(request.POST.get("next") or "comms:queue")
+        target = request.POST.get("next", "")
+        if not url_has_allowed_host_and_scheme(target, allowed_hosts={request.get_host()}):
+            target = reverse("comms:queue")
+        return redirect(target)
 
 
 # ------------------------------------------------------------------ one client

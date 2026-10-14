@@ -313,10 +313,36 @@ def update_draft(message: QueuedMessage, user, *, to, cc, bcc, subject, body_htm
     return message
 
 
+def update_text(message: QueuedMessage, user, *, to: str, body_text: str) -> QueuedMessage:
+    """Edit a text message, with the same rules as an email draft."""
+    if not message.is_editable:
+        raise ValidationError("This message can no longer be edited.")
+    message.to = to
+    message.body_text = body_text
+    if message.state == QueuedMessage.State.FAILED:
+        message.state = QueuedMessage.State.NEEDS_APPROVAL
+        message.error = ""
+    message.save()
+    events.record(
+        user,
+        "message.edited",
+        f"{who(user)} edited a text message for {message.client.name}.",
+        client=message.client,
+        target=message,
+    )
+    return message
+
+
 def retry(message: QueuedMessage, user) -> QueuedMessage:
-    """A failed message goes back to approved so the job picks it up again."""
+    """A failed message goes back to approved so the job picks it up again.
+
+    The approval checks run again: the client may have left since it failed.
+    """
     if message.state != QueuedMessage.State.FAILED:
         raise ValidationError("Only a failed message can be retried.")
+    problems = approval_problems(message)
+    if problems:
+        raise ValidationError(problems)
     message.state = QueuedMessage.State.APPROVED
     message.approved_by = message.approved_by or user
     message.send_after = timezone.now()

@@ -51,6 +51,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "apps.core.middleware.RequestSizeLimitMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -62,6 +63,7 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
     "apps.core.middleware.ContentSecurityPolicyMiddleware",
+    "apps.core.middleware.PrivateFileHeadersMiddleware",
     "apps.events.middleware.RequestContextMiddleware",
     "apps.accounts.middleware.SessionLimitsMiddleware",
     "apps.accounts.middleware.RequireTwoFactorMiddleware",
@@ -133,6 +135,11 @@ STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 }
+
+# The largest request body, refused before Django reads it: room for several 25 MB
+# files at once on the staff upload, never gigabytes. At most 10 files a request.
+MAX_REQUEST_BYTES = 100 * 1024 * 1024
+DATA_UPLOAD_MAX_NUMBER_FILES = 10
 
 TAILWIND_CLI_SRC_CSS = "assets/css/source.css"
 TAILWIND_CLI_DIST_CSS = "css/tailwind.css"

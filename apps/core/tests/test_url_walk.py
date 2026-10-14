@@ -401,7 +401,7 @@ finance:matching                    finance.owner
 finance:match_confirm               finance.owner
 finance:match_unmatch               finance.owner
 finance:match_ignore                finance.owner
-finance:xero_connect                finance.owner
+finance:xero_connect                integrations.manage
 finance:xero_callback               get=refused post=finance.owner
 finance:xero_disconnect             finance.owner
 finance:xero_sync                   finance.owner

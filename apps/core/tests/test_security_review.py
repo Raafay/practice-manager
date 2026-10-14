@@ -111,3 +111,119 @@ def test_pipeline_money_totals_are_for_the_owner_only(client):
     sign_in(client, owner())
     page = client.get(reverse("pipeline:prospects")).content.decode()
     assert "Open pipeline a month" in page
+
+
+# F9: a text message cannot be rewritten after approval or sending.
+
+
+def test_a_sent_text_message_cannot_be_edited(client):
+    from apps.comms import services as comms
+    from apps.comms.models import Channel, QueuedMessage
+
+    record, _ = client_with_contact()
+    message = comms.create_message(
+        record, to="07700900123", body_text="Original", channel=Channel.SMS
+    )
+    QueuedMessage.objects.filter(pk=message.pk).update(state=QueuedMessage.State.SENT)
+    sign_in(client, staff())
+    client.post(
+        reverse("comms:message", args=[message.pk]),
+        {"action": "save", "to": "07700900999", "body": "Changed"},
+    )
+    message.refresh_from_db()
+    assert message.body_text == "Original" and message.to == "07700900123"
+
+
+# F10: retrying a failed message runs the approval checks again.
+
+
+def test_retry_refuses_a_message_to_a_client_who_has_left():
+    from django.core.exceptions import ValidationError
+
+    from apps.comms import services as comms
+    from apps.comms.models import QueuedMessage
+
+    record, contact = client_with_contact()
+    message = comms.create_message(
+        record, to=contact.email, subject="Hello", body_html="<p>Hello</p>"
+    )
+    QueuedMessage.objects.filter(pk=message.pk).update(state=QueuedMessage.State.FAILED)
+    record.status = "former"
+    record.save()
+    message.refresh_from_db()
+    with pytest.raises(ValidationError):
+        comms.retry(message, owner())
+    message.refresh_from_db()
+    assert message.state == QueuedMessage.State.FAILED
+
+
+def test_the_pause_switch_does_not_redirect_off_site(client):
+    sign_in(client, owner())
+    response = client.post(reverse("comms:pause"), {"paused": "1", "next": "https://evil.example"})
+    assert response["Location"] == reverse("comms:queue")
+
+
+# F11: the password is asked for again before connecting Xero and the failures download.
+
+
+@pytest.mark.parametrize("name, args", [("finance:xero_connect", []), ("imports:failures", [1])])
+def test_the_password_is_asked_for_again(client, name, args):
+    sign_in(client, owner(), recent_password=False)
+    response = client.get(reverse(name, args=args))
+    assert response.status_code == 302
+    assert response["Location"].startswith(reverse("account_reauthenticate"))
+
+
+# F13: request bodies and files.
+
+
+def test_a_huge_request_is_refused_before_it_is_read(client):
+    response = client.generic("POST", "/r/any-token/", b"x", CONTENT_LENGTH=str(200 * 1024 * 1024))
+    assert response.status_code == 413
+
+
+def test_files_are_never_cached(client):
+    from apps.clients.tests.factories import DocumentFactory
+
+    document = DocumentFactory(client=ClientFactory())
+    sign_in(client, staff())
+    response = client.get(reverse("clients:document_download", args=[document.public_id]))
+    assert response.status_code == 200
+    assert response["Cache-Control"] == "private, no-store"
+    assert response["X-Content-Type-Options"] == "nosniff"
+
+
+# F14: tax references in an import file are not shown back.
+
+
+def test_the_match_page_hides_tax_reference_columns(client):
+    from apps.imports.tests.helpers import boss, csv_bytes, upload
+
+    run = upload(
+        boss(),
+        "clients",
+        "made-up.csv",
+        csv_bytes("Name,Type,Corp Tax UTR,NI Number", "Sample Ltd,Ltd,1234567890,ZZ123456Z"),
+    )
+    sign_in(client, boss())
+    page = client.get(reverse("imports:match", args=[run.pk])).content.decode()
+    assert "1234567890" not in page and "ZZ123456Z" not in page
+    assert "Sample Ltd" in page
+
+
+# F15: a reveal is logged only on a client the person is linked to.
+
+
+def test_a_reveal_cannot_be_filed_on_an_unrelated_client(client):
+    from apps.clients.tests.factories import ContactFactory
+    from apps.events.models import ActivityEvent
+
+    person = ContactFactory(ni_number="ZZ 12 34 56 Z")
+    unrelated = ClientFactory()
+    sign_in(client, staff())
+    client.post(
+        reverse("clients:contact_reveal", args=[person.pk, "ni_number"]),
+        {"client": unrelated.pk},
+    )
+    event = ActivityEvent.objects.filter(verb="sensitive.revealed").latest("pk")
+    assert event.client_id is None

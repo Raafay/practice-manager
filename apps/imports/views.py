@@ -74,6 +74,12 @@ class MatchView(ImportAccess, View):
             return redirect("imports:run", run.pk)
         form = form or MappingForm(run=run)
         rows = [r for r in services.rows_of(run) if any(c.strip() for c in r)][:PREVIEW_ROWS]
+        # Tax references and codes are not shown back on screen.
+        hidden = services.sensitive_columns(run)
+        rows = [
+            [services.LEFT_OUT if i in hidden and c.strip() else c for i, c in enumerate(r)]
+            for r in rows
+        ]
         return render(
             request,
             "imports/match.html",
@@ -178,6 +184,10 @@ class RunView(ImportAccess, View):
 
 class FailuresView(ImportAccess, View):
     """The rows that were not imported, with the reason, as CSV. Tax references are left out."""
+
+    # A download of client data: the password is asked for again, as for exports.
+    require_reauth = True
+    reauth_allow_get = False
 
     def get(self, request, pk):
         run = _run(pk)

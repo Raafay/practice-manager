@@ -328,7 +328,15 @@ class MatchActionView(FinanceView):
 
 
 class XeroConnectView(FinanceView):
-    """Start the Xero consent. Needs the app keys in the environment."""
+    """Start the Xero consent. Needs the app keys in the environment.
+
+    Connecting an integration needs integrations.manage as well as the finance right,
+    and the password again (spec 01 section 3).
+    """
+
+    required_rights = ("finance.owner", "integrations.manage")
+    require_reauth = True
+    reauth_allow_get = False
 
     def get(self, request):
         if not xero.keys_present():
