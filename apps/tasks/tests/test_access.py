@@ -130,4 +130,4 @@ def test_the_tasks_tab_is_on_the_client_page(client, world):
 def test_tasks_are_in_the_navigation(client):
     sign_in(client, staff())
     html = client.get(reverse("overview")).content.decode()
-    assert reverse("tasks:list") in html and "My work" in html
+    assert reverse("tasks:list") in html and "Overview" in html

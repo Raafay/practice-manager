@@ -1,0 +1,7 @@
+{# Links between the Tasks pages. Needs: section (list, projects, repeating, workload). #}
+<nav class="mb-4 flex flex-wrap gap-1.5 border-b border-slate-200 pb-2" aria-label="Tasks sections">
+  <a href="{% url 'tasks:list' %}" class="chip" {% if section == "list" %}aria-current="true"{% endif %}>Tasks</a>
+  <a href="{% url 'tasks:projects' %}" class="chip" {% if section == "projects" %}aria-current="true"{% endif %}>Projects</a>
+  <a href="{% url 'tasks:repeating' %}" class="chip" {% if section == "repeating" %}aria-current="true"{% endif %}>Repeating</a>
+  <a href="{% url 'tasks:workload' %}" class="chip" {% if section == "workload" %}aria-current="true"{% endif %}>Workload</a>
+</nav>

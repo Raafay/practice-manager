@@ -5,6 +5,7 @@
   {% include "components/_page_header.html" with title="Tasks" subtitle="All work in one place: compliance and fractional." %}
   <button type="button" class="btn btn-primary" hx-get="{% url 'tasks:new' %}" hx-target="#drawer-body">{% icon "plus" "size-4" %} New task</button>
 </div>
+{% include "tasks/_subnav.html" with section="list" %}
 <div id="task-page">{% include "tasks/_page.html" %}</div>
 {% endblock %}
 {% block drawer_attrs %}{% if open_task %}data-open-on-load data-return-url="{% url 'tasks:list' %}"{% endif %}{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "layouts/app.html" %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Overview" subtitle="Your work, your clients' deadlines and what is waiting on you." %}
+  <div class="flex gap-2">
+    <a href="{% url 'tasks:list' %}?chip=mine" class="btn btn-secondary">{% icon "list-bullet" "size-4" %} All my tasks</a>
+    <button type="button" class="btn btn-primary" hx-get="{% url 'tasks:new' %}" hx-target="#drawer-body">{% icon "plus" "size-4" %} New task</button>
+  </div>
+</div>
+<p class="mb-4 text-sm">
+  <a href="{% url 'tasks:list' %}?chip=unassigned" class="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 no-underline hover:bg-slate-50">
+    {% icon "user-plus" "size-4" %} <strong>{{ unassigned_count }}</strong> unassigned task{{ unassigned_count|pluralize }}
+  </a>
+</p>
+<div class="mb-6 grid gap-4 lg:grid-cols-3">
+  <section class="card card-body" aria-labelledby="ov-deadlines">
+    <h2 id="ov-deadlines" class="mb-2 flex items-center gap-2 text-base">Deadlines in the next 14 days <span class="badge badge-neutral">{{ deadline_rows|length }}</span></h2>
+    <p class="muted mb-1 text-xs">For clients where you are the manager or partner.</p>
+    {% if deadline_rows %}
+    <ul class="divide-y divide-slate-100 text-sm">
+      {% for d in deadline_rows|slice:":8" %}
+      <li class="flex items-center justify-between gap-2 py-1.5"><a href="{% url 'services:client_deadlines' d.client_id %}" class="truncate">{{ d.client.name }}: {{ d.label }}</a><span class="whitespace-nowrap {% if d.due_date < today %}font-medium text-red-700{% else %}muted{% endif %}">{% if d.due_date < today %}Overdue {% endif %}{{ d.due_date|date:"d/m/Y" }}</span></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="muted">Nothing due soon for your clients.</p>{% endif %}
+  </section>
+  <section class="card card-body" aria-labelledby="ov-waiting">
+    <h2 id="ov-waiting" class="mb-2 flex items-center gap-2 text-base">Waiting on me <span class="badge badge-neutral">{{ waiting.total }}</span></h2>
+    {% if waiting.reviews or waiting.mentions %}
+    <ul class="divide-y divide-slate-100 text-sm">
+      {% for task in waiting.reviews %}<li class="flex items-center justify-between gap-2 py-1.5"><a href="{% url 'tasks:detail' task.pk %}" class="truncate">Review: {{ task.title }}</a><span class="muted whitespace-nowrap">{{ task.owner.name|default:"Unassigned" }}</span></li>{% endfor %}
+      {% for n in waiting.mentions %}<li class="py-1.5"><form method="post" action="{% url 'events:notification_open' n.pk %}">{% csrf_token %}<button type="submit" class="text-left text-accent underline">{{ n.message }}</button></form></li>{% endfor %}
+    </ul>
+    {% else %}<p class="muted">No reviews or mentions waiting for you.</p>{% endif %}
+  </section>
+  <section class="card card-body" aria-labelledby="ov-other">
+    <h2 id="ov-other" class="mb-2 text-base">Elsewhere</h2>
+    <ul class="space-y-1.5 text-sm">
+      <li><a href="{% url 'comms:queue' %}">Messages waiting for approval</a>: <strong>{{ comms_waiting|default:0 }}</strong></li>
+      <li class="muted">Client requests: arrive with the client portal in a later stage.</li>
+    </ul>
+  </section>
+</div>
+{% include "onboarding/_overview_panels.html" %}
+{% for section in sections %}
+<section class="mb-6" aria-labelledby="sec-{{ section.key }}">
+  <h2 id="sec-{{ section.key }}" class="mb-2 flex items-center gap-2 text-base">{{ section.label }} <span class="badge {% if section.key == 'overdue' and section.tasks %}badge-red{% else %}badge-neutral{% endif %}">{{ section.tasks|length }}</span></h2>
+  {% if section.tasks %}
+    {% include "tasks/_table.html" with rows=section.tasks %}
+  {% else %}
+    <p class="muted">Nothing here.</p>
+  {% endif %}
+</section>
+{% endfor %}
+{% endblock %}

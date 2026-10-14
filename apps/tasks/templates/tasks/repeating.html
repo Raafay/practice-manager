@@ -1,0 +1,37 @@
+{% extends "layouts/app.html" %}
+{% block title %}Repeating tasks{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Repeating tasks" subtitle="Regular work with no statutory deadline. A task is made when each period starts." %}
+  <button type="button" class="btn btn-primary" hx-get="{% url 'tasks:repeating_new' %}" hx-target="#drawer-body">{% icon "plus" "size-4" %} New repeating task</button>
+</div>
+{% url 'tasks:repeating_new' as repeating_new_url %}
+{% include "tasks/_subnav.html" with section="repeating" %}
+{% if rules %}
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th scope="col">Task</th><th scope="col">Client</th><th scope="col">Owner</th><th scope="col">How often</th><th scope="col">From</th><th scope="col">Ends</th><th scope="col">Made</th><th scope="col">State</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+    <tbody>
+      {% for rule in rules %}
+      <tr>
+        <td class="font-medium">{{ rule.title }}</td>
+        <td>{% if rule.client %}<a href="{% url 'clients:detail' rule.client_id %}">{{ rule.client.name }}</a>{% else %}<span class="muted">Internal</span>{% endif %}</td>
+        <td>{% if rule.owner %}{{ rule.owner.name }}{% else %}<span class="muted">Unassigned</span>{% endif %}</td>
+        <td>{{ rule.get_frequency_display }}</td>
+        <td class="whitespace-nowrap">{{ rule.first_date|date:"d/m/Y" }}</td>
+        <td class="whitespace-nowrap">{% if rule.ends_on %}{{ rule.ends_on|date:"d/m/Y" }}{% else %}<span class="muted">Never</span>{% endif %}</td>
+        <td>{{ rule.made }}</td>
+        <td>{% if rule.active %}{% include "components/_badge.html" with text="On" tone="green" %}{% else %}{% include "components/_badge.html" with text="Off" %}{% endif %}</td>
+        <td class="whitespace-nowrap text-right">
+          <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'tasks:repeating_edit' rule.pk %}" hx-target="#drawer-body">Edit</button>
+          <form method="post" action="{% url 'tasks:repeating_toggle' rule.pk %}" class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">{% if rule.active %}Switch off{% else %}Switch on{% endif %}</button></form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  {% include "components/_empty.html" with title="No repeating tasks yet" message="Add a weekly finance catch-up or a monthly board pack and the tasks will appear by themselves." icon_name="arrow-path" action_url=repeating_new_url action_label="New repeating task" %}
+{% endif %}
+{% endblock %}

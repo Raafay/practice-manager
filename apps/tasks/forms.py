@@ -11,6 +11,10 @@ from apps.core.models import validate_hex_colour
 from apps.services.models import Service
 
 from .models import (
+    Project,
+    ProjectSection,
+    ProjectTemplate,
+    RepeatingTask,
     TaskCategory,
     TaskKind,
     TaskStatus,
@@ -86,9 +90,17 @@ class TaskCreateForm(StyledFormMixin, forms.Form):
     service = forms.ModelChoiceField(
         Service.objects.none(), required=False, widget=forms.HiddenInput
     )
+    project = forms.ModelChoiceField(
+        Project.objects.none(), required=False, widget=forms.HiddenInput
+    )
+    section = forms.ModelChoiceField(
+        ProjectSection.objects.none(), required=False, widget=forms.HiddenInput
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["project"].queryset = Project.objects.all()
+        self.fields["section"].queryset = ProjectSection.objects.all()
         self.fields["category"].queryset = TaskCategory.objects.filter(active=True)
         self.fields["status"].queryset = TaskStatus.objects.filter(active=True)
         self.fields["service"].queryset = Service.objects.all()
@@ -254,3 +266,134 @@ class TaskDescriptionForm(forms.Form):
     description = forms.CharField(
         required=False, widget=forms.HiddenInput(attrs={"id": "id_description"})
     )
+
+
+class ProjectForm(StyledFormMixin, forms.ModelForm):
+    client_text = forms.CharField(
+        required=False,
+        label="Client",
+        widget=forms.TextInput(
+            attrs={
+                "list": "client-options",
+                "autocomplete": "off",
+                "hx-get": reverse_lazy("tasks:client_options"),
+                "hx-trigger": "input changed delay:250ms",
+                "hx-target": "#client-options",
+                "hx-swap": "innerHTML",
+            }
+        ),
+        help_text="Start typing a name or number. Leave empty for the practice's own project.",
+    )
+    template = forms.ModelChoiceField(
+        ProjectTemplate.objects.none(),
+        required=False,
+        empty_label="No template (start empty)",
+        label="Start from a template",
+        help_text="Makes the sections and tasks, dated from the start date.",
+    )
+
+    class Meta:
+        model = Project
+        fields = [
+            "name",
+            "client_text",
+            "owner",
+            "state",
+            "start_date",
+            "end_date",
+            "budget_hours",
+            "description",
+        ]
+        widgets = {
+            "start_date": DateInput,
+            "end_date": DateInput,
+            "description": forms.Textarea(attrs={"rows": 3}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["owner"] = StaffChoiceField(required=False, empty_label="Unassigned")
+        if self.instance.pk:
+            del self.fields["template"]
+            if self.instance.client_id:
+                self.initial["client_text"] = client_label(self.instance.client)
+        else:
+            self.fields["template"].queryset = ProjectTemplate.objects.filter(active=True)
+            self.order_fields(
+                [
+                    "template",
+                    "name",
+                    "client_text",
+                    "owner",
+                    "state",
+                    "start_date",
+                    "end_date",
+                    "budget_hours",
+                    "description",
+                ]
+            )
+
+    def clean_client_text(self):
+        return resolve_client(self.cleaned_data["client_text"])
+
+    def clean(self):
+        data = super().clean()
+        if data.get("template") and not data.get("start_date"):
+            self.add_error("start_date", "Give a start date so the tasks can be dated.")
+        if (
+            data.get("start_date")
+            and data.get("end_date")
+            and data["end_date"] < data["start_date"]
+        ):
+            self.add_error("end_date", "The end date is before the start date.")
+        return data
+
+
+class RepeatingTaskForm(StyledFormMixin, forms.ModelForm):
+    client_text = forms.CharField(
+        required=False,
+        label="Client",
+        widget=forms.TextInput(
+            attrs={
+                "list": "client-options",
+                "autocomplete": "off",
+                "hx-get": reverse_lazy("tasks:client_options"),
+                "hx-trigger": "input changed delay:250ms",
+                "hx-target": "#client-options",
+                "hx-swap": "innerHTML",
+            }
+        ),
+        help_text="Start typing a name or number. Leave empty for the practice's own work.",
+    )
+
+    class Meta:
+        model = RepeatingTask
+        fields = [
+            "title",
+            "client_text",
+            "category",
+            "owner",
+            "frequency",
+            "first_date",
+            "days_until_due",
+            "ends_on",
+            "active",
+        ]
+        widgets = {"first_date": DateInput, "ends_on": DateInput}
+        labels = {"days_until_due": "Days to finish", "active": "Switched on"}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["owner"] = StaffChoiceField(required=False, empty_label="Unassigned")
+        self.fields["category"].queryset = TaskCategory.objects.filter(active=True)
+        if self.instance.pk and self.instance.client_id:
+            self.initial["client_text"] = client_label(self.instance.client)
+
+    def clean_client_text(self):
+        return resolve_client(self.cleaned_data["client_text"])
+
+    def clean(self):
+        data = super().clean()
+        if data.get("ends_on") and data.get("first_date") and data["ends_on"] < data["first_date"]:
+            self.add_error("ends_on", "The end date is before the first date.")
+        return data

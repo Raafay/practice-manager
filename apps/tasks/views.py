@@ -23,7 +23,7 @@ from apps.core.permissions import StaffRequiredMixin
 from apps.events.models import ActivityEvent
 
 from . import board as board_mod
-from . import calview, filters, listing, services
+from . import calview, filters, listing, overview, services
 from .forms import CommentForm, TaskCreateForm, client_label
 from .models import Project, ProjectSection, Task, TaskCategory, TaskKind, TaskStar, TaskStatus
 
@@ -84,9 +84,12 @@ def build_page(
     base_url: str,
     fixed_client: Client | None = None,
     fixed_project: Project | None = None,
+    default_group: str = "",
 ) -> dict:
     params, active_view = list_params(request)
     query, form = filters.parse(params)
+    if default_group and "group" not in params and active_view is None:
+        query = dataclasses.replace(query, group=default_group)
     layout = query.layout
     queryset = filters.apply(
         dataclasses.replace(query, show_done=True) if layout == "board" else query,
@@ -651,7 +654,7 @@ class TaskCreateView(StaffRequiredMixin, View):
             task = services.create_task(
                 request.user,
                 title=data["title"],
-                client=data["client_text"],
+                client=data["client_text"] or (data["project"].client if data["project"] else None),
                 kind=data["kind"],
                 category=data["category"],
                 owner=data["owner"],
@@ -660,6 +663,12 @@ class TaskCreateView(StaffRequiredMixin, View):
                 due_date=data["due_date"],
                 description=data["description"],
                 service=data["service"],
+                project=data["project"],
+                section=data["section"]
+                if data["project"]
+                and data["section"]
+                and data["section"].project_id == data["project"].pk
+                else None,
             )
         except ValidationError as exc:
             form.add_error(None, exc)
@@ -819,8 +828,8 @@ def my_sections(user, today: date | None = None) -> list[dict]:
     ]
 
 
-class MyWorkView(StaffRequiredMixin, View):
-    """The staff home page until Stage 8 builds the Overview."""
+class OverviewView(StaffRequiredMixin, View):
+    """The staff home page: my work, deadlines for my clients, what is waiting on me."""
 
     def get(self, request):
         context = {
@@ -841,9 +850,14 @@ class MyWorkView(StaffRequiredMixin, View):
                     "Deadline",
                 )
             ],
+            "deadline_rows": overview.deadlines_for_my_clients(request.user),
+            "waiting": overview.waiting_on_me(request.user),
             **pick_lists(),
         }
         from apps.onboarding.panels import overview_context
 
         context.update(overview_context(request.user))
-        return render(request, "tasks/my_work.html", context)
+        return render(request, "tasks/overview.html", context)
+
+
+MyWorkView = OverviewView  # the old name

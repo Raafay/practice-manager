@@ -414,6 +414,12 @@ class Project(TimeStampedModel):
         if self.start_date and self.end_date and self.end_date < self.start_date:
             raise ValidationError("The end date is before the start date.")
 
+    @property
+    def state_tone(self) -> str:
+        return {"planned": "neutral", "active": "green", "on_hold": "amber", "done": "accent"}[
+            self.state
+        ]
+
 
 class ProjectSection(TimeStampedModel):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="sections")
