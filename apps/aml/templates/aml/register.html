@@ -1,0 +1,37 @@
+{% extends "layouts/app.html" %}
+{% block title %}AML register{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="AML register" subtitle="Every client with its risk level, state, last assessment and next review." %}
+  <div class="flex gap-2">
+    <a href="{% url 'services:reports' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Reports</a>
+    {% if user|can:"data.export" %}<a href="{{ export_url }}?{{ keep_query }}" class="btn btn-secondary">{% icon "arrow-down-tray" "size-4" %} Export CSV</a>{% endif %}
+  </div>
+</div>
+<form method="get" class="card card-body mb-4 space-y-3" aria-label="Filter the register">
+  <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    {% include "components/_field.html" with field=form.q %}
+    {% include "components/_field.html" with field=form.level %}
+    {% include "components/_field.html" with field=form.state %}
+    {% include "components/_field.html" with field=form.status %}
+  </div>
+  <div class="flex gap-2"><button type="submit" class="btn btn-primary">{% icon "funnel" "size-4" %} Apply</button><a href="{% url 'aml:register' %}" class="btn btn-ghost">Clear</a></div>
+</form>
+<p class="muted mb-2" role="status">{{ total }} client{{ total|pluralize }}.</p>
+{% if page.object_list %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th scope="col">Client</th><th scope="col">Level</th><th scope="col">State</th><th scope="col">Last assessed</th><th scope="col">Next review</th><th scope="col">Identity</th></tr></thead>
+  <tbody>{% for r in page.object_list %}
+    <tr>
+      <td><a href="{% url 'aml:tab' r.client.pk %}" class="font-medium text-slate-900">{{ r.client.name }}</a><span class="muted block">{{ r.client.reference }} · {{ r.client.get_status_display }}</span></td>
+      <td>{% if r.level %}{% include "components/_badge.html" with text=r.level_label tone=r.level_tone %}{% else %}<span class="muted">None yet</span>{% endif %}</td>
+      <td>{% include "components/_badge.html" with text=r.state_label tone=r.state_tone %}</td>
+      <td class="whitespace-nowrap">{{ r.last_assessed|date:"d/m/Y"|default:"" }}</td>
+      <td class="whitespace-nowrap">{{ r.next_review|date:"d/m/Y"|default:"" }}</td>
+      <td>{{ r.verified }} of {{ r.total }}</td>
+    </tr>{% endfor %}</tbody></table></div>
+{% include "components/_pagination.html" %}
+{% else %}
+  {% include "components/_empty.html" with title="No clients match" message="Widen the filters. Clients appear here once they are active, onboarding or paused." icon_name="shield-check" %}
+{% endif %}
+{% endblock %}

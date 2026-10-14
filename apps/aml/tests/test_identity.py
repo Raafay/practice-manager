@@ -4,7 +4,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
 from apps.accounts.models import Role
-from apps.accounts.tests.factories import UserFactory, manager, sign_in, staff
+from apps.accounts.tests.factories import manager, sign_in, staff
 from apps.aml import services
 from apps.aml.models import IdentityCheck
 from apps.clients import services as client_services
@@ -96,12 +96,15 @@ def test_uploads_are_sensitive_documents_and_each_view_is_logged(client):
     assert ActivityEvent.objects.filter(verb="document.downloaded", client=c).exists()
     client.get(reverse("clients:document_preview", args=[document.public_id]))
     assert ActivityEvent.objects.filter(verb="document.viewed", client=c).exists()
-    # Staff without the right cannot open it at all.
-    nobody = UserFactory(role_slug=Role.STAFF)
-    nobody.extra_rights = []
+    # Staff without the right cannot open it, and nothing more is logged.
+    role = Role.objects.get(slug=Role.STAFF)
+    role.rights = [r for r in role.rights if r != "documents.sensitive"]
+    role.save()
+    before = ActivityEvent.objects.filter(verb="document.downloaded").count()
     sign_in(client, staff())
     response = client.get(reverse("clients:document_download", args=[document.public_id]))
-    assert response.status_code in (200, 403)
+    assert response.status_code == 403
+    assert ActivityEvent.objects.filter(verb="document.downloaded").count() == before
 
 
 def test_checklist_line_ticks_when_everyone_is_verified_and_untick_when_added():
@@ -145,8 +148,12 @@ def test_identity_pages_need_sign_in_and_the_right_client(client):
     assert client.get(url).status_code == 200
     other = ClientFactory()
     assert client.get(reverse("aml:identity", args=[other.pk, check.pk])).status_code == 404
-    response = client.post(url, {"state": "received", "id_file": png()}, format="multipart")
-    assert response.status_code in (302, 403)
+    # Without the sensitive-documents right, an upload is refused.
+    role = Role.objects.get(slug=Role.STAFF)
+    role.rights = [r for r in role.rights if r != "documents.sensitive"]
+    role.save()
+    assert client.post(url, {"state": "received", "id_file": png()}).status_code == 403
+    assert not check.documents.exists()
 
 
 def test_the_provider_interface_has_nothing_behind_it():

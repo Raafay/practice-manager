@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views, views_settings
+from . import views, views_register, views_settings
 
 app_name = "aml"
 
@@ -76,5 +76,11 @@ urlpatterns = [
         "settings/aml-records/policy/<int:pk>/delete/",
         views_settings.PolicyDeleteView.as_view(),
         name="policy_delete",
+    ),
+    path("reports/aml-register/", views_register.RegisterView.as_view(), name="register"),
+    path(
+        "reports/aml-register/export/",
+        views_register.RegisterExportView.as_view(),
+        name="register_export",
     ),
 ]
