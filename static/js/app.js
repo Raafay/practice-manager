@@ -404,3 +404,27 @@ function initProspectBoard(root) {
 
 document.addEventListener("DOMContentLoaded", () => initProspectBoard(document));
 document.addEventListener("htmx:load", (event) => initProspectBoard(event.detail.elt));
+
+// A button that copies the text of another element: <button data-copy-from="#id">.
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-copy-from]");
+  if (!button) return;
+  const source = document.querySelector(button.dataset.copyFrom);
+  if (!source) return;
+  const text = source.value || source.textContent.trim();
+  const done = () => {
+    const original = button.dataset.label || button.textContent;
+    button.dataset.label = original;
+    button.textContent = "Copied";
+    setTimeout(() => {
+      button.textContent = original;
+    }, 2000);
+  };
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(done, () => {
+      if (source.select) source.select();
+    });
+  } else if (source.select) {
+    source.select();
+  }
+});

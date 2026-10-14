@@ -108,8 +108,9 @@ def test_values_are_escaped():
 
 
 def test_link_fields_show_a_labelled_placeholder_and_block():
-    result = merge.render("{{ portal_link }}", ctx_for())
-    assert result.placeholders == ["portal_link"]
+    # portal_link has a builder since Stage 10; proposal_link is filled in only when sending one.
+    result = merge.render("{{ proposal_link }}", ctx_for())
+    assert result.placeholders == ["proposal_link"]
     assert result.blocked
     assert "not available yet" in result.text
 

@@ -1,0 +1,8 @@
+{% extends "layouts/public.html" %}
+{% block title %}Too many requests{% endblock %}
+{% block content %}
+<div class="card card-body">
+  <h1 class="text-xl">Please try again later</h1>
+  <p class="mt-2">Too many requests were sent from this address. Please wait a while, or phone {{ practice.practice_name }}{% if practice.phone %} on {{ practice.phone }}{% endif %}.</p>
+</div>
+{% endblock %}

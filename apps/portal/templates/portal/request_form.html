@@ -1,0 +1,25 @@
+{% extends "layouts/public.html" %}
+{% load portal_tags %}
+{% block title %}Send a request{% endblock %}
+{% block content %}
+<div class="card card-body">
+  {% logo_src practice as logo %}
+  {% if logo %}<img src="{{ logo }}" alt="" class="mb-3 h-10 w-auto max-w-[10rem] object-contain">{% endif %}
+  <h1 class="text-xl">Send a request to {{ practice.practice_name }} about {{ client_name }}</h1>
+  <p class="muted mt-1">Tell us what you need and we will get back to you by email.</p>
+</div>
+<form method="post" enctype="multipart/form-data" class="card card-body mt-4 space-y-4" novalidate>
+  {% csrf_token %}
+  {% if error %}<div class="form-errors" role="alert"><p>{{ error }}</p></div>{% endif %}
+  {% if form.errors and not error %}<div class="form-errors" role="alert"><p>Please check the form.</p></div>{% endif %}
+  {% for field in form.visible_fields %}
+    {% if field.name == "website" %}<div class="hp-wrap" aria-hidden="true">{% include "components/_field.html" with field=field %}</div>
+    {% else %}{% include "components/_field.html" with field=field %}{% endif %}
+  {% endfor %}
+  <div>
+    <label class="label" for="req-files">Files <span class="font-normal text-slate-400">(optional, up to 3, 10 MB each)</span></label>
+    <input id="req-files" type="file" name="files" multiple class="input">
+  </div>
+  <div><button type="submit" class="btn btn-primary w-full sm:w-auto">Send request</button></div>
+</form>
+{% endblock %}

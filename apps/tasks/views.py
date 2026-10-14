@@ -860,6 +860,9 @@ class OverviewView(StaffRequiredMixin, View):
         from apps.pipeline.panels import overview_context as pipeline_context
 
         context.update(pipeline_context(request.user))
+        from apps.portal.panels import overview_context as portal_context
+
+        context.update(portal_context(request.user))
         return render(request, "tasks/overview.html", context)
 
 

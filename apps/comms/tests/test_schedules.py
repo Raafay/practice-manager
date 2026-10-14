@@ -205,7 +205,7 @@ def test_an_automatic_template_with_a_blocking_problem_still_waits_for_a_person(
     vat_deadline(client)
     row = schedule()
     row.template.send_mode = "auto"
-    row.template.body += "<p>{{ portal_link }}</p>"  # the page is not built yet: blocks sending
+    row.template.body += "<p>{{ proposal_link }}</p>"  # no page to point to: blocks sending
     row.template.save()
     schedules.run_all(date(2026, 10, 5))
     assert QueuedMessage.objects.get().state == "needs_approval"

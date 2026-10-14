@@ -1,0 +1,11 @@
+{% extends "portal/base.html" %}
+{% block title %}{{ req.subject }}{% endblock %}
+{% block content %}
+<p><a href="{% url 'portal:requests' %}" class="text-sm">&larr; All requests</a></p>
+<div class="card card-body mt-2">
+  <div class="flex flex-wrap items-center gap-2"><h1 class="text-xl">{{ req.subject }}</h1>{% include "components/_badge.html" with text=req.get_state_display tone=req.state_tone %}{% if req.urgency == "urgent" %}{% include "components/_badge.html" with text="Urgent" tone="red" %}{% endif %}</div>
+  <p class="muted mt-1">Reference {{ req.reference }} · sent {{ req.received_at|date:"d/m/Y" }} at {{ req.received_at|time:"H:i" }}</p>
+  <p class="mt-3 whitespace-pre-line">{{ req.body }}</p>
+</div>
+<p class="muted mt-3 text-sm">We will reply to {{ req.sender_email|default:"you" }} by email.</p>
+{% endblock %}

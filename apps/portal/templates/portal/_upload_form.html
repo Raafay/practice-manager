@@ -1,0 +1,12 @@
+<form method="post" action="{% if action %}{{ action }}{% else %}{% url 'portal:upload' %}{% endif %}" enctype="multipart/form-data" class="card card-body mt-2 space-y-4" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-errors" role="alert">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+  {% include "components/_field.html" with field=form.category %}
+  {% include "components/_field.html" with field=form.note %}
+  <div>
+    <label class="label" for="upload-files">Choose files</label>
+    <input id="upload-files" type="file" name="files" multiple required class="input">
+    <p class="help">Up to 10 files, 25 MB each. PDF, photos, Word, Excel, CSV or text.</p>
+  </div>
+  <div><button type="submit" class="btn btn-primary w-full sm:w-auto">{% icon "arrow-up-tray" "size-4" %} Send files</button></div>
+</form>

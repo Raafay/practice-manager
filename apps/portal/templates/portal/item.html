@@ -1,0 +1,45 @@
+{% extends "portal/base.html" %}
+{% block title %}{{ item.title }}{% endblock %}
+{% block content %}
+<p><a href="{% url 'portal:home' %}" class="text-sm">&larr; Home</a></p>
+<div class="card card-body mt-2">
+  <h1 class="text-xl">{{ item.title }}</h1>
+  {% if item.description %}<p class="mt-1 text-slate-700">{{ item.description }}</p>{% endif %}
+  {% if item.due_date %}<p class="mt-1 text-sm text-slate-600">Please do this by {{ item.due_date|date:"d/m/Y" }}.</p>{% endif %}
+  {% if problem %}<div class="form-errors mt-3" role="alert"><p>{{ problem }}</p></div>{% endif %}
+  {% if item.state == "done" %}
+  <p class="mt-3 rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-900" role="status">{% icon "check-circle" "size-5 inline" %} This is done{% if item.completed_at %} ({{ item.completed_at|date:"d/m/Y" }}){% endif %}. Thank you.</p>
+  {% elif item.state == "cancelled" %}
+  <p class="muted mt-3">This is no longer needed.</p>
+  {% endif %}
+</div>
+
+{% if uploading and item.state == "open" %}
+<section class="mt-5" aria-labelledby="item-up-h">
+  <h2 id="item-up-h" class="text-base">Upload your records</h2>
+  {% url "portal:item_upload" item.public_id as up %}
+  {% include "portal/_upload_form.html" with action=up %}
+  <form method="post" action="{% url 'portal:item_everything' item.public_id %}" class="card card-body mt-4 space-y-2">
+    {% csrf_token %}
+    <p class="text-sm text-slate-700">When you have sent everything, tell us so we can stop sending reminders.</p>
+    <div><button type="submit" class="btn btn-secondary">That is everything</button></div>
+  </form>
+</section>
+{% endif %}
+
+{% if approving and item.state == "open" %}
+<section class="mt-5" aria-labelledby="appr-h">
+  <h2 id="appr-h" class="text-base">Read, then approve</h2>
+  <p class="mt-1"><a class="btn btn-secondary" href="{% url 'portal:document' document.public_id %}">{% icon "arrow-down-tray" "size-4" %} Download “{{ document.title }}”</a></p>
+  <form method="post" action="{% url 'portal:item_approve' item.public_id %}" class="card card-body mt-3 space-y-4" novalidate>
+    {% csrf_token %}
+    {% if error %}<div class="form-errors" role="alert"><p>{{ error }}</p></div>{% endif %}
+    {% if approve_form.errors and not error %}<div class="form-errors" role="alert"><p>Please check the form.</p></div>{% endif %}
+    <div>{% include "components/_field.html" with field=approve_form.agree %}</div>
+    {% include "components/_field.html" with field=approve_form.typed_name %}
+    <p class="help">Your approval is recorded with your name, the time, your IP address and your browser.</p>
+    <div><button type="submit" class="btn btn-primary w-full sm:w-auto">Approve</button></div>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

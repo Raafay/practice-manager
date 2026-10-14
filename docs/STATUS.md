@@ -4,7 +4,7 @@ Keep this file under 150 lines. When it grows, shorten older stages to two lines
 
 ## Where things stand
 
-Next stage to build: 10 (Portal and requests).
+Next stage to build: 11 (Time, fees, Xero and forecast).
 
 | Stage | State | Merged on |
 |---|---|---|
@@ -18,7 +18,7 @@ Next stage to build: 10 (Portal and requests).
 | 7 Onboarding and AML | Built, in review | |
 | 8 Tasks, part two | Built, in review | |
 | 9 Prospects and proposals | Built, in review | |
-| 10 Portal and requests | Not started | |
+| 10 Portal and requests | Built, in review | |
 | 11 Time, fees, Xero and forecast | Not started | |
 | 12 Import and reports | Not started | |
 | 13 Hardening and deployment | Not started | |
@@ -95,6 +95,14 @@ See `docs/screens/stage-03/`. 499 tests at the time.
 - `apps/pipeline`: PipelineStage (8 seeded), ProspectDetails, Meeting, Proposal, PipelineSettings. Prospects page (board with drag, list, filters, header figures), new prospect form, Sales and Meetings panels on the Info tab, quiet rule with daily job `pipeline_daily` (06:50, also expires proposals), quiet panel on Overview, `g p` shortcut.
 - Proposals: made from proposed services, versions (older ones withdrawn), three fee switches, compose page, sent through the queue (approved at once if the sender may approve), public page behind the Stage 7 action link (view, accept, question, decline), PDFs to Documents, `on_proposal_accepted` calls Stage 7's onboarding hook. Settings: Pipeline stages, Proposal wording and rules. Engagement tab lists proposals.
 - Merge field `proposal_summary` added. Screens in `docs/screens/stage-09/`. No new dependency.
+
+## Stage 10: portal and requests (built 14/10/2026)
+
+- `apps/portal`: sign-in by emailed six-digit code (`PortalLoginCode`, hashed, 10 minutes, 5 tries, same page for unknown emails, staff emails never offered one), `PortalRequiredMixin`, `for_portal_user` on Client, Document, Deadline, PortalItem, PortalForm, Request. Portal pages: Home, Documents with upload, Requests, Details, client switcher; own phone-first layout with logo (as a data address, never a public file), name, accent.
+- Things to do (`PortalItem`) of all six kinds. Letters and proposals add and close their items through signals; signing and proposal pages are reached by a one-day action link. "That is everything" ticks the stops-reminders step once. Approving a document saves an approval PDF. Staff: Invite/Withdraw on Contacts, portal badge on the header, "Ask the client to upload/approve" on a task. `upload_link`, `portal_link`, `request_link` and new `confirm_link` merge fields work; starter templates now point to them (migration `portal.0002`).
+- Confirmation statement check (PDF copy, step ticked, changes highlighted) and client details form (save and return, tax references sealed in the answers, staff review with Apply per field, ticks "Client details form completed").
+- Requests: public form `/r/<token>/` (bot trap, 10/hour per address, 30/day per link, 3 files of 10 MB), client Requests tab (copy, QR code, Replace link), inbox with convert, link, reply (queued), close, spam, reopen, "Log a request" in the New menu, nav count, Overview panel, proposal questions. Optional acknowledgement template, off.
+- New dependency: `segno` (pure-Python QR code, no other use). Screens in `docs/screens/stage-10/`. 
 
 ## Assumptions
 
@@ -195,3 +203,13 @@ Things a stage left unfinished or found broken, with the stage number. Remove a 
 
 - 8: Project templates cannot be edited in Settings. The calendar's deadline markers follow the client (and fixed client) only, not the other filters. Drag and drop was checked through the endpoints and page markup, not in a live browser.
 - 9: Drag and drop was checked through the endpoints and markup, not in a live browser. The Prospects list has no CSV export.
+
+### Stage 10 assumptions and gaps
+
+- Portal sign-in is our own small code flow, not allauth's login by code, because that would also apply to staff at `/login/`. Sign-in and invitation emails go straight out (CORRECTIONS 17), not through the queue.
+- The details form never shows another person's date of birth, address or tax references to a portal user (a privacy test caught this); staff see everything on the review screen.
+- Items made by `upload_link`/`confirm_link` are created when the email is rendered, once per task. A recipient with no portal access cannot open them until invited. Rendering a preview also creates the item.
+- Request attachments stay as private `RequestFile`s until converted or linked, then become Documents. Requests closed by a done task become "closed". A reply to a request is queued and marks it "answered".
+- Demo data has three portal users (Copperleaf, Harbour Bakes, Wren and Finch) so every item kind is open. The portal code appears in the runserver console.
+- Known gaps: no email-in or WhatsApp-in (not in stage); portal items are not auto-withdrawn when a records task is cancelled.
+- Stage 6 assumption 6 and Stage 7 gap 7 are resolved by this stage.

@@ -1,0 +1,23 @@
+{% extends "layouts/auth.html" %}
+{% block title %}Client sign-in{% endblock %}
+{% block content %}
+<h1>Client sign-in</h1>
+{% if stage == "email" %}
+<p class="text-sm text-slate-600">Enter your email address. If we hold it for you, we will email you a six-digit code. There is no password to remember.</p>
+<form method="post" action="{% url 'portal:login' %}" class="space-y-4" novalidate>
+  {% csrf_token %}
+  {% include "components/_form_fields.html" %}
+  <button type="submit" class="btn btn-primary w-full">Email me a code</button>
+</form>
+{% else %}
+<p class="text-sm text-slate-600" role="status">If that email address is one we hold, a code is on its way. It works for 10 minutes. Check your junk folder if it does not arrive.</p>
+<form method="post" action="{% url 'portal:login_code' %}" class="space-y-4" novalidate>
+  {% csrf_token %}
+  {% if error %}<div class="form-errors" role="alert"><p>{{ error }}</p></div>{% endif %}
+  {% include "components/_form_fields.html" %}
+  <button type="submit" class="btn btn-primary w-full">Sign in</button>
+</form>
+<p class="text-sm"><a href="{% url 'portal:login' %}">Start again with a different email</a></p>
+{% endif %}
+<p class="text-xs text-slate-500">Practice staff sign in at the <a href="{% url 'account_login' %}">staff sign-in</a>.</p>
+{% endblock %}

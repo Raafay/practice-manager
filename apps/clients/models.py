@@ -53,6 +53,26 @@ class ClientQuerySet(models.QuerySet):
     def archived(self):
         return self.filter(archived_at__isnull=False)
 
+    def for_portal_user(self, user):
+        """The clients a portal user may see: linked, portal access on, not archived.
+
+        Every portal query starts from this, so another client's data cannot be reached.
+        """
+        if user is None or not getattr(user, "is_authenticated", False):
+            return self.none()
+        if not (user.is_active and user.is_portal):
+            return self.none()
+        return (
+            self.filter(
+                client_contacts__contact__portal_user=user,
+                client_contacts__portal_access=True,
+                client_contacts__resigned_on__isnull=True,
+                archived_at__isnull=True,
+            )
+            .exclude(status=Client.Status.LOST)
+            .distinct()
+        )
+
 
 class Client(PublicIdModel, TimeStampedModel):
     class Type(models.TextChoices):
@@ -347,6 +367,14 @@ class Contact(PublicIdModel, TimeStampedModel):
         "identity verified with Companies House", default=False
     )
     ch_identity_verified_on = models.DateField(null=True, blank=True)
+    # Set when staff invite this person to the portal. Portal users have no password.
+    portal_user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="portal_contact",
+    )
 
     class Meta:
         ordering = ["last_name", "first_name"]
@@ -476,6 +504,14 @@ def document_upload_to(instance, filename: str) -> str:
 class DocumentQuerySet(models.QuerySet):
     def live(self):
         return self.filter(deleted_at__isnull=True)
+
+    def for_portal_user(self, user):
+        """Shared with the portal by staff, or uploaded through the portal. Never staff-only."""
+        return (
+            self.live()
+            .filter(client__in=Client.objects.for_portal_user(user))
+            .filter(Q(shared_with_portal=True) | Q(source="portal"))
+        )
 
 
 class Document(PublicIdModel, TimeStampedModel):

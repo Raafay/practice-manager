@@ -50,6 +50,7 @@ FIELDS: dict[str, tuple[str, str]] = {
     "portal_link": ("Links", "Button: client portal"),
     "upload_link": ("Links", "Button: upload documents"),
     "request_link": ("Links", "Button: make a request"),
+    "confirm_link": ("Links", "Button: check company details"),
     "cs01_data": ("Blocks", "What Companies House holds, to confirm"),
     "proposal_summary": ("Blocks", "The proposal's services and charges"),
     "outstanding_invoices": ("Blocks", "Overdue invoices (from Stage 11)"),
@@ -62,6 +63,7 @@ LINK_FIELDS = {
     "portal_link": "Client portal",
     "upload_link": "Upload documents",
     "request_link": "Make a request",
+    "confirm_link": "Check your details",
 }
 
 # Later stages register a function (client, extra) -> url for a link field.

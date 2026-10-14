@@ -1,0 +1,12 @@
+{# New requests, on the Overview. Needs: request_rows, request_total. #}
+<section class="card card-body mb-6" aria-labelledby="ov-requests">
+  <h2 id="ov-requests" class="mb-2 flex items-center gap-2 text-base">New requests <span class="badge {% if request_total %}badge-accent{% else %}badge-neutral{% endif %}">{{ request_total }}</span></h2>
+  {% if request_rows %}
+  <ul class="divide-y divide-slate-100 text-sm">
+    {% for r in request_rows %}
+    <li class="flex items-center justify-between gap-2 py-1.5"><a href="{% url 'portal:inbox_detail' r.pk %}" class="truncate">{{ r.subject|default:"(no subject)" }}{% if r.urgency == "urgent" %} <span class="badge badge-red">Urgent</span>{% endif %}</a><span class="muted whitespace-nowrap">{{ r.client.name|default:"General" }}</span></li>
+    {% endfor %}
+  </ul>
+  <p class="mt-2 text-sm"><a href="{% url 'portal:inbox' %}">Open the Requests page</a></p>
+  {% else %}<p class="muted">No new requests. Anything clients send will appear here.</p>{% endif %}
+</section>

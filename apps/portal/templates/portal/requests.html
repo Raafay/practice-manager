@@ -1,0 +1,18 @@
+{% extends "portal/base.html" %}
+{% block title %}Requests{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between gap-3"><h1 class="text-xl">Requests</h1><a href="{% url 'portal:request_new' %}" class="btn btn-primary">New request</a></div>
+{% url "portal:request_new" as request_new_url %}
+{% if requests %}
+<ul class="card mt-4 divide-y divide-slate-100">
+  {% for r in requests %}
+  <li class="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
+    <div class="min-w-0"><a href="{% url 'portal:request_detail' r.public_id %}" class="font-medium">{{ r.subject }}</a><p class="muted text-sm">{{ r.reference }} · sent {{ r.received_at|date:"d/m/Y" }}</p></div>
+    {% include "components/_badge.html" with text=r.get_state_display tone=r.state_tone %}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<div class="mt-4">{% include "components/_empty.html" with title="No requests yet" message="Need something? Send us a request and we will get back to you." action_url=request_new_url action_label="New request" icon_name="inbox" %}</div>
+{% endif %}
+{% endblock %}

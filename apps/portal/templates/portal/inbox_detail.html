@@ -1,0 +1,45 @@
+{% extends "layouts/app.html" %}
+{% block title %}Request {{ req.reference }}{% endblock %}
+{% block content %}
+<p class="mb-2"><a href="{% url 'portal:inbox' %}" class="text-sm">&larr; All requests</a></p>
+<div class="page-header">
+  <div>
+    <div class="flex flex-wrap items-center gap-2"><h1>{{ req.subject|default:"(no subject)" }}</h1>
+      {% include "components/_badge.html" with text=req.get_state_display tone=req.state_tone %}
+      {% if req.urgency == "urgent" %}{% include "components/_badge.html" with text="Urgent" tone="red" icon_name="exclamation-triangle" %}{% endif %}</div>
+    <p class="muted mt-0.5">{{ req.reference }} · by {{ req.get_channel_display|lower }} · received {{ req.received_at|date:"d/m/Y" }} at {{ req.received_at|time:"H:i" }}{% if req.logged_by %} · logged by {{ req.logged_by }}{% endif %}</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    {% if req.is_open or req.state == "answered" %}
+      {% if not req.task %}
+      <a class="btn btn-primary" href="{% url 'portal:inbox_convert' req.pk %}" hx-get="{% url 'portal:inbox_convert' req.pk %}" hx-target="#drawer-body">{% icon "plus" "size-4" %} Make a task</a>
+      <a class="btn btn-secondary" href="{% url 'portal:inbox_link' req.pk %}" hx-get="{% url 'portal:inbox_link' req.pk %}" hx-target="#modal-body">Link to a task</a>
+      {% endif %}
+      {% if req.client and req.sender_email %}<a class="btn btn-secondary" href="{% url 'portal:inbox_reply' req.pk %}" hx-get="{% url 'portal:inbox_reply' req.pk %}" hx-target="#modal-body">{% icon "envelope" "size-4" %} Reply by email</a>{% endif %}
+      <a class="btn btn-secondary" href="{% url 'portal:inbox_close' req.pk %}" hx-get="{% url 'portal:inbox_close' req.pk %}" hx-target="#modal-body">Close</a>
+      <form method="post" action="{% url 'portal:inbox_spam' req.pk %}">{% csrf_token %}<button type="submit" class="btn btn-ghost">Spam</button></form>
+    {% else %}
+      <form method="post" action="{% url 'portal:inbox_reopen' req.pk %}">{% csrf_token %}<button type="submit" class="btn btn-secondary">Reopen</button></form>
+    {% endif %}
+  </div>
+</div>
+<div class="grid gap-4 lg:grid-cols-3">
+  <section class="card card-body lg:col-span-2" aria-label="The request">
+    <p class="whitespace-pre-line">{{ req.body }}</p>
+    {% if files %}
+    <h2 class="mt-4 text-base">Files</h2>
+    <ul class="mt-1 text-sm">{% for f in files %}<li><a href="{% url 'portal:inbox_file' req.pk f.public_id %}">{{ f.original_name }}</a> <span class="muted">{{ f.size|filesizeformat }}</span>{% if f.document %} <span class="badge badge-neutral">Filed under the client</span>{% endif %}</li>{% endfor %}</ul>
+    {% endif %}
+    {% if req.closing_note %}<p class="mt-4 rounded-md bg-slate-50 px-3 py-2 text-sm"><strong>Closing note:</strong> {{ req.closing_note }}</p>{% endif %}
+  </section>
+  <aside class="card card-body space-y-2 text-sm" aria-label="Details">
+    <p><span class="font-medium">Client:</span> {% if req.client %}<a href="{% url 'portal:client_requests' req.client.pk %}">{{ req.client.name }}</a>{% else %}<span class="muted">General (no client)</span>{% endif %}
+      {% if not req.client %} · <a href="{% url 'portal:inbox_client' req.pk %}" hx-get="{% url 'portal:inbox_client' req.pk %}" hx-target="#modal-body">Choose one</a>{% endif %}</p>
+    <p><span class="font-medium">From:</span> {{ req.sender_name|default:"Unknown" }}</p>
+    {% if req.sender_email %}<p><span class="font-medium">Email:</span> {{ req.sender_email }}</p>{% endif %}
+    {% if req.sender_phone %}<p><span class="font-medium">Phone:</span> {{ req.sender_phone }}</p>{% endif %}
+    {% if req.task %}<p><span class="font-medium">Task:</span> <a href="{% url 'tasks:detail' req.task.pk %}">{{ req.task.title }}</a></p>{% endif %}
+    {% if proposal_note %}<p class="muted">A question about a proposal.</p>{% endif %}
+  </aside>
+</div>
+{% endblock %}

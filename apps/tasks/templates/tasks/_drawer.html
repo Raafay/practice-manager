@@ -123,6 +123,16 @@
     {% else %}<p class="muted">Documents attach to a client's tasks.</p>{% endif %}
   </section>
 
+  {% if task.client and not task.is_cancelled %}
+  <section aria-labelledby="portal-h">
+    <h2 id="portal-h" class="mb-1 text-sm font-semibold">Client portal</h2>
+    <div class="flex flex-wrap gap-2">
+      <form method="post" action="{% url 'portal:task_ask_upload' task.pk %}">{% csrf_token %}<button type="submit" class="btn btn-secondary btn-sm">Ask the client to upload</button></form>
+      <a class="btn btn-secondary btn-sm" href="{% url 'portal:task_ask_approve' task.pk %}" hx-get="{% url 'portal:task_ask_approve' task.pk %}" hx-target="#modal-body">Ask the client to approve this document</a>
+    </div>
+  </section>
+  {% endif %}
+
   <section aria-labelledby="followers-h">
     <h2 id="followers-h" class="mb-1 text-sm font-semibold">Followers</h2>
     <div class="flex flex-wrap items-center gap-2">

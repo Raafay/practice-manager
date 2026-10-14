@@ -1,0 +1,31 @@
+{% extends "layouts/app.html" %}
+{% block title %}Requests{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Requests" subtitle="Everything clients ask for, from the request link, the portal, WhatsApp, phone and in person." %}
+  <a class="btn btn-primary" href="{% url 'portal:inbox_log' %}" hx-get="{% url 'portal:inbox_log' %}" hx-target="#drawer-body">{% icon "plus" "size-4" %} Log a request</a>
+</div>
+<nav class="tabs mb-4" aria-label="Show requests">
+  {% for value, label in filters %}<a class="tab" href="?state={{ value }}" {% if value == state %}aria-current="page"{% endif %}>{{ label }}{% if value == "new" and counts.new %} <span class="badge badge-accent">{{ counts.new }}</span>{% endif %}</a>{% endfor %}
+</nav>
+{% if page.object_list %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th scope="col">Request</th><th scope="col">Client</th><th scope="col">From</th><th scope="col">Channel</th><th scope="col">State</th><th scope="col">Age</th></tr></thead>
+  <tbody>
+    {% for r in page.object_list %}
+    <tr>
+      <td><a href="{% url 'portal:inbox_detail' r.pk %}" class="font-medium text-slate-900">{{ r.subject|default:"(no subject)" }}</a>{% if r.urgency == "urgent" %} {% include "components/_badge.html" with text="Urgent" tone="red" icon_name="exclamation-triangle" %}{% endif %}<span class="muted block">{{ r.reference }}</span></td>
+      <td>{% if r.client %}<a href="{% url 'portal:client_requests' r.client.pk %}">{{ r.client.name }}</a>{% else %}<span class="muted">General</span>{% endif %}</td>
+      <td>{{ r.sender_name|default:"—" }}</td>
+      <td>{{ r.get_channel_display }}</td>
+      <td>{% include "components/_badge.html" with text=r.get_state_display tone=r.state_tone %}</td>
+      <td class="whitespace-nowrap">{{ r.received_at|timesince:now }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table></div>
+{% include "components/_pagination.html" %}
+{% else %}
+{% include "components/_empty.html" with title="No requests here" message="New requests from the request link, the portal and anything you log by hand will appear here." icon_name="inbox" %}
+{% endif %}
+{% endblock %}

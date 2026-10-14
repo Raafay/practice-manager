@@ -12,6 +12,7 @@
       <a href="{% url 'overview' %}" class="nav-link" data-go="o" {% if nav == "overview" %}aria-current="page"{% endif %}>Overview</a>
       <a href="{% url 'tasks:list' %}" class="nav-link" data-go="t" {% if request.path|slice:":7" == "/tasks/" %}aria-current="page"{% endif %}>Tasks</a>
       <a href="{% url 'comms:queue' %}" class="nav-link" {% if request.path|slice:":10" == "/messages/" %}aria-current="page"{% endif %}>Queued{% if comms_waiting %} <span class="rounded-full bg-amber-500 px-1.5 text-[10px] font-semibold leading-4 text-white" aria-label="{{ comms_waiting }} waiting for approval">{{ comms_waiting }}</span>{% endif %}</a>
+      <a href="{% url 'portal:inbox' %}" class="nav-link" {% if request.path|slice:":10" == "/requests/" %}aria-current="page"{% endif %}>Requests{% if requests_new %} <span class="rounded-full bg-accent px-1.5 text-[10px] font-semibold leading-4 text-white" aria-label="{{ requests_new }} new">{{ requests_new }}</span>{% endif %}</a>
       <a href="{% url 'pipeline:prospects' %}" class="nav-link" data-go="p" {% if request.path|slice:":11" == "/prospects/" %}aria-current="page"{% endif %}>Prospects</a>
       <a href="{% url 'clients:list' %}" class="nav-link" data-go="c" {% if request.path|slice:":9" == "/clients/" or request.path|slice:":10" == "/contacts/" or request.path == "/search/" %}aria-current="page"{% endif %}>Clients</a>
       <a href="{% url 'services:reports' %}" class="nav-link" {% if request.path|slice:":9" == "/reports/" %}aria-current="page"{% endif %}>Reports</a>
@@ -35,6 +36,7 @@
           <a class="menu-item" id="new-task-link" href="{% url 'tasks:new' %}" hx-get="{% url 'tasks:new' %}" hx-target="#drawer-body">{% icon "plus" "size-4" %} New task <kbd class="ml-auto text-xs text-slate-400">n</kbd></a>
           <a class="menu-item" href="{% url 'tasks:project_new' %}" hx-get="{% url 'tasks:project_new' %}" hx-target="#drawer-body">{% icon "rectangle-stack" "size-4" %} New project</a>
           <a class="menu-item" href="{% url 'tasks:repeating_new' %}" hx-get="{% url 'tasks:repeating_new' %}" hx-target="#drawer-body">{% icon "arrow-path" "size-4" %} New repeating task</a>
+          <a class="menu-item" href="{% url 'portal:inbox_log' %}" hx-get="{% url 'portal:inbox_log' %}" hx-target="#drawer-body">{% icon "inbox" "size-4" %} Log a request</a>
           <a class="menu-item" href="{% url 'clients:new' %}">{% icon "building-office-2" "size-4" %} New client</a>
           <a class="menu-item" href="{% url 'companieshouse:add' %}">{% icon "magnifying-glass" "size-4" %} Add from Companies House</a>
         </div>

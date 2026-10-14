@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% load portal_tags %}
+{% comment %}The portal layout: phone first, the practice's logo, name and accent colour. No staff navigation.{% endcomment %}
+{% block body %}
+<header class="border-b border-slate-200 bg-white">
+  <div class="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-2 px-4 py-3">
+    <a href="{% url 'portal:home' %}" class="flex items-center gap-2 text-slate-800 no-underline hover:no-underline">
+      {% logo_src practice as logo %}
+      {% if logo %}<img src="{{ logo }}" alt="" class="h-8 w-auto max-w-[8rem] object-contain">{% else %}{% icon "building-office" "size-6 text-accent" %}{% endif %}
+      <span class="text-base font-semibold">{{ practice.practice_name }}</span>
+    </a>
+    {% if request.user.is_authenticated and portal_client %}
+    <form method="post" action="{% url 'portal:logout' %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Sign out</button></form>
+    {% endif %}
+  </div>
+  {% if portal_client %}
+  <div class="mx-auto max-w-3xl px-4 pb-2">
+    {% if portal_clients|length > 1 %}
+    <form method="post" action="{% url 'portal:switch' %}" class="mb-2 flex items-center gap-2">
+      {% csrf_token %}
+      <label for="client-switch" class="text-sm text-slate-600">Business</label>
+      <select id="client-switch" name="client" class="input max-w-xs">
+        {% for c in portal_clients %}<option value="{{ c.public_id }}" {% if c.pk == portal_client.pk %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+      </select>
+      <button type="submit" class="btn btn-secondary btn-sm">Switch</button>
+    </form>
+    {% else %}
+    <p class="mb-2 text-sm text-slate-600">{{ portal_client.name }}</p>
+    {% endif %}
+    <nav aria-label="Portal" class="tabs overflow-x-auto">
+      {% with name=request.resolver_match.url_name %}
+      <a href="{% url 'portal:home' %}" class="tab" {% if name == "home" %}aria-current="page"{% endif %}>Home</a>
+      <a href="{% url 'portal:documents' %}" class="tab" {% if name == "documents" or name == "upload" %}aria-current="page"{% endif %}>Documents</a>
+      <a href="{% url 'portal:requests' %}" class="tab" {% if name == "requests" or name == "request_new" or name == "request_detail" %}aria-current="page"{% endif %}>Requests</a>
+      <a href="{% url 'portal:details' %}" class="tab" {% if name == "details" %}aria-current="page"{% endif %}>Details</a>
+      {% endwith %}
+    </nav>
+  </div>
+  {% endif %}
+</header>
+<main id="main" class="mx-auto w-full max-w-3xl px-4 py-5">
+  {% block content %}{% endblock content %}
+</main>
+<footer class="mx-auto max-w-3xl px-4 pb-8 text-xs text-slate-500">{{ practice.practice_name }}{% if practice.phone %} · {{ practice.phone }}{% endif %}{% if practice.email %} · {{ practice.email }}{% endif %}</footer>
+{% endblock body %}

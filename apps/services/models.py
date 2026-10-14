@@ -123,6 +123,12 @@ class DeadlineQuerySet(models.QuerySet):
         today = today or timezone.localdate()
         return self.open().filter(due_date__lte=today + timedelta(days=days))
 
+    def for_portal_user(self, user):
+        """Open deadlines of the person's clients. The portal shows the label and date only."""
+        from apps.clients.models import Client
+
+        return self.open().filter(client__in=Client.objects.for_portal_user(user))
+
 
 class Deadline(TimeStampedModel):
     class Source(models.TextChoices):
