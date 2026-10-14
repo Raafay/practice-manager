@@ -47,6 +47,14 @@
     {% else %}
     <p class="muted">Not linked to any client. They stay on file.</p>
     {% endif %}
+    {% if user|can:"retention.manage" %}
+    <h2 class="mb-2 mt-6">Data protection</h2>
+    <div class="card card-body space-y-2 text-sm">
+      <p class="muted">For a subject access request, or once no client keeps this person.</p>
+      <a class="btn btn-secondary btn-sm" href="{% url 'clients:contact_export' contact.pk %}">{% icon "arrow-down-tray" "size-4" %} Export everything (ZIP)</a>
+      <a class="btn btn-ghost btn-sm" href="{% url 'clients:contact_purge' contact.pk %}">Remove for good…</a>
+    </div>
+    {% endif %}
   </section>
 </div>
 {% endblock %}

@@ -168,6 +168,9 @@ clients:link_remove                 staff
 clients:contact_detail              staff
 clients:contact_detail_edit         staff
 clients:contact_reveal              staff
+clients:contact_export              retention.manage
+clients:contact_purge               retention.manage
+clients:retention                   retention.manage
 clients:personal_tax_client         staff
 clients:document_upload             staff
 clients:document_download           get=documents.sensitive post=staff

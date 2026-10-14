@@ -9,6 +9,12 @@
     <span class="flex items-center gap-2 font-semibold">{% icon "user-circle" %} Your profile</span>
     <span class="muted mt-1 block">Name, initials, colour, password and two-factor.</span>
   </a>
+  {% if user|can:"retention.manage" %}
+  <a href="{% url 'clients:retention' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "archive-box" %} Retention report</span>
+    <span class="muted mt-1 block">Clients, people and files past their keep-until date. Lists only; you decide.</span>
+  </a>
+  {% endif %}
   {% if user|can:"settings.manage" %}
   <a href="{% url 'core:practice_settings' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
     <span class="flex items-center gap-2 font-semibold">{% icon "building-office" %} Practice details</span>
