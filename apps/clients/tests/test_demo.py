@@ -13,7 +13,8 @@ def test_demo_data_covers_every_type_and_status_and_is_safe_to_run_twice():
     first = (Client.objects.count(), Contact.objects.count(), Document.objects.count())
     call_command("seed_demo", stdout=io.StringIO())
     assert first == (Client.objects.count(), Contact.objects.count(), Document.objects.count())
-    assert first[0] >= 30 and first[1] == 50 and first[2] > 0
+    # Stage 7 adds three onboarding contacts to the fifty from Stage 2.
+    assert first[0] >= 30 and first[1] >= 50 and first[2] > 0
     assert set(Client.objects.values_list("client_type", flat=True)) == {
         value for value, _ in Client.Type.choices
     }
