@@ -47,7 +47,7 @@ What is in this repository:
     make seed      # load made-up demo data (safe to run twice)
     make dev       # run the site
 
-Then open `http://localhost:8000`. `make seed` prints the sign-in details for the made-up staff. The first time, you need uv installed (`curl -LsSf https://astral.sh/uv/install.sh | sh`) and PostgreSQL 16 running. For a quick look without PostgreSQL, copy `.env.example` to `.env` and set `DATABASE_URL=sqlite:///local.sqlite3`.
+Then open `http://localhost:8000`. `make seed` prints the sign-in details for the made-up staff. The first time, you need uv installed (`curl -LsSf https://astral.sh/uv/install.sh | sh`) and PostgreSQL 16 running. For a quick look without PostgreSQL, copy `.env.example` to `.env` and set `DATABASE_URL=sqlite:///local.sqlite3`. On a Mac, `brew install pango` lets the app make real PDFs; without it, development shows a stand-in page where a PDF would be.
 
 Or with Docker: `docker compose up`. It uses the development settings, not production ones.
 
