@@ -673,4 +673,7 @@ class MyWorkView(StaffRequiredMixin, View):
             ],
             **pick_lists(),
         }
+        from apps.onboarding.panels import overview_context
+
+        context.update(overview_context(request.user))
         return render(request, "tasks/my_work.html", context)

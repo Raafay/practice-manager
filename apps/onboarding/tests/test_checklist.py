@@ -197,3 +197,27 @@ def test_checklist_template_is_edited_in_settings(client):
     assert response.status_code == 302
     fresh = onboarding_client()
     assert fresh.onboarding_items.filter(name="Sign the data sharing form").exists()
+
+
+def test_overview_shows_the_compliance_panels(client):
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from apps.onboarding import hmrc
+    from apps.onboarding.tests.test_hmrc import client_with
+
+    onboarding_client(name="Panel Test Ltd")
+    c = client_with("ct600")
+    c.name = "Expiring Ltd"
+    c.save()
+    auth = hmrc.add(manager(), c, tax="ct", method="post_code")
+    hmrc.update(
+        manager(),
+        auth,
+        {"state": "requested", "requested_on": timezone.localdate() - timedelta(days=25)},
+    )
+    sign_in(client, staff())
+    page = client.get(reverse("overview")).content.decode()
+    assert "Onboarding in progress" in page and "Panel Test Ltd" in page
+    assert "HMRC authorisations expiring" in page and "Expiring Ltd" in page

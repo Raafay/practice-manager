@@ -1,0 +1,37 @@
+{% if onboarding_total or review_total or awaiting_approval or expiring_total %}
+<div class="mb-6 grid gap-4 lg:grid-cols-3">
+  {% if onboarding_total %}
+  <section class="card card-body" aria-labelledby="ov-onb">
+    <h2 id="ov-onb" class="mb-2 flex items-center gap-2 text-base">Onboarding in progress <span class="badge badge-neutral">{{ onboarding_total }}</span></h2>
+    <ul class="divide-y divide-slate-100 text-sm">
+      {% for row in onboarding_rows %}
+      <li class="flex items-center justify-between gap-2 py-1.5"><a href="{% url 'onboarding:tab' row.client.pk %}">{{ row.client.name }}</a><span class="muted whitespace-nowrap">{{ row.needed_done }} of {{ row.needed }} needed</span></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+  {% if review_total or awaiting_approval %}
+  <section class="card card-body" aria-labelledby="ov-aml">
+    <h2 id="ov-aml" class="mb-2 flex items-center gap-2 text-base">AML reviews <span class="badge {% if review_rows %}badge-amber{% else %}badge-neutral{% endif %}">{{ review_total }}</span></h2>
+    <ul class="divide-y divide-slate-100 text-sm">
+      {% for row in review_rows %}
+      <li class="flex items-center justify-between gap-2 py-1.5"><a href="{% url 'aml:tab' row.client.pk %}">{{ row.client.name }}</a><span class="whitespace-nowrap {% if row.overdue %}text-red-700{% else %}muted{% endif %}">{% if row.overdue %}Overdue since {% else %}Due {% endif %}{{ row.due|date:"d/m/Y" }}</span></li>
+      {% endfor %}
+      {% for c in awaiting_approval %}
+      <li class="flex items-center justify-between gap-2 py-1.5"><a href="{% url 'aml:tab' c.pk %}">{{ c.name }}</a><span class="muted">Waiting for approval</span></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+  {% if expiring_total %}
+  <section class="card card-body" aria-labelledby="ov-hmrc">
+    <h2 id="ov-hmrc" class="mb-2 flex items-center gap-2 text-base">HMRC authorisations expiring <span class="badge badge-amber">{{ expiring_total }}</span></h2>
+    <ul class="divide-y divide-slate-100 text-sm">
+      {% for row in expiring_rows %}
+      <li class="flex items-center justify-between gap-2 py-1.5"><a href="{% url 'onboarding:hmrc' row.auth.client_id %}">{{ row.auth.client.name }}: {{ row.auth.get_tax_display }}</a><span class="muted whitespace-nowrap">{{ row.date|date:"d/m/Y" }}</span></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</div>
+{% endif %}
