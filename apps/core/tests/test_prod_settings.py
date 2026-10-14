@@ -191,3 +191,27 @@ def test_error_reports_carry_no_personal_data():
     for secret in ("SECRET-TOKEN", "Pat Sample", "pat@example.com", "sessionid", "'ni'"):
         assert secret not in text
     assert scrubbed["exception"]["values"][0]["type"] == "IntegrityError"
+
+
+def test_static_files_collect_with_the_build_settings(tmp_path, settings):
+    """The image build runs collectstatic with whitenoise's manifest; a broken reference
+    (a vendored file pointing at a missing source map) would stop the build."""
+    from django.core.management import call_command
+
+    settings.STATIC_ROOT = tmp_path / "static"
+    settings.STORAGES = {
+        **settings.STORAGES,
+        "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+    }
+    call_command("collectstatic", interactive=False, verbosity=0)
+    assert (tmp_path / "static" / "staticfiles.json").exists()
+
+
+def test_the_production_backends_can_be_loaded(monkeypatch):
+    """A missing library (boto3 for the bucket and SES) would only show up in production."""
+    from django.utils.module_loading import import_string
+
+    prod = load_prod(monkeypatch)
+    import_string(prod.STORAGES["default"]["BACKEND"])
+    for backend in prod.EMAIL_PROVIDERS.values():
+        import_string(backend)

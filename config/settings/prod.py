@@ -54,6 +54,9 @@ SECURE_REDIRECT_EXEMPT = [r"^healthz/$"]  # the host's own health check may use 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_HSTS_SECONDS = 365 * 24 * 60 * 60
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# HSTS preload is left off on purpose: joining the browsers' preload list is hard to
+# undo, and the practice may still move the domain. The warning is silenced.
+SILENCED_SYSTEM_CHECKS = ["security.W021"]
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = True
