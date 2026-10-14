@@ -857,6 +857,9 @@ class OverviewView(StaffRequiredMixin, View):
         from apps.onboarding.panels import overview_context
 
         context.update(overview_context(request.user))
+        from apps.pipeline.panels import overview_context as pipeline_context
+
+        context.update(pipeline_context(request.user))
         return render(request, "tasks/overview.html", context)
 
 

@@ -1,0 +1,47 @@
+{% extends "layouts/public.html" %}
+{% block title %}Proposal{% endblock %}
+{% block content %}
+<div class="card card-body">
+  <h1 class="text-xl">Proposal for {{ client_name }}</h1>
+  {% if error %}<div class="form-errors mt-3" role="alert"><p>{{ error }}</p></div>{% endif %}
+  {% if notice %}<div class="mt-3 rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-900" role="status">{{ notice }}</div>{% endif %}
+  {% if proposal.state == "accepted" %}
+    <div class="mt-3 rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-900" role="status">{% icon "check-circle" "size-5 inline" %} Accepted by {{ proposal.decided_by }} on {{ proposal.decided_at|date:"d/m/Y" }} at {{ proposal.decided_at|time:"H:i" }}. Thank you. We will be in touch about the next steps.</div>
+  {% elif proposal.state == "declined" %}
+    <div class="mt-3 rounded-md border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-800" role="status">This proposal was declined on {{ proposal.decided_at|date:"d/m/Y" }}. If that was a mistake, please reply to our email.</div>
+  {% elif proposal.state == "expired" %}
+    <div class="mt-3 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">This proposal was open until {{ proposal.valid_until|date:"d/m/Y" }} and has expired. Please get in touch if you would still like to go ahead.</div>
+  {% else %}
+    <p class="muted mt-1">Please read the proposal below. You can accept it, ask a question or decline.</p>
+  {% endif %}
+  {% if proposal.state != "expired" %}<p class="mt-2"><a class="btn btn-secondary btn-sm" href="{% url 'pipeline:proposal_pdf' token %}">{% icon "arrow-down-tray" "size-4" %} Download a PDF copy</a></p>{% endif %}
+</div>
+{% if proposal.state != "expired" %}
+<article class="card card-body prose-letter mt-4" aria-label="The proposal">{{ body|safe }}</article>
+{% endif %}
+{% if not decided %}
+<section class="mt-4 space-y-4" aria-label="Your answer">
+  <form method="post" class="card card-body space-y-4" novalidate>
+    {% csrf_token %}<input type="hidden" name="action" value="accept">
+    <h2 class="text-base">Accept this proposal</h2>
+    {% if accept_form.errors and not error %}<div class="form-errors" role="alert"><p>Please check the form.</p></div>{% endif %}
+    {% include "components/_field.html" with field=accept_form.agree %}
+    {% include "components/_field.html" with field=accept_form.typed_name %}
+    <p class="help">Accepting is recorded with your name, the time, your IP address and your browser.</p>
+    <div><button type="submit" class="btn btn-primary w-full sm:w-auto">Accept the proposal</button></div>
+  </form>
+  <details class="card card-body" {% if open_form == "question" %}open{% endif %}>
+    <summary class="cursor-pointer font-medium">Ask a question</summary>
+    <form method="post" class="mt-3 space-y-3" novalidate>{% csrf_token %}<input type="hidden" name="action" value="question">
+      {% include "components/_field.html" with field=question_form.question %}
+      <button type="submit" class="btn btn-secondary">Send question</button></form>
+  </details>
+  <details class="card card-body">
+    <summary class="cursor-pointer font-medium">Decline</summary>
+    <form method="post" class="mt-3 space-y-3" novalidate>{% csrf_token %}<input type="hidden" name="action" value="decline">
+      {% include "components/_field.html" with field=decline_form.reason %}
+      <button type="submit" class="btn btn-secondary" data-confirm="Decline this proposal? You will not be able to change your answer.">Decline the proposal</button></form>
+  </details>
+</section>
+{% endif %}
+{% endblock %}

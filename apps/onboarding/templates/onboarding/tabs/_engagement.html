@@ -34,5 +34,4 @@
 {% else %}
   {% include "components/_empty.html" with title="No engagement letter yet" message="Prepare one from the client's services. You can edit it, then it waits in Queued for approval before the signing link goes out." icon_name="document-text" %}
 {% endif %}
-<h2 class="mb-1 mt-6 text-base font-semibold">Proposals</h2>
-<p class="muted">Proposals for this client will be listed here once the sales pipeline is built.</p>
+{% include "pipeline/_proposals_list.html" %}

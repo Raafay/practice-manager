@@ -1,0 +1,23 @@
+{% extends "layouts/app.html" %}
+{% block title %}Proposal wording and rules{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Proposal wording and rules" subtitle="When a prospect counts as quiet, how long proposals last, and the standard wording." %}
+  <a href="{% url 'core:settings' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Settings</a>
+</div>
+{% if starter %}<div class="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">Starter text. Replace the opening text and "What happens next" with the practice's own wording. The proposal email is under <a href="{% url 'comms:templates' %}">Message templates</a>.</div>{% endif %}
+<form method="post" class="card card-body max-w-3xl space-y-4" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-errors" role="alert">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+  {% include "components/_field.html" with field=form.quiet_days %}
+  {% include "components/_field.html" with field=form.valid_days %}
+  {% include "components/_field.html" with field=form.opening_text %}
+  <div>
+    <label class="label" for="what_next_editor">What happens next</label>
+    {{ form.what_next_html }}
+    <trix-editor input="{{ form.what_next_html.id_for_label }}" id="what_next_editor" class="textarea min-h-48 rich-text" aria-label="What happens next"></trix-editor>
+    <p class="help">Shown at the end of every new proposal. Proposals already made keep the wording they had.</p>
+  </div>
+  <div class="flex justify-end"><button type="submit" class="btn btn-primary">Save</button></div>
+</form>
+{% endblock %}

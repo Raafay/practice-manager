@@ -1,0 +1,31 @@
+{% extends "layouts/app.html" %}
+{% block title %}New prospect{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="New prospect" subtitle="Only the name and one way to reach the contact are needed." %}
+  <a href="{% url 'pipeline:prospects' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Prospects</a>
+</div>
+<p class="mb-4 text-sm">A company or LLP? <a href="{% url 'companieshouse:add' %}?status=prospect">Add it from Companies House</a> to bring in its filing dates and directors.</p>
+<form method="post" class="card card-body max-w-3xl space-y-4" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-errors" role="alert">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+  <div class="grid gap-4 sm:grid-cols-2">
+    {% include "components/_field.html" with field=form.name %}
+    {% include "components/_field.html" with field=form.client_type %}
+    {% include "components/_field.html" with field=form.first_name %}
+    {% include "components/_field.html" with field=form.last_name %}
+    {% include "components/_field.html" with field=form.email %}
+    {% include "components/_field.html" with field=form.phone %}
+    {% include "components/_field.html" with field=form.source %}
+    {% include "components/_field.html" with field=form.owner %}
+    {% include "components/_field.html" with field=form.referred_by_client %}
+    {% include "components/_field.html" with field=form.referred_by_text %}
+    {% if form.expected_fee %}{% include "components/_field.html" with field=form.expected_fee %}{% endif %}
+    {% include "components/_field.html" with field=form.next_action %}
+    {% include "components/_field.html" with field=form.next_action_date %}
+  </div>
+  {% include "components/_field.html" with field=form.notes %}
+  <p class="help">Services wanted: after saving, tick them in the Services panel on the prospect's page.</p>
+  <div class="flex justify-end gap-2"><a href="{% url 'pipeline:prospects' %}" class="btn btn-secondary">Cancel</a><button type="submit" class="btn btn-primary">Add prospect</button></div>
+</form>
+{% endblock %}

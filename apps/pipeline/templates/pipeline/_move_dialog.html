@@ -1,0 +1,19 @@
+{# The Lost and Won prompts, shown in the dialog when a card is dropped on those columns. #}
+<h2 class="mb-3">{% if stage.is_lost %}Mark {{ client.name }} as lost{% else %}Mark {{ client.name }} as won{% endif %}</h2>
+<form method="post" action="{% url 'pipeline:move' client.pk %}" hx-post="{% url 'pipeline:move' client.pk %}" hx-target="#modal-body" hx-swap="innerHTML" class="space-y-4" novalidate>
+  {% csrf_token %}
+  <input type="hidden" name="to" value="{{ stage.pk }}">
+  {% if stage.is_lost %}
+    {% if form.errors %}<div class="form-errors" role="alert"><p>Say why this prospect was lost.</p></div>{% endif %}
+    {% include "components/_field.html" with field=form.lost_reason %}
+    {% include "components/_field.html" with field=form.lost_note %}
+    <p class="help">The client is marked lost. You can bring it back later from the Lost column.</p>
+  {% else %}
+    <input type="hidden" name="confirm" value="1">
+    <p>Has {{ client.name }} agreed to become a client? Onboarding starts: the checklist is created and the status becomes Onboarding. The proposed services stay proposed until the client is made live.</p>
+  {% endif %}
+  <div class="flex justify-end gap-2">
+    <button type="button" class="btn btn-secondary" data-dialog-close>Cancel</button>
+    <button type="submit" class="btn {% if stage.is_lost %}btn-danger{% else %}btn-primary{% endif %}">{% if stage.is_lost %}Mark as lost{% else %}Mark as won{% endif %}</button>
+  </div>
+</form>

@@ -12,6 +12,7 @@
       <a href="{% url 'overview' %}" class="nav-link" data-go="o" {% if nav == "overview" %}aria-current="page"{% endif %}>Overview</a>
       <a href="{% url 'tasks:list' %}" class="nav-link" data-go="t" {% if request.path|slice:":7" == "/tasks/" %}aria-current="page"{% endif %}>Tasks</a>
       <a href="{% url 'comms:queue' %}" class="nav-link" {% if request.path|slice:":10" == "/messages/" %}aria-current="page"{% endif %}>Queued{% if comms_waiting %} <span class="rounded-full bg-amber-500 px-1.5 text-[10px] font-semibold leading-4 text-white" aria-label="{{ comms_waiting }} waiting for approval">{{ comms_waiting }}</span>{% endif %}</a>
+      <a href="{% url 'pipeline:prospects' %}" class="nav-link" data-go="p" {% if request.path|slice:":11" == "/prospects/" %}aria-current="page"{% endif %}>Prospects</a>
       <a href="{% url 'clients:list' %}" class="nav-link" data-go="c" {% if request.path|slice:":9" == "/clients/" or request.path|slice:":10" == "/contacts/" or request.path == "/search/" %}aria-current="page"{% endif %}>Clients</a>
       <a href="{% url 'services:reports' %}" class="nav-link" {% if request.path|slice:":9" == "/reports/" %}aria-current="page"{% endif %}>Reports</a>
       <a href="{% url 'core:settings' %}" class="nav-link" {% if request.path|slice:":10" == "/settings/" %}aria-current="page"{% endif %}>Settings</a>

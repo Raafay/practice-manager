@@ -371,12 +371,14 @@ class ClientTabView(StaffRequiredMixin, View):
         shown = []
         for panel in panels.visible_panels(client):
             shown.append(panel_context(request, client, panel.key))
+        from apps.pipeline.views import sales_context
         from apps.services.panel import panel_context as services_panel_context
 
         return {
             "pinned_notes": pinned,
             "panels": shown,
             **services_panel_context(client, request.user),
+            **sales_context(client, request.user),
         }
 
     def context_timeline(self, request, client):

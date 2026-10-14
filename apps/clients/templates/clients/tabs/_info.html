@@ -9,6 +9,7 @@
   {% endfor %}
 </section>
 {% endif %}
+{% if sales %}{% include "pipeline/_sales_panel.html" %}{% endif %}
 <div class="grid gap-4 lg:grid-cols-3">
   <div class="space-y-3 lg:col-span-2">
     {% for item in panels %}{% include "clients/_panel.html" with client=item.client panel=item.panel rows=item.rows form=item.form main_contact=item.main_contact has_individual_client=item.has_individual_client %}{% endfor %}

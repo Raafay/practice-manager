@@ -1,0 +1,21 @@
+{% extends "layouts/app.html" %}
+{% block title %}Proposal{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Proposal" subtitle=client.name %}
+  <a href="{% url 'onboarding:engagement' client.pk %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Engagement</a>
+</div>
+<p class="mb-3">Version {{ proposal.version }} {% include "components/_badge.html" with text=proposal.get_state_display tone=proposal.tone %}</p>
+{% if starter %}<div class="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">Starter text. Replace with the practice's own wording before use. <a href="{% url 'pipeline:rules' %}">Proposal wording in Settings</a>.</div>{% endif %}
+<article class="card card-body prose-letter" aria-label="The proposal">{{ body|safe }}</article>
+<div class="card card-body mt-4 space-y-1 text-sm">
+  {% if proposal.sent_at %}<p><strong>Sent:</strong> {{ proposal.sent_at|date:"d/m/Y H:i" }} to {{ proposal.sent_to }}</p>{% endif %}
+  {% if proposal.viewed_at %}<p><strong>First opened:</strong> {{ proposal.viewed_at|date:"d/m/Y H:i" }}</p>{% endif %}
+  {% if proposal.decided_at %}<p><strong>{{ proposal.get_state_display }}:</strong> {{ proposal.decided_by }}, {{ proposal.decided_at|date:"d/m/Y H:i" }}{% if proposal.ip_address %}, IP {{ proposal.ip_address }}{% endif %}</p>{% endif %}
+  {% if proposal.decline_reason %}<p><strong>Reason given:</strong> {{ proposal.decline_reason }}</p>{% endif %}
+  {% if proposal.fingerprint %}<p class="break-all"><strong>Fingerprint (SHA-256 of the sent PDF):</strong> {{ proposal.fingerprint }}</p>{% endif %}
+  {% if proposal.state == "sent" or proposal.state == "viewed" %}
+  <form method="post" action="{% url 'pipeline:proposal_cancel_link' client.pk proposal.pk %}" data-confirm="Cancel the link? The client will not be able to open or accept this proposal.">{% csrf_token %}<button type="submit" class="btn btn-secondary btn-sm">Cancel the link</button></form>
+  {% endif %}
+</div>
+{% endblock %}

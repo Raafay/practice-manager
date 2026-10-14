@@ -1,0 +1,89 @@
+{% extends "layouts/app.html" %}
+{% load static %}
+{% block title %}Prospects{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Prospects" subtitle="Every enquiry, what it is worth and what happens next." %}
+  <div class="flex flex-wrap gap-2">
+    <a href="{% url 'companieshouse:add' %}?status=prospect" class="btn btn-secondary">{% icon "magnifying-glass" "size-4" %} Add from Companies House</a>
+    <a href="{% url 'pipeline:prospect_new' %}" class="btn btn-primary">{% icon "plus" "size-4" %} New prospect</a>
+  </div>
+</div>
+
+<section class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5" aria-label="Pipeline figures">
+  <div class="card card-body"><p class="muted text-xs">Open prospects</p><p class="text-xl font-semibold">{{ figures.open_count }}</p></div>
+  {% if can_fees %}<div class="card card-body"><p class="muted text-xs">Open pipeline a month</p><p class="text-xl font-semibold">£{{ figures.open_value }}</p></div>{% endif %}
+  {% if can_owner_figures %}<div class="card card-body"><p class="muted text-xs">Weighted a month</p><p class="text-xl font-semibold">£{{ figures.weighted_value }}</p></div>{% endif %}
+  <div class="card card-body"><p class="muted text-xs">Proposals waiting for an answer</p><p class="text-xl font-semibold">{{ figures.waiting }}</p></div>
+  <div class="card card-body"><p class="muted text-xs">Won, last 12 months</p>
+    <p class="text-xl font-semibold">{% if figures.win_rate is not None %}{{ figures.win_rate }}% won{% else %}Nothing decided{% endif %}</p>
+    <p class="muted text-xs">{{ figures.won_count }} won, {{ figures.lost_count }} lost{% if figures.average_days is not None %}. About {{ figures.average_days }} days from enquiry to won.{% endif %}</p></div>
+</section>
+
+<form method="get" class="mb-3 flex flex-wrap items-end gap-3" aria-label="Filter prospects">
+  <input type="hidden" name="view" value="{{ view }}">
+  <div><label class="label" for="{{ form.owner.id_for_label }}">Owner</label>{{ form.owner|styled }}</div>
+  <div><label class="label" for="{{ form.stage.id_for_label }}">Stage</label>{{ form.stage|styled }}</div>
+  <div><label class="label" for="{{ form.source.id_for_label }}">Source</label>{{ form.source|styled }}</div>
+  <label class="flex items-center gap-2 pb-2 text-sm text-slate-700" for="{{ form.quiet.id_for_label }}">{{ form.quiet|styled }} Quiet only</label>
+  <button type="submit" class="btn btn-secondary">Filter</button>
+  {% if keep_query %}<a href="{% url 'pipeline:prospects' %}?view={{ view }}" class="btn btn-ghost">Clear</a>{% endif %}
+  <div class="ml-auto inline-flex gap-1.5" role="group" aria-label="Layout">
+    <a href="?{{ keep_query }}&view=board" class="chip" {% if view == "board" %}aria-current="true"{% endif %}>{% if view == "board" %}{% icon "check" "size-3" "mini" %}{% endif %}Board</a>
+    <a href="?{{ keep_query }}&view=list" class="chip" {% if view == "list" %}aria-current="true"{% endif %}>{% if view == "list" %}{% icon "check" "size-3" "mini" %}{% endif %}List</a>
+  </div>
+</form>
+
+{% if not any_prospects %}
+  {% url 'pipeline:prospect_new' as new_url %}
+  {% include "components/_empty.html" with title="No prospects yet" message="Add the first enquiry. You can record meetings, tick the services they want and send a proposal from its page." icon_name="user-plus" action_url=new_url action_label="New prospect" %}
+{% elif view == "board" %}
+<p id="board-message" class="mb-2 hidden rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert"></p>
+<p class="muted mb-2">Drag a card to change its stage. Dropping on Lost asks for a reason; dropping on Won starts onboarding. Won and Lost show the last 30 days.</p>
+<div class="flex items-start gap-3 overflow-x-auto pb-3" data-board="prospect" data-csrf="{{ csrf_token }}">
+  {% for column in columns %}
+  <section class="w-72 shrink-0 rounded-lg bg-slate-100" aria-labelledby="stage-{{ column.stage.pk }}" data-column-box>
+    <header class="px-3 py-2">
+      <div class="flex items-center gap-2">
+        <span class="inline-block size-2.5 rounded-full" style="background-color: {{ column.stage.colour }}" aria-hidden="true"></span>
+        <h2 id="stage-{{ column.stage.pk }}" class="flex-1 truncate text-sm font-semibold">{{ column.stage.name }}</h2>
+        <span class="badge badge-neutral" data-column-count>{{ column.count }}</span>
+      </div>
+      {% if can_fees and column.stage.is_open and column.count %}<p class="muted mt-0.5 text-xs">£{{ column.total }} a month</p>{% endif %}
+    </header>
+    <div class="max-h-[70vh] min-h-16 space-y-2 overflow-y-auto px-2 pb-2" data-column-cards data-stage-id="{{ column.stage.pk }}" data-stage-kind="{% if column.stage.is_lost %}lost{% elif column.stage.is_won %}won{% else %}open{% endif %}" aria-label="{{ column.stage.name }} cards">
+      {% for card in column.cards %}{% include "pipeline/_card.html" %}{% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</div>
+{% else %}
+{% if rows %}
+<div class="table-wrap"><table class="table">
+  <thead><tr>
+    <th scope="col"><a href="?{{ keep_query }}&view=list&sort=name">Prospect</a></th>
+    <th scope="col">Contact</th>
+    <th scope="col"><a href="?{{ keep_query }}&view=list&sort=stage">Stage</a></th>
+    {% if can_fees %}<th scope="col"><a href="?{{ keep_query }}&view=list&sort=fee">Monthly fee</a></th>{% endif %}
+    <th scope="col"><a href="?{{ keep_query }}&view=list&sort=next">Next action</a></th>
+    <th scope="col"><a href="?{{ keep_query }}&view=list&sort=days">Days in stage</a></th>
+    <th scope="col"><a href="?{{ keep_query }}&view=list&sort=owner">Owner</a></th>
+  </tr></thead>
+  <tbody>
+  {% for card in rows %}
+  <tr>
+    <td><a class="font-medium" href="{% url 'clients:detail' card.client.pk %}">{{ card.client.name }}</a>{% if card.quiet %} {% include "components/_badge.html" with text="Quiet" tone="amber" icon_name="clock" %}{% endif %}</td>
+    <td>{{ card.main_contact.full_name|default:"" }}</td>
+    <td>{% include "components/_badge.html" with text=card.details.stage.name tone="neutral" %}</td>
+    {% if can_fees %}<td class="tabular-nums">£{{ card.fee }}</td>{% endif %}
+    <td>{% if card.details.next_action %}{{ card.details.next_action }}{% if card.details.next_action_date %}<span class="block text-xs {% if card.overdue %}font-medium text-red-700{% else %}muted{% endif %}">{% if card.overdue %}Overdue {% endif %}{{ card.details.next_action_date|date:"d/m/Y" }}</span>{% endif %}{% else %}<span class="muted">None set</span>{% endif %}</td>
+    <td class="tabular-nums">{{ card.days_in_stage }}</td>
+    <td>{% if card.details.owner %}{% include "components/_avatar.html" with person=card.details.owner %}{% else %}<span class="muted">Nobody</span>{% endif %}</td>
+  </tr>
+  {% endfor %}
+  </tbody></table></div>
+{% else %}
+  {% include "components/_empty.html" with title="No prospects match" message="Clear the filters to see every open prospect." icon_name="funnel" %}
+{% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,57 @@
+{# The Sales and Meetings panels at the top of a prospect's Info tab. Needs: sales, client. #}
+{% with s=sales d=sales.details %}
+<div class="mb-4 grid gap-4 lg:grid-cols-3">
+  <details class="panel lg:col-span-2" id="sales-panel" data-panel="sales" open>
+    <summary>Sales {% icon "chevron-right" "panel-chevron size-4 text-slate-400 transition-transform" %}</summary>
+    <div class="panel-body">
+      <div class="mb-3 flex flex-wrap items-center gap-2">
+        {% include "components/_badge.html" with text=d.stage.name tone="accent" %}
+        {% if s.quiet %}{% include "components/_badge.html" with text="Quiet" tone="amber" icon_name="clock" %}<span class="muted text-xs">{{ s.quiet_reason }}</span>{% endif %}
+        {% if d.stage.is_lost %}<span class="text-sm text-red-700">Lost{% if d.lost_reason %}: {{ d.get_lost_reason_display }}{% endif %}{% if d.lost_note %}. {{ d.lost_note }}{% endif %}</span>{% endif %}
+        <button type="button" class="btn btn-secondary btn-sm ml-auto" hx-get="{% url 'pipeline:sales_edit' client.pk %}" hx-target="#modal-body">Edit</button>
+      </div>
+      {% if s.is_open %}
+      <form method="post" action="{% url 'pipeline:move' client.pk %}" class="mb-3 flex flex-wrap items-end gap-2" aria-label="Change stage">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{% url 'clients:detail' client.pk %}">
+        <div><label class="label" for="sales-stage">Stage</label>
+          <select id="sales-stage" name="to" class="select">
+            {% for st in s.stages %}<option value="{{ st.pk }}" {% if st.pk == d.stage_id %}selected{% endif %}>{{ st.name }}</option>{% endfor %}
+          </select></div>
+        <button type="submit" class="btn btn-secondary btn-sm">Move</button>
+        {% if s.won_stage %}<button type="button" class="btn btn-secondary btn-sm" hx-get="{% url 'pipeline:move' client.pk %}?to={{ s.won_stage.pk }}" hx-target="#modal-body">Mark won</button>{% endif %}
+        {% if s.lost_stage %}<button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'pipeline:move' client.pk %}?to={{ s.lost_stage.pk }}" hx-target="#modal-body">Mark lost</button>{% endif %}
+      </form>
+      {% endif %}
+      <dl class="grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+        <div><dt class="muted">Owner</dt><dd>{{ d.owner.name|default:"Nobody yet" }}</dd></div>
+        <div><dt class="muted">Source</dt><dd>{{ client.get_source_display|default:"Not known" }}</dd></div>
+        <div><dt class="muted">Referred by</dt><dd>{% if client.referred_by_client %}<a href="{% url 'clients:detail' client.referred_by_client_id %}">{{ client.referred_by_client.name }}</a>{% elif client.referred_by_text %}{{ client.referred_by_text }}{% else %}Nobody recorded{% endif %}</dd></div>
+        <div><dt class="muted">Enquiry date</dt><dd>{{ d.enquiry_date|date:"d/m/Y"|default:"Not recorded" }}</dd></div>
+        <div><dt class="muted">Expected start</dt><dd>{% if d.expected_start %}{{ d.expected_start|date:"F Y" }}{% else %}Not set{% endif %}</dd></div>
+        <div><dt class="muted">Next action</dt><dd>{% if d.next_action %}{{ d.next_action }}{% if d.next_action_date %} <span class="{% if s.overdue %}font-medium text-red-700{% endif %}">({{ d.next_action_date|date:"d/m/Y" }})</span>{% endif %}{% else %}None set. Edit to add one.{% endif %}</dd></div>
+        {% if s.can_fees %}
+        <div><dt class="muted">Expected monthly fee</dt><dd>£{{ s.fee }}{% if not s.from_services %} <span class="muted">(entered by hand)</span>{% else %} <span class="muted">(from the proposed services)</span>{% endif %}</dd></div>
+        <div><dt class="muted">One-off setup fee</dt><dd>{% if d.setup_fee %}£{{ d.setup_fee }}{% else %}None{% endif %}</dd></div>
+        {% endif %}
+      </dl>
+    </div>
+  </details>
+  <details class="panel" id="meetings-panel" data-panel="meetings" open>
+    <summary>Meetings {% icon "chevron-right" "panel-chevron size-4 text-slate-400 transition-transform" %}</summary>
+    <div class="panel-body">
+      <button type="button" class="btn btn-secondary btn-sm mb-3" hx-get="{% url 'pipeline:meeting_add' client.pk %}" hx-target="#modal-body">{% icon "plus" "size-4" %} Log a meeting</button>
+      {% if s.meetings %}
+      <ul class="divide-y divide-slate-100 text-sm">
+        {% for m in s.meetings %}
+        <li class="py-2"><p class="font-medium">{{ m.held_at|date:"d/m/Y H:i" }} · {{ m.get_kind_display }}{% if m.place %} · {{ m.place }}{% endif %}</p>
+          {% if m.outcome %}<p>{{ m.outcome }}</p>{% endif %}
+          {% if m.follow_up %}<p class="muted">Follow-up: {{ m.follow_up }}{% if m.follow_up_date %} by {{ m.follow_up_date|date:"d/m/Y" }}{% endif %}{% if m.follow_up_task_id %} · <a href="{% url 'tasks:detail' m.follow_up_task_id %}">task</a>{% endif %}</p>{% endif %}
+          {% if m.notes %}<p class="muted whitespace-pre-line">{{ m.notes }}</p>{% endif %}</li>
+        {% endfor %}
+      </ul>
+      {% else %}<p class="muted">No meetings logged yet. Log one after you meet them; a follow-up becomes a task.</p>{% endif %}
+    </div>
+  </details>
+</div>
+{% endwith %}

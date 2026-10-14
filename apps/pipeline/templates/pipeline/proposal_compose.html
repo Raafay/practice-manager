@@ -1,0 +1,43 @@
+{% extends "layouts/app.html" %}
+{% block title %}Send proposal{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Send proposal" subtitle=client.name %}
+  <a href="{% url 'onboarding:engagement' client.pk %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Engagement</a>
+</div>
+<p class="mb-3">Version {{ proposal.version }} {% include "components/_badge.html" with text=proposal.get_state_display tone=proposal.tone %}</p>
+{% if starter %}<div class="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">Starter text. Replace the proposal email and "What happens next" with the practice's own wording. <a href="{% url 'pipeline:rules' %}">Proposal wording in Settings</a>.</div>{% endif %}
+{% if warning %}<div class="mb-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">{{ warning }}</div>{% endif %}
+<div class="grid gap-4 lg:grid-cols-2">
+<form method="post" enctype="multipart/form-data" class="card card-body space-y-4" novalidate aria-label="Send Proposal Email">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-errors" role="alert">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+  <fieldset class="space-y-2"><legend class="label">How the fees are shown</legend>
+    {% include "components/_field.html" with field=form.show_breakdown %}
+    {% if vat_registered %}{% include "components/_field.html" with field=form.show_inc_vat %}{% include "components/_field.html" with field=form.show_vat_text %}{% else %}<p class="help">The practice is not VAT registered, so no VAT is added or mentioned. Change this under Settings, Practice.</p>{% endif %}
+    <button type="submit" name="action" value="refresh" class="btn btn-secondary btn-sm" formnovalidate>Update the message with these settings</button>
+  </fieldset>
+  {% include "components/_field.html" with field=form.contacts %}
+  {% include "components/_field.html" with field=form.to %}
+  {% include "components/_field.html" with field=form.cc %}
+  {% include "components/_field.html" with field=form.subject %}
+  <div>
+    <label class="label" for="compose_body_editor">Message</label>
+    {{ form.body }}
+    <trix-editor input="{{ form.body.id_for_label }}" id="compose_body_editor" class="textarea min-h-64 rich-text" aria-label="Message"></trix-editor>
+    {% for e in form.body.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+    <p class="help">Keep the Proposal link: it is replaced with the client's private link when you send.</p>
+  </div>
+  {% if form.attachments.field.choices %}{% include "components/_field.html" with field=form.attachments %}{% endif %}
+  {% include "components/_field.html" with field=form.signature %}
+  <div class="flex flex-wrap justify-end gap-2">
+    <a href="{% url 'onboarding:engagement' client.pk %}" class="btn btn-secondary">Cancel</a>
+    <button type="submit" name="action" value="send" class="btn btn-primary">{% icon "envelope" "size-4" %} {% if can_send_now %}Send proposal{% else %}Queue proposal for approval{% endif %}</button>
+  </div>
+</form>
+<section aria-label="Preview of the proposal page" class="card card-body">
+  <h2 class="mb-2 text-base">What the client will see</h2>
+  <div class="prose-letter">{{ preview|safe }}</div>
+</section>
+</div>
+{% endblock %}
