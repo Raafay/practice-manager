@@ -47,9 +47,13 @@ def sections_for(form: PortalForm, viewer=None):
 # ---------------------------------------------------------------- reading answers
 
 
-def read_answers(form: PortalForm, post) -> dict:
-    """Pull the answers out of a POST. Secrets are sealed straight away."""
-    sections = sections_for(form)
+def read_answers(form: PortalForm, post, viewer=None) -> dict:
+    """Pull the answers out of a POST. Secrets are sealed straight away.
+
+    viewer: the contact posting. Another person's fields were not shown to them, so
+    a blank there keeps what was saved before, as for secrets.
+    """
+    sections = sections_for(form, viewer)
     answers: dict = {}
     if form.kind == PortalForm.Kind.CONFIRMATION:
         for section in sections:
@@ -65,15 +69,21 @@ def read_answers(form: PortalForm, post) -> dict:
     previous = form.answers or {}
     for field in formspecs.all_fields(sections):
         value = (post.get(field.key, "") or "").strip()[:2000]
-        if field.secret:
-            # Blank means "keep what is held". A value is stored sealed.
+        if field.secret or field.private:
+            # Blank means "keep what is held". A secret is stored sealed.
             if value:
-                answers[field.key] = formspecs.seal(value)
+                answers[field.key] = formspecs.seal(value) if field.secret else value
             elif field.key in previous:
                 answers[field.key] = previous[field.key]
         elif value:
             answers[field.key] = value
     return answers
+
+
+def visible_answers(form: PortalForm, answers: dict, viewer) -> dict:
+    """Answers this viewer may see: never another person's saved details."""
+    private = {f.key for f in formspecs.all_fields(sections_for(form, viewer)) if f.private}
+    return {key: value for key, value in (answers or {}).items() if key not in private}
 
 
 def check_complete(form: PortalForm, answers: dict) -> dict[str, str]:

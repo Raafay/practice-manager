@@ -506,11 +506,19 @@ class DocumentQuerySet(models.QuerySet):
         return self.filter(deleted_at__isnull=True)
 
     def for_portal_user(self, user):
-        """Shared with the portal by staff, or uploaded through the portal. Never staff-only."""
+        """Shared with the portal by staff, or uploaded through the portal. Never staff-only.
+
+        A sensitive upload (a passport, say) is seen only by the person who sent it,
+        not by colleagues with access to the same client.
+        """
         return (
             self.live()
             .filter(client__in=Client.objects.for_portal_user(user))
-            .filter(Q(shared_with_portal=True) | Q(source="portal"))
+            .filter(
+                Q(shared_with_portal=True)
+                | Q(source="portal", sensitive=False)
+                | Q(source="portal", sensitive=True, uploaded_by=user)
+            )
         )
 
 

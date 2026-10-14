@@ -211,7 +211,9 @@ class ItemFormView(ItemMixin):
 
     def _context(self, form, errors=None, values=None, note=""):
         sections = pforms.sections_for(form, self.request.portal_contact)
-        answers = values if values is not None else form.answers
+        answers = pforms.visible_answers(
+            form, values if values is not None else form.answers, self.request.portal_contact
+        )
         return {
             "item": form.item,
             "pform": form,
@@ -233,7 +235,7 @@ class ItemFormView(ItemMixin):
         form = pforms.form_for(item)
         if form.state != PortalForm.State.DRAFT:
             return self.page(request, self._context(form), status=409)
-        answers = pforms.read_answers(form, request.POST)
+        answers = pforms.read_answers(form, request.POST, request.portal_contact)
         if "save" in request.POST:
             pforms.save_draft(form, answers)
             messages.success(request, "Saved. You can come back to finish it later.")
