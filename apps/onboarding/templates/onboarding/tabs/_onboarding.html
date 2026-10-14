@@ -41,3 +41,27 @@
 {% else %}
   {% include "components/_empty.html" with title="No onboarding checklist" message="The checklist is created when a client's status becomes Onboarding, for example when a proposal is accepted." icon_name="clipboard-document-list" %}
 {% endif %}
+
+<section class="mt-6" aria-labelledby="clearance-h">
+  <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+    <h2 id="clearance-h" class="text-base font-semibold">Professional clearance</h2>
+    <button type="button" class="btn btn-secondary btn-sm" hx-get="{% url 'onboarding:clearance_start' client.pk %}" hx-target="#drawer-body">{% icon "envelope" "size-4" %} Ask the previous accountant</button>
+  </div>
+  {% if clearances %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th scope="col">Previous accountant</th><th scope="col">Asked for</th><th scope="col">Sent</th><th scope="col">Reply</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+    <tbody>{% for r, chase_due in clearances %}
+      <tr>
+        <td class="font-medium text-slate-900">{{ r.accountant_name }}{% if r.firm %}<span class="muted block">{{ r.firm }}</span>{% endif %}</td>
+        <td>{{ r.asked_labels|join:", " }}{% if r.received %}<span class="muted block">{{ r.received|length }} arrived</span>{% endif %}</td>
+        <td class="whitespace-nowrap">{{ r.sent_on|date:"d/m/Y" }}{% if r.chased_on %}<span class="muted block">Chased {{ r.chased_on|date:"d/m/Y" }}</span>{% endif %}</td>
+        <td>{% if r.reply_received_on %}{% include "components/_badge.html" with text="Replied" tone="green" %} {{ r.reply_received_on|date:"d/m/Y" }}{% elif chase_due %}{% include "components/_badge.html" with text="No reply after 14 days" tone="amber" %}{% else %}<span class="muted">Waiting</span>{% endif %}</td>
+        <td class="whitespace-nowrap text-right">
+          {% if chase_due %}<form method="post" action="{% url 'onboarding:clearance_chase' client.pk r.pk %}" class="inline">{% csrf_token %}<button type="submit" class="btn btn-secondary btn-sm">Chase</button></form>{% endif %}
+          <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'onboarding:clearance_update' client.pk r.pk %}" hx-target="#drawer-body">Update</button>
+        </td>
+      </tr>{% endfor %}</tbody></table></div>
+  {% else %}
+    <p class="muted">No clearance request yet. Ask the previous accountant before taking the work on, then tick the checklist line when you are satisfied.</p>
+  {% endif %}
+</section>

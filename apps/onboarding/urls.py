@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views, views_hmrc, views_letters, views_settings, views_sign
+from . import views, views_clearance, views_hmrc, views_letters, views_settings, views_sign
 
 app_name = "onboarding"
 
@@ -73,5 +73,21 @@ urlpatterns = [
         "clients/<int:pk>/hmrc/<int:auth_pk>/reveal/",
         views_hmrc.AuthorisationRevealView.as_view(),
         name="hmrc_reveal",
+    ),
+    # Professional clearance
+    path(
+        "clients/<int:pk>/clearance/start/",
+        views_clearance.ClearanceStartView.as_view(),
+        name="clearance_start",
+    ),
+    path(
+        "clients/<int:pk>/clearance/<int:req_pk>/",
+        views_clearance.ClearanceUpdateView.as_view(),
+        name="clearance_update",
+    ),
+    path(
+        "clients/<int:pk>/clearance/<int:req_pk>/chase/",
+        views_clearance.ClearanceChaseView.as_view(),
+        name="clearance_chase",
     ),
 ]

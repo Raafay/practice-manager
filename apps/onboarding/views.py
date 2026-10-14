@@ -9,7 +9,7 @@ from apps.clients.views import ClientTabView
 from apps.clients.views_base import done, get_client, render_form
 from apps.core.permissions import CapabilityRequiredMixin, StaffRequiredMixin
 
-from . import services
+from . import clearance, services
 from .forms import ItemForm, MakeLiveForm
 from .models import OnboardingItem
 
@@ -29,6 +29,10 @@ class OnboardingTabView(ClientTabView):
             "can_make_live": client.status == client.Status.ONBOARDING
             and request.user.can("clients.status"),
             "can_override": request.user.can("onboarding.override"),
+            "clearances": [
+                (r, clearance.chase_due(r))
+                for r in client.clearance_requests.select_related("message")
+            ],
         }
 
 

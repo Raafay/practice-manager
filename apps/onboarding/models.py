@@ -184,6 +184,12 @@ class ClearanceRequest(TimeStampedModel):
     letter_document = models.ForeignKey(
         "clients.Document", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
     )
+    message = models.ForeignKey(
+        "comms.QueuedMessage", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    chase_message = models.ForeignKey(
+        "comms.QueuedMessage", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
     )
