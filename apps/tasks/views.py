@@ -1,10 +1,12 @@
+import dataclasses
 from datetime import date, datetime
 
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Exists, OuterRef, Q
-from django.http import Http404, QueryDict
+from django.http import Http404, HttpResponse, QueryDict
+from django.middleware.csrf import get_token
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -20,9 +22,10 @@ from apps.clients.views_base import done, get_client, render_form, respond, want
 from apps.core.permissions import StaffRequiredMixin
 from apps.events.models import ActivityEvent
 
-from . import filters, listing, services
+from . import board as board_mod
+from . import calview, filters, listing, services
 from .forms import CommentForm, TaskCreateForm, client_label
-from .models import Task, TaskCategory, TaskKind, TaskStar, TaskStatus
+from .models import Project, ProjectSection, Task, TaskCategory, TaskKind, TaskStar, TaskStatus
 
 LIST_KEY = "tasks"
 
@@ -75,21 +78,78 @@ def list_params(request) -> tuple[QueryDict, SavedView | None]:
     return request.GET, None
 
 
-def build_page(request, *, base_url: str, fixed_client: Client | None = None) -> dict:
+def build_page(
+    request,
+    *,
+    base_url: str,
+    fixed_client: Client | None = None,
+    fixed_project: Project | None = None,
+) -> dict:
     params, active_view = list_params(request)
     query, form = filters.parse(params)
-    queryset = filters.apply(query, request.user, client=fixed_client)
-    try:
-        page = min(max(int(params.get("page", 1)), 1), 50)
-    except ValueError:
-        page = 1
-    result = listing.build(
-        queryset,
-        query,
-        page=page,
-        new_url=reverse("tasks:new"),
-        client_id=fixed_client.pk if fixed_client else None,
+    layout = query.layout
+    queryset = filters.apply(
+        dataclasses.replace(query, show_done=True) if layout == "board" else query,
+        request.user,
+        client=fixed_client,
     )
+    if fixed_project is not None:
+        queryset = queryset.filter(project=fixed_project)
+    today = timezone.localdate()
+    context = {}
+    if layout == "board":
+        mode = board_mod.valid_mode(query.by, project=fixed_project is not None)
+        context["board"] = board_mod.build(queryset, mode, project=fixed_project, today=today)
+        context["board_modes"] = [
+            {
+                "key": key,
+                "label": label,
+                "active": key == mode,
+                "qs": filters.query_string(params, by="" if key == "status" else key),
+            }
+            for key, label in board_mod.MODES
+            if key != "section" or fixed_project is not None
+        ]
+        context.update(
+            total=1, groups=[], more=False, next_page=2, add_url_all=reverse("tasks:new")
+        )
+    elif layout == "calendar":
+        anchor = calview.parse_anchor(params.get("date", ""), today)
+        cal = query.cal if query.cal in calview.LAYOUT_KEYS else "month"
+        on = query.on if query.on in calview.ON_KEYS else "target"
+        data = calview.build(
+            queryset, layout=cal, anchor=anchor, on=on, client=fixed_client, today=today
+        )
+        data["cal_anchor"] = anchor
+        data["cal_links"] = {
+            "prev": filters.query_string(params, date=data["cal_prev"].isoformat()),
+            "next": filters.query_string(params, date=data["cal_next"].isoformat()),
+            "today": filters.query_string(params, date=""),
+            "month": filters.query_string(params, cal="", date=anchor.isoformat()),
+            "week": filters.query_string(params, cal="week", date=anchor.isoformat()),
+            "target": filters.query_string(params, on=""),
+            "due": filters.query_string(params, on="due"),
+        }
+        context.update(data)
+        context.update(
+            total=1, groups=[], more=False, next_page=2, add_url_all=reverse("tasks:new")
+        )
+    else:
+        try:
+            page = min(max(int(params.get("page", 1)), 1), 50)
+        except ValueError:
+            page = 1
+        result = listing.build(
+            queryset,
+            query,
+            page=page,
+            new_url=reverse("tasks:new"),
+            client_id=fixed_client.pk if fixed_client else None,
+            project_id=fixed_project.pk if fixed_project else None,
+        )
+        context.update(result)
+        context["more_qs"] = filters.query_string(params, page=result["next_page"])
+
     effective = query.sort or filters.DEFAULT_SORT
 
     def sort_link(key):
@@ -122,11 +182,23 @@ def build_page(request, *, base_url: str, fixed_client: Client | None = None) ->
                 else "",
             }
         )
+    groups_options = [g for g in filters.GROUPS if g[0] != "section" or fixed_project is not None]
     return {
         "base_url": base_url,
         "fixed_client": fixed_client,
+        "fixed_project": fixed_project,
         "form": form,
         "query": query,
+        "layout": layout,
+        "layouts": [
+            {
+                "key": key,
+                "label": label,
+                "active": key == layout,
+                "qs": filters.query_string(params, layout="" if key == "table" else key),
+            }
+            for key, label in filters.LAYOUTS
+        ],
         "chips": [
             {
                 "key": key,
@@ -137,12 +209,13 @@ def build_page(request, *, base_url: str, fixed_client: Client | None = None) ->
             for key, label in filters.CHIPS
         ],
         "show_done_qs": filters.query_string(params, show_done="" if query.show_done else "1"),
-        "groups_options": filters.GROUPS,
+        "groups_options": groups_options,
         "state_inputs": [
-            (k, params.get(k)) for k in ("chip", "sort", "show_done") if params.get(k)
+            (k, params.get(k))
+            for k in ("chip", "sort", "show_done", "layout", "by", "cal", "on", "date")
+            if params.get(k)
         ],
         "header": header,
-        "more_qs": filters.query_string(params, page=result["next_page"]),
         "saved_views": SavedView.objects.filter(list_key=LIST_KEY)
         .filter(Q(owner=request.user) | Q(shared=True))
         .select_related("owner"),
@@ -150,10 +223,11 @@ def build_page(request, *, base_url: str, fixed_client: Client | None = None) ->
         "view_form": SavedViewForm(),
         "state_qs": filters.state_query(query, params),
         "current_qs": params.urlencode() if active_view is None else "",
-        "today": timezone.localdate(),
+        "today": today,
         "teams": list(Team.objects.all()),
         "user": request.user,
-        **result,
+        "csrf_for_js": get_token(request),
+        **context,
         **pick_lists(),
     }
 
@@ -186,6 +260,92 @@ class ClientTasksView(ClientTabView):
         )
         context.pop("user", None)
         return context
+
+
+# ------------------------------------------------------------------ board and calendar moves
+
+
+def _id(raw) -> int | None:
+    raw = (raw or "").strip()
+    return int(raw) if raw.isdigit() else None
+
+
+def _plain(message: str, status: int = 422) -> HttpResponse:
+    return HttpResponse(message, status=status, content_type="text/plain; charset=utf-8")
+
+
+def column_target(by: str, key: str, task: Task):
+    """The status, person, category, client or section a column key names."""
+    if key == "none":
+        value = None
+    else:
+        pk = _id(key)
+        if pk is None:
+            raise ValidationError("That column does not exist.")
+        model = {
+            "status": TaskStatus.objects.filter(active=True),
+            "owner": User.objects.staff().filter(is_active=True),
+            "category": TaskCategory.objects.filter(active=True),
+            "client": Client.objects.all(),
+            "section": ProjectSection.objects.all(),
+        }.get(by)
+        if model is None:
+            raise ValidationError("That column cannot be changed by dragging.")
+        value = model.filter(pk=pk).first()
+        if value is None:
+            raise ValidationError("That column does not exist.")
+    return value
+
+
+class BoardMoveView(StaffRequiredMixin, View):
+    """Save a drag on the board: the card's new column and where it sits in it."""
+
+    def post(self, request):
+        task_id = _id(request.POST.get("task"))
+        if task_id is None:
+            return _plain("Choose a task.", 400)
+        task = get_object_or_404(Task, pk=task_id)
+        by = request.POST.get("by", "")
+        try:
+            value = column_target(by, request.POST.get("to", ""), task)
+            lookup = {
+                "status": "status",
+                "owner": "owner",
+                "category": "category",
+                "client": "client",
+                "section": "section",
+            }[by]
+            column = list(
+                Task.objects.live().filter(**{lookup: value}).order_by(*board_mod.card_order())
+            )
+            by_id = {t.pk: t for t in column}
+            before = by_id.get(_id(request.POST.get("before")) or 0)
+            after = by_id.get(_id(request.POST.get("after")) or 0)
+            services.move_task(
+                request.user, task, by, value, column=column, before=before, after=after
+            )
+        except (ValidationError, KeyError) as exc:
+            message = " ".join(exc.messages) if isinstance(exc, ValidationError) else "Cannot move."
+            return _plain(message)
+        card = board_mod.fetch_card(task.pk)
+        return render(request, "tasks/_card.html", {"task": card})
+
+
+class CalendarMoveView(StaffRequiredMixin, View):
+    """Save a drag on the calendar. Only the target date changes."""
+
+    def post(self, request):
+        task_id = _id(request.POST.get("task"))
+        if task_id is None:
+            return _plain("Choose a task.", 400)
+        task = get_object_or_404(Task, pk=task_id)
+        try:
+            day = _date(request.POST.get("date", ""))
+            services.move_to_date(request.user, task, day)
+        except ValidationError as exc:
+            return _plain(" ".join(exc.messages))
+        task = board_mod.fetch_card(task.pk)
+        return render(request, "tasks/_cal_chip.html", {"task": task})
 
 
 # ------------------------------------------------------------------ the drawer
@@ -440,7 +600,17 @@ class AttachView(StaffRequiredMixin, View):
 
 def prefill_from(request) -> dict:
     initial = {"owner": request.user.pk}
-    for key in ("client", "owner", "status", "category", "service", "kind", "target_date"):
+    for key in (
+        "client",
+        "owner",
+        "status",
+        "category",
+        "service",
+        "kind",
+        "target_date",
+        "project",
+        "section",
+    ):
         value = request.GET.get(key)
         if value is None:
             continue

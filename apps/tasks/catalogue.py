@@ -202,7 +202,7 @@ TEMPLATES = [
 
 
 # ------------------------------------------------------------------ project templates (Stage 8)
-# name, description, sections: [(section name, [(task title, category, estimate minutes, day offset)])]
+# name, description, sections: [(section name, [(title, category, minutes, day offset)])]
 PROJECT_TEMPLATES = [
     (
         "Finance function health check",
@@ -212,7 +212,12 @@ PROJECT_TEMPLATES = [
                 "Understand the business",
                 [
                     ("Kick-off call with the director", "Operations", 60, 0),
-                    ("Collect the chart of accounts, policies and last two sets of accounts", "Reporting and budgets", 90, 3),
+                    (
+                        "Collect the chart of accounts, policies and last two sets of accounts",
+                        "Reporting and budgets",
+                        90,
+                        3,
+                    ),
                     ("Map who does what in the finance team", "Operations", 90, 7),
                 ],
             ),

@@ -26,6 +26,9 @@ ROW_FIELDS = (
     "service__name",
     "due_date",
     "target_date",
+    "section_id",
+    "section__name",
+    "section__position",
 )
 
 
@@ -98,6 +101,15 @@ def _group_for(row: dict, mode: str) -> tuple[str, str, tuple, dict]:
             (0, row["service__name"].lower()),
             {"service": row["service_id"]},
         )
+    if mode == "section":
+        if row["section_id"] is None:
+            return "none", "No section", (1, 0), {}
+        return (
+            str(row["section_id"]),
+            row["section__name"],
+            (0, row["section__position"]),
+            {"section": row["section_id"]},
+        )
     if mode == "week":
         when = row["due_date"] or row["target_date"]
         if when is None:
@@ -130,6 +142,7 @@ def build(
     today: date | None = None,
     new_url: str = "",
     client_id: int | None = None,
+    project_id: int | None = None,
 ) -> dict:
     """The groups to show for a query. Two queries for rows, one for steps."""
     today = today or timezone.localdate()
@@ -170,6 +183,8 @@ def build(
         prefill = dict(group.prefill)
         if client_id is not None:
             prefill["client"] = client_id
+        if project_id is not None:
+            prefill["project"] = project_id
         group.add_url = f"{new_url}?{urlencode(prefill)}" if prefill else new_url
     return {
         "groups": ordered_groups,

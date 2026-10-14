@@ -140,7 +140,7 @@ class ProfileForm(StyledFormMixin, forms.ModelForm):
         }
         help_texts = {
             "weekly_hours": "Used to plan workload.",
-            "email_overdue": "In the daily email at 08:00 on working days. Notices in the app stay on.",
+            "email_overdue": "Sent at 08:00 on working days. Notices in the app stay on.",
         }
         labels = {
             "email_overdue": "Daily email: overdue tasks",

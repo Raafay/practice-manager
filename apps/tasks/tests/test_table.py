@@ -10,7 +10,7 @@ from apps.accounts.tests.factories import owner, sign_in, staff
 from apps.clients.tests.factories import ClientFactory
 from apps.services.models import Service
 from apps.tasks import filters, listing, services
-from apps.tasks.models import Task, TaskKind
+from apps.tasks.models import Project, Task, TaskKind
 
 from .factories import category, make_task, status
 
@@ -176,8 +176,9 @@ def test_kind_category_service_status_priority_filters(world):
 
 
 def test_project_filter(world):
-    Task.objects.filter(pk=world["request"].pk).update(project_id=7)
-    assert titles(world["me"], project="7") == ["Client asked for a letter"]
+    project = Project.objects.create(name="Health check")
+    Task.objects.filter(pk=world["request"].pk).update(project=project)
+    assert titles(world["me"], project=str(project.pk)) == ["Client asked for a letter"]
 
 
 def test_starred_filter_is_per_user(world):

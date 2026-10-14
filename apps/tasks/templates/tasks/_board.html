@@ -1,0 +1,29 @@
+{# The board. Columns are lists SortableJS drags between; app.js saves each move. #}
+<div class="mb-3 flex flex-wrap items-center gap-2 text-sm">
+  <span class="font-medium text-slate-700" id="board-modes-label">Columns by</span>
+  <div class="inline-flex flex-wrap gap-1.5" role="group" aria-labelledby="board-modes-label">
+    {% for mode in board_modes %}
+    <a href="{{ base_url }}?{{ mode.qs }}" class="chip" {% if mode.active %}aria-current="true"{% endif %} hx-get="{{ base_url }}?{{ mode.qs }}" hx-target="#task-page" hx-push-url="true">{% if mode.active %}{% icon "check" "size-3" "mini" %}{% endif %}{{ mode.label }}</a>
+    {% endfor %}
+  </div>
+  <span class="muted">Drag a card to change its {{ board.mode }}{% if board.mode == "status" %}; done work shows for 14 days{% endif %}.</span>
+</div>
+<p id="board-message" class="mb-2 hidden rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert"></p>
+{% if board.capped %}<p class="muted mb-2">Showing the first {{ board.fetched }} tasks. Use the filters to narrow the board.</p>{% endif %}
+<div class="flex items-start gap-3 overflow-x-auto pb-3" data-board="{{ board.mode }}" data-move-url="{% url 'tasks:board_move' %}" data-csrf="{{ csrf_for_js }}">
+  {% for column in board.columns %}
+  <section class="w-72 shrink-0 rounded-lg bg-slate-100" aria-labelledby="col-{{ column.key }}" x-data="dropdown" data-column-box>
+    <header class="flex items-center gap-2 px-3 py-2">
+      <span class="inline-block size-2.5 rounded-full" style="background-color: {{ column.colour|default:'#64748b' }}" aria-hidden="true"></span>
+      <h2 id="col-{{ column.key }}" class="flex-1 truncate text-sm font-semibold">{{ column.label }}</h2>
+      <span class="badge badge-neutral" data-column-count>{{ column.total }}</span>
+      <button type="button" class="btn-icon p-1" @click="toggle" :aria-expanded="!open" aria-label="Fold or unfold {{ column.label }}">{% icon "chevron-down" "size-4" %}</button>
+    </header>
+    {% if column.note %}<p class="px-3 pb-1 text-xs text-slate-500">{{ column.note }}</p>{% endif %}
+    <div class="min-h-16 space-y-2 px-2 pb-2" data-column-cards data-column-key="{{ column.key }}" aria-label="{{ column.label }} cards">
+      {% for task in column.tasks %}{% include "tasks/_card.html" %}{% endfor %}
+    </div>
+    {% if column.hidden > 0 %}<p class="px-3 pb-2 text-xs text-slate-500">{{ column.hidden }} more not shown. Use the filters.</p>{% endif %}
+  </section>
+  {% endfor %}
+</div>

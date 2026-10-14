@@ -9,6 +9,8 @@ urlpatterns = [
     path("tasks/new/", views.TaskCreateView.as_view(), name="new"),
     path("tasks/client-options/", views.ClientOptionsView.as_view(), name="client_options"),
     path("tasks/bulk/", views.BulkView.as_view(), name="bulk"),
+    path("tasks/board/move/", views.BoardMoveView.as_view(), name="board_move"),
+    path("tasks/calendar/move/", views.CalendarMoveView.as_view(), name="calendar_move"),
     path("tasks/views/save/", views.SavedViewCreateView.as_view(), name="view_save"),
     path(
         "tasks/views/<int:pk>/default/", views.SavedViewDefaultView.as_view(), name="view_default"

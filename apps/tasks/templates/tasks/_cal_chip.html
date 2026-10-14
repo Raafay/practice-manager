@@ -1,0 +1,5 @@
+{# One task on the calendar. Draggable unless the calendar shows deadline dates. #}
+<li id="cal-task-{{ task.pk }}" class="rounded border border-slate-200 bg-white px-1.5 py-1 text-xs shadow-sm {% if task.is_done %}opacity-70{% endif %}" {% if not cal_locked %}data-calendar-task{% endif %} data-task-id="{{ task.pk }}" style="border-left: 3px solid {{ task.category.colour|default:'#cbd5e1' }}">
+  <a href="{% url 'tasks:detail' task.pk %}" hx-get="{% url 'tasks:detail' task.pk %}" hx-target="#drawer-body" class="block truncate font-medium text-slate-900 no-underline hover:underline {% if task.is_done %}line-through{% endif %}">{{ task.title }}</a>
+  <span class="block truncate text-slate-600">{% if task.client %}{{ task.client.name }}{% else %}Internal{% endif %}{% if task.owner %} · {{ task.owner.display_initials }}{% endif %}{% if task.tone == "red" %} · overdue{% endif %}</span>
+</li>

@@ -32,7 +32,10 @@ CHIPS = [
     ("overdue", "Overdue"),
     ("this_week", "This week"),
 ]
-CHIP_KEYS = {key for key, _ in CHIPS}
+CHIP_KEYS = {key for key, _ in CHIPS} | {"next_week"}  # next_week is reached from Workload
+
+LAYOUTS = [("table", "Table"), ("board", "Board"), ("calendar", "Calendar")]
+LAYOUT_KEYS = {key for key, _ in LAYOUTS}
 
 GROUPS = [
     ("", "No grouping"),
@@ -42,6 +45,7 @@ GROUPS = [
     ("category", "Category"),
     ("service", "Service"),
     ("week", "Week due"),
+    ("section", "Project section"),
 ]
 GROUP_KEYS = {key for key, _ in GROUPS if key}
 
@@ -84,6 +88,15 @@ def ordering_for(sort: str) -> list:
 def week_bounds(today: date) -> tuple[date, date]:
     monday = today - timedelta(days=today.weekday())
     return monday, monday + timedelta(days=6)
+
+
+def overdue_q(today: date) -> Q:
+    """The target date or the deadline has passed. The caller limits this to open work."""
+    return Q(target_date__lt=today) | Q(due_date__lt=today)
+
+
+def between_q(first: date, last: date) -> Q:
+    return Q(target_date__range=(first, last)) | Q(due_date__range=(first, last))
 
 
 class TaskFilterForm(StyledFormMixin, forms.Form):
@@ -146,6 +159,10 @@ class TaskQuery:
     group: str
     sort: str
     values: dict
+    layout: str = "table"
+    by: str = ""  # board columns
+    cal: str = ""  # month or week
+    on: str = ""  # calendar: target or due
 
     @property
     def filters_active(self) -> bool:
@@ -153,7 +170,7 @@ class TaskQuery:
 
 
 FILTER_KEYS = list(TaskFilterForm.base_fields)
-STATE_KEYS = ["chip", "show_done", "group", "sort"]
+STATE_KEYS = ["chip", "show_done", "group", "sort", "layout", "by", "cal", "on"]
 
 
 def parse(params: QueryDict) -> tuple[TaskQuery, TaskFilterForm]:
@@ -167,6 +184,10 @@ def parse(params: QueryDict) -> tuple[TaskQuery, TaskFilterForm]:
             group=group if group in GROUP_KEYS else "",
             sort=valid_sort(params.get("sort", "")),
             values=form.values(),
+            layout=params.get("layout") if params.get("layout") in LAYOUT_KEYS else "table",
+            by=params.get("by", ""),
+            cal=params.get("cal", ""),
+            on=params.get("on", ""),
         ),
         form,
     )
@@ -198,12 +219,12 @@ def _chip(tasks, chip: str, user, today: date):
     if chip == "unassigned":
         return tasks.filter(owner__isnull=True)
     if chip == "overdue":
-        return tasks.filter(status__is_done=False).filter(
-            Q(target_date__lt=today) | Q(due_date__lt=today)
-        )
+        return tasks.filter(status__is_done=False).filter(overdue_q(today))
     if chip == "this_week":
-        first, last = week_bounds(today)
-        return tasks.filter(Q(target_date__range=(first, last)) | Q(due_date__range=(first, last)))
+        return tasks.filter(between_q(*week_bounds(today)))
+    if chip == "next_week":
+        first, last = week_bounds(today + timedelta(days=7))
+        return tasks.filter(between_q(first, last))
     return tasks
 
 

@@ -1,11 +1,18 @@
 {# Everything under the page title on the Tasks page and the client's Tasks tab. #}
+<div class="mb-3 flex flex-wrap items-center gap-2">
+  <div class="inline-flex overflow-hidden rounded-md border border-slate-300 bg-white" role="group" aria-label="How to show the tasks">
+    {% for item in layouts %}
+    <a href="{{ base_url }}?{{ item.qs }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm no-underline hover:bg-slate-50 {% if item.active %}bg-slate-900 font-medium text-white hover:bg-slate-900{% else %}text-slate-700{% endif %}" {% if item.active %}aria-current="true"{% endif %} hx-get="{{ base_url }}?{{ item.qs }}" hx-target="#task-page" hx-push-url="true">{% if item.key == "table" %}{% icon "list-bullet" "size-4" %}{% elif item.key == "board" %}{% icon "squares-2x2" "size-4" %}{% else %}{% icon "calendar" "size-4" %}{% endif %}{{ item.label }}</a>
+    {% endfor %}
+  </div>
+</div>
 <div class="mb-3 flex flex-wrap items-center gap-2" role="group" aria-label="Quick filters">
   {% for chip in chips %}
   <a href="{{ base_url }}?{{ chip.qs }}" class="chip" {% if chip.active %}aria-current="true"{% endif %} hx-get="{{ base_url }}?{{ chip.qs }}" hx-target="#task-page" hx-push-url="true">{% if chip.active %}{% icon "check" "size-3" "mini" %}{% endif %}{{ chip.label }}</a>
   {% endfor %}
   <span class="mx-1 h-5 w-px bg-slate-300" aria-hidden="true"></span>
-  <a href="{{ base_url }}?{{ show_done_qs }}" class="chip" {% if query.show_done %}aria-current="true"{% endif %} hx-get="{{ base_url }}?{{ show_done_qs }}" hx-target="#task-page" hx-push-url="true">{% if query.show_done %}{% icon "check" "size-3" "mini" %}{% endif %}Show done</a>
-  {% if not fixed_client %}
+  {% if layout != "board" %}<a href="{{ base_url }}?{{ show_done_qs }}" class="chip" {% if query.show_done %}aria-current="true"{% endif %} hx-get="{{ base_url }}?{{ show_done_qs }}" hx-target="#task-page" hx-push-url="true">{% if query.show_done %}{% icon "check" "size-3" "mini" %}{% endif %}Show done</a>{% endif %}
+  {% if not fixed_client and not fixed_project %}
   <div class="relative ml-auto" x-data="dropdown" @keydown.escape="close" @click.outside="close">
     <button type="button" class="btn btn-secondary btn-sm" @click="toggle" :aria-expanded="open" aria-haspopup="true">{% icon "bookmark" "size-4" %} Views{% if active_view %}: {{ active_view.name }}{% endif %} {% icon "chevron-down" "size-3" %}</button>
     <div class="menu min-w-72" x-show="open" x-cloak>
@@ -38,11 +45,11 @@
     <summary>Filters and grouping{% if query.filters_active %} <span class="badge badge-accent">On</span>{% endif %} {% icon "chevron-right" "panel-chevron size-4 text-slate-400 transition-transform" %}</summary>
     <div class="panel-body">
       <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div><label class="label" for="id_group">Group by</label>
-          <select id="id_group" name="group" class="select">{% for key, label in groups_options %}<option value="{{ key }}" {% if key == query.group %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+        {% if layout == "table" %}<div><label class="label" for="id_group">Group by</label>
+          <select id="id_group" name="group" class="select">{% for key, label in groups_options %}<option value="{{ key }}" {% if key == query.group %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>{% endif %}
         <div><label class="label" for="{{ form.q.id_for_label }}">Search</label>{{ form.q }}</div>
         <div><label class="label" for="{{ form.owner.id_for_label }}">Owner</label>{{ form.owner }}</div>
-        {% if not fixed_client %}<div><label class="label" for="{{ form.client.id_for_label }}">Client</label>{{ form.client }}</div>
+        {% if not fixed_client and not fixed_project %}<div><label class="label" for="{{ form.client.id_for_label }}">Client</label>{{ form.client }}</div>
         <div><label class="label" for="{{ form.manager.id_for_label }}">Client manager</label>{{ form.manager }}</div>{% endif %}
         <div><label class="label" for="{{ form.team.id_for_label }}">Team</label>{{ form.team }}</div>
         <div><label class="label" for="{{ form.kind.id_for_label }}">Kind</label>{{ form.kind }}</div>
@@ -65,7 +72,7 @@
   </details>
 </form>
 
-<form id="bulk-form" method="post" action="{% url 'tasks:bulk' %}" class="mb-3 flex flex-wrap items-end gap-2 rounded-md border border-slate-200 bg-white p-2 text-sm">
+{% if layout == "table" %}<form id="bulk-form" method="post" action="{% url 'tasks:bulk' %}" class="mb-3 flex flex-wrap items-end gap-2 rounded-md border border-slate-200 bg-white p-2 text-sm">
   {% csrf_token %}
   <input type="hidden" name="next" value="{{ request.get_full_path }}">
   <div><label class="label" for="bulk-action">With the ticked tasks</label>
@@ -77,10 +84,14 @@
   <div><label class="label" for="bulk-status">Status</label><select id="bulk-status" name="status" class="select">{% for status in statuses %}<option value="{{ status.pk }}">{{ status.name }}</option>{% endfor %}</select></div>
   <div><label class="label" for="bulk-date">Target date</label><input id="bulk-date" type="date" name="target_date" class="input"></div>
   <button type="submit" class="btn btn-secondary">Apply to ticked</button>
-</form>
+</form>{% endif %}
 
 <div id="task-results">
-{% if groups and total %}
+{% if layout == "board" %}
+  {% include "tasks/_board.html" %}
+{% elif layout == "calendar" %}
+  {% include "tasks/_calendar.html" %}
+{% elif groups and total %}
   {% for group in groups %}
   {% if query.group %}
   <details class="panel mb-4" open>
