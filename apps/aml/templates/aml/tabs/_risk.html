@@ -1,0 +1,81 @@
+{% load aml_tags %}
+<div class="grid gap-4 lg:grid-cols-3">
+  <section class="card card-body lg:col-span-1" aria-labelledby="risk-summary">
+    <h2 id="risk-summary" class="text-base font-semibold">AML status</h2>
+    <p class="mt-2">{% include "components/_badge.html" with text=aml_state.1 tone=aml_state.2 %}
+      {% if current %}{% include "components/_badge.html" with text=current.get_level_display|add:" risk" tone=current.level_tone %}{% endif %}</p>
+    {% if current %}
+    <dl class="mt-3 space-y-1 text-sm">
+      <div class="flex justify-between"><dt class="muted">Score</dt><dd>{{ current.score }}</dd></div>
+      <div class="flex justify-between"><dt class="muted">Approved</dt><dd>{{ current.approved_at|date:"d/m/Y" }}{% if current.approved_by %} by {{ current.approved_by.name }}{% endif %}</dd></div>
+      <div class="flex justify-between"><dt class="muted">Next review</dt><dd>{{ current.next_review_due|date:"d/m/Y" }}</dd></div>
+      {% if current.enhanced_needed %}<div class="flex justify-between"><dt class="muted">Enhanced checks</dt><dd>Required</dd></div>{% endif %}
+    </dl>
+    {% if current.ch_snapshot_document %}<p class="mt-2 text-sm"><a href="{% url 'clients:document_download' current.ch_snapshot_document.public_id %}">Companies House record saved on approval</a></p>{% endif %}
+    {% endif %}
+    {% for prompt in prompts %}
+    <p class="mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">{% icon "exclamation-triangle" "size-4 inline" %} Review prompted: {{ prompt.reason }}</p>
+    {% endfor %}
+    <div class="mt-4 flex flex-wrap gap-2">
+      {% if open_assessment %}
+        <a class="btn btn-primary" href="{% url 'aml:assessment' client.pk open_assessment.pk %}">{% if open_assessment.state == "submitted" %}Open for approval{% else %}Continue the assessment{% endif %}</a>
+      {% else %}
+      <form method="post" action="{% url 'aml:start' client.pk %}">{% csrf_token %}
+        <button type="submit" class="btn btn-primary">{% if current %}Start a review{% else %}Start a risk assessment{% endif %}</button>
+      </form>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="card card-body lg:col-span-2" aria-labelledby="id-heading">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <div>
+        <h2 id="id-heading" class="text-base font-semibold">Identity</h2>
+        <p class="muted">{{ verified }} of {{ total_people }} verified. Everyone listed must be verified before go-live.</p>
+      </div>
+      <button type="button" class="btn btn-secondary btn-sm" hx-get="{% url 'aml:person_add' client.pk %}" hx-target="#modal-body">{% icon "user-plus" "size-4" %} Add a person</button>
+    </div>
+    {% if checks %}
+    <div class="table-wrap mt-3"><table class="table">
+      <thead><tr><th scope="col">Person</th><th scope="col">Why listed</th><th scope="col">State</th><th scope="col">Document</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+      <tbody>
+      {% for check in checks %}
+      <tr>
+        <td><a class="font-medium text-slate-900" href="{% url 'clients:contact_detail' check.contact_id %}">{{ check.contact.full_name }}</a></td>
+        <td>{{ check.reasons|join:", " }}</td>
+        <td>{% include "components/_badge.html" with text=check.get_state_display tone=check.tone %}{% if check.verified_at %}<span class="muted block">{{ check.verified_at|date:"d/m/Y" }}{% if check.verified_by %} by {{ check.verified_by.name }}{% endif %}</span>{% endif %}</td>
+        <td>{% if check.document_type %}{{ check.get_document_type_display }}{% if check.document_expiry %}<span class="muted block">Expires {{ check.document_expiry|date:"d/m/Y" }}</span>{% endif %}{% endif %}</td>
+        <td class="whitespace-nowrap text-right">
+          <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'aml:identity' client.pk check.pk %}" hx-target="#drawer-body">Update</button>
+          <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'aml:person_remove' client.pk check.pk %}" hx-target="#modal-body">Remove</button>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody></table></div>
+    {% else %}
+      {% include "components/_empty.html" with title="No one to identify yet" message="Add the main contact, the directors, partners or trustees, and anyone who owns more than 25% on the Contacts tab; they appear here." icon_name="user-plus" %}
+    {% endif %}
+    {% if removed_checks %}
+    <details class="mt-3 text-sm"><summary class="cursor-pointer text-slate-600">Taken off the list ({{ removed_checks|length }})</summary>
+      <ul class="mt-1 space-y-1">{% for c in removed_checks %}<li>{{ c.contact.full_name }}: {{ c.excluded_reason }}</li>{% endfor %}</ul></details>
+    {% endif %}
+  </section>
+</div>
+
+<h2 class="mb-1 mt-6 text-base font-semibold">Assessment history</h2>
+{% if history %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th scope="col">Version</th><th scope="col">State</th><th scope="col">Level</th><th scope="col">Score</th><th scope="col">Assessed</th><th scope="col">Approved</th><th scope="col"><span class="sr-only">Open</span></th></tr></thead>
+  <tbody>{% for a in history %}
+    <tr>
+      <td>Version {{ a.version }}{% if a.review_reason %}<span class="muted block">{{ a.review_reason }}</span>{% endif %}</td>
+      <td>{{ a.get_state_display }}</td>
+      <td>{% if a.level %}{% include "components/_badge.html" with text=a.get_level_display tone=a.level_tone %}{% endif %}</td>
+      <td>{{ a.score }}</td>
+      <td>{% if a.assessed_at %}{{ a.assessed_at|date:"d/m/Y" }}<span class="muted block">{{ a.assessed_by.name }}</span>{% endif %}</td>
+      <td>{% if a.approved_at %}{{ a.approved_at|date:"d/m/Y" }}<span class="muted block">{{ a.approved_by.name }}</span>{% endif %}</td>
+      <td class="text-right"><a class="btn btn-ghost btn-sm" href="{% url 'aml:assessment' client.pk a.pk %}">Open</a></td>
+    </tr>{% endfor %}</tbody></table></div>
+{% else %}
+  {% include "components/_empty.html" with title="No risk assessment yet" message="Start one to score the client against the practice's questions. It must be approved before the client can go live." icon_name="shield-check" %}
+{% endif %}

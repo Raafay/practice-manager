@@ -48,7 +48,7 @@ def letterhead_html(practice: PracticeSettings) -> str:
     )
 
 
-def render_pdf(html_body: str, practice: PracticeSettings) -> bytes:
+def render_pdf(html_body: str, practice: PracticeSettings, *, on_date=None) -> bytes:
     from weasyprint import HTML
 
     document = (
@@ -56,7 +56,7 @@ def render_pdf(html_body: str, practice: PracticeSettings) -> bytes:
         + LETTER_CSS % {"accent": practice.accent_colour}
         + "</style></head><body>"
         + letterhead_html(practice)
-        + f"<p class='date'>{timezone.localdate():%d/%m/%Y}</p>"
+        + f"<p class='date'>{(on_date or timezone.localdate()):%d/%m/%Y}</p>"
         + html_body
         + "</body></html>"
     )

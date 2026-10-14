@@ -27,7 +27,11 @@ def test_status_moves_follow_the_rules(client):
     assert change(client, target, "onboarding").status_code == 302
     target.refresh_from_db()
     assert target.status == "onboarding"
-    assert change(client, target, "active").status_code == 302
+    # The onboarding gate (Stage 7): no way to go live by hand from the status form.
+    assert change(client, target, "active").status_code == 422
+    target.refresh_from_db()
+    assert target.status == "onboarding"
+    services.set_status(manager(), target, "active")
     target.refresh_from_db()
     assert target.status == "active" and target.client_since is not None
     assert change(client, target, "lost").status_code == 422

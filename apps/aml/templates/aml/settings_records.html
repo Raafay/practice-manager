@@ -1,0 +1,49 @@
+{% extends "layouts/app.html" %}
+{% block title %}AML practice records{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="AML practice records" subtitle="Who supervises the practice, who the nominated officer is, training and policy documents. Suspicious activity reports are not kept in this app." %}
+  <a href="{% url 'core:settings' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Settings</a>
+</div>
+<form method="post" class="card card-body mb-6 max-w-xl space-y-4" novalidate>
+  {% csrf_token %}
+  {% include "components/_form_fields.html" %}
+  <div><button type="submit" class="btn btn-primary">Save</button></div>
+</form>
+
+<h2 class="mb-2 text-base font-semibold">Staff AML training</h2>
+{% if training_due %}<p class="mb-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">Training is due again for: {% for r in training_due %}{{ r.person.name }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>{% endif %}
+<div class="grid gap-4 lg:grid-cols-[1fr_22rem]">
+  <div>
+    {% if training %}
+    <div class="table-wrap"><table class="table">
+      <thead><tr><th scope="col">Person</th><th scope="col">Date</th><th scope="col">Course</th><th scope="col">Notes</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+      <tbody>{% for r in training %}<tr><td>{{ r.person.name }}</td><td>{{ r.trained_on|date:"d/m/Y" }}</td><td>{{ r.course }}</td><td>{{ r.notes }}</td>
+        <td class="text-right"><form method="post" action="{% url 'aml:training_delete' r.pk %}" data-confirm="Remove this training record?" class="inline">{% csrf_token %}<button class="btn btn-ghost btn-sm" type="submit">Remove</button></form></td></tr>{% endfor %}</tbody></table></div>
+    {% else %}{% include "components/_empty.html" with title="No training logged" message="Log each person's AML training here. You are reminded 12 months later." icon_name="user-group" %}{% endif %}
+  </div>
+  <form method="post" action="{% url 'aml:training_add' %}" class="card card-body space-y-3" novalidate>
+    {% csrf_token %}
+    <h3 class="text-sm font-semibold">Log training</h3>
+    {% include "components/_form_fields.html" with form=training_form %}
+    <button type="submit" class="btn btn-secondary">Log training</button>
+  </form>
+</div>
+
+<h2 class="mb-2 mt-6 text-base font-semibold">Policy documents</h2>
+<div class="grid gap-4 lg:grid-cols-[1fr_22rem]">
+  <div>
+    {% if policies %}
+    <ul class="divide-y divide-slate-200 rounded-md border border-slate-200 bg-white">{% for d in policies %}
+      <li class="flex items-center justify-between gap-2 px-3 py-2"><a href="{% url 'aml:policy' d.pk %}">{{ d.title }}</a>
+        <form method="post" action="{% url 'aml:policy_delete' d.pk %}" data-confirm="Remove {{ d.title }}?">{% csrf_token %}<button class="btn btn-ghost btn-sm" type="submit">Remove</button></form></li>{% endfor %}</ul>
+    {% else %}{% include "components/_empty.html" with title="No policy documents" message="Upload the practice's AML policy and procedures so everyone can find them." icon_name="document-text" %}{% endif %}
+  </div>
+  <form method="post" action="{% url 'aml:policy_add' %}" enctype="multipart/form-data" class="card card-body space-y-3" novalidate>
+    {% csrf_token %}
+    <h3 class="text-sm font-semibold">Add a document</h3>
+    {% include "components/_form_fields.html" with form=policy_form %}
+    <button type="submit" class="btn btn-secondary">Upload</button>
+  </form>
+</div>
+{% endblock %}

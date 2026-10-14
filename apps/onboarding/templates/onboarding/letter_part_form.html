@@ -1,0 +1,25 @@
+{% extends "layouts/app.html" %}
+{% block title %}{{ part }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title=part.get_key_display subtitle="Click a merge field to put it in the text." %}
+  <a href="{% url 'onboarding:letter_parts' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Letter wording</a>
+</div>
+{% if part.starter %}<div class="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">Starter text. Replace with the practice's own wording before use.</div>{% endif %}
+<form method="post" novalidate class="grid gap-6 lg:grid-cols-[1fr_20rem]">
+  <div class="card card-body space-y-4">
+    {% csrf_token %}
+    {{ form.body }}
+    <trix-editor input="{{ form.body.id_for_label }}" id="template_body_editor" class="textarea min-h-72 rich-text" aria-label="Wording"></trix-editor>
+    {% for e in form.body.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+    <div><button type="submit" class="btn btn-primary">Save wording</button></div>
+  </div>
+  <aside class="card card-body" aria-label="Merge fields">
+    <h2 class="mb-2">Merge fields</h2>
+    {% for group, fields in field_groups.items %}
+    <h3 class="mt-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{{ group }}</h3>
+    <div class="mt-1 flex flex-wrap gap-1">{% for name, label in fields %}<button type="button" class="btn btn-secondary btn-sm" data-insert-field="{{ name }}" title="{{ label }}">{{ name }}</button>{% endfor %}</div>
+    {% endfor %}
+  </aside>
+</form>
+{% endblock %}

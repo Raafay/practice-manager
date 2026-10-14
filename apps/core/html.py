@@ -3,8 +3,8 @@
 import nh3
 
 ALLOWED_TAGS = {
-    "a", "blockquote", "br", "code", "del", "div", "em", "h1", "li", "ol", "p", "pre",
-    "strong", "ul",
+    "a", "blockquote", "br", "code", "del", "div", "em", "h1", "h2", "h3", "li", "ol", "p",
+    "pre", "strong", "ul",
 }  # fmt: skip
 ALLOWED_ATTRIBUTES = {"a": {"href"}}
 ALLOWED_SCHEMES = {"http", "https", "mailto"}

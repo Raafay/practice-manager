@@ -249,6 +249,23 @@
   .rich-text blockquote {
     @apply border-l-4 border-slate-300 pl-3 text-slate-600;
   }
+  /* A letter shown on a page (engagement letter, signing page) */
+  .prose-letter {
+    @apply space-y-3 text-sm leading-relaxed text-slate-800;
+  }
+  .prose-letter h1,
+  .prose-letter h2 {
+    @apply mt-4 text-base font-semibold;
+  }
+  .prose-letter h3 {
+    @apply mt-3 text-sm font-semibold;
+  }
+  .prose-letter ul {
+    @apply list-disc pl-5;
+  }
+  .prose-letter ol {
+    @apply list-decimal pl-5;
+  }
 
   /* Avatars */
   .avatar {

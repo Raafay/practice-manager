@@ -130,6 +130,8 @@ class SyncResult:
     contacts_created: int = 0
     links_created: int = 0
     links_updated: int = 0
+    # An officer or owner was added, resigned or ceased (the AML review is prompted).
+    people_changed: bool = False
 
     @property
     def changed(self) -> bool:
@@ -300,6 +302,7 @@ def _role_label(item: dict) -> str:
 
 def _record_people_changes(actor, client, snapshot, officers, owners, result) -> None:
     def record(verb, summary):
+        result.people_changed = True
         result.changes.append(summary)
         events.record(actor, verb, summary, client=client, target=client)
 

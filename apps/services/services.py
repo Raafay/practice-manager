@@ -8,6 +8,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
+import django.dispatch
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
@@ -70,6 +71,10 @@ def _money(value) -> str:
     return "no fee" if value is None else f"£{Decimal(value):,.2f}"
 
 
+# Sent after a service is switched on for a client (client, client_service, actor).
+service_added = django.dispatch.Signal()
+
+
 def switch_on(
     actor,
     client: Client,
@@ -120,6 +125,7 @@ def switch_on(
             target=cs,
         )
     deadlines.generate_for_client(client, actor=actor)
+    service_added.send(sender=ClientService, client=client, client_service=cs, actor=actor)
     return cs
 
 

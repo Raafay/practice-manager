@@ -1,0 +1,26 @@
+{% extends "layouts/app.html" %}
+{% block title %}Risk questions{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Risk questions" subtitle="Scored in every risk assessment. Every change is logged." %}
+  <div class="flex gap-2">
+    <a href="{% url 'core:settings' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Settings</a>
+    <a href="{% url 'aml:bands' %}" class="btn btn-secondary">Score bands</a>
+    <button type="button" class="btn btn-primary" hx-get="{% url 'aml:question_add' %}" hx-target="#drawer-body">{% icon "plus" "size-4" %} New question</button>
+  </div>
+</div>
+<div class="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="note">The practice owner should read these questions and the score bands before they are relied on. Scores: low {{ "0" }} to {{ aml.medium_from|add:"-1" }}, medium {{ aml.medium_from }} to {{ aml.high_from|add:"-1" }}, high {{ aml.high_from }} or more. An answer that means enhanced checks makes the suggestion high.</div>
+<div class="table-wrap"><table class="table">
+  <thead><tr><th scope="col">Section</th><th scope="col">Question</th><th scope="col">Scores</th><th scope="col">On</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+  <tbody>{% for question in questions %}
+    <tr>
+      <td>{{ question.section }}</td>
+      <td class="font-medium text-slate-900">{{ question.text }}{% if question.records_check %}<span class="muted block">Records the date checked and how</span>{% endif %}</td>
+      <td>{% for o in question.options %}{{ o.label }} {{ o.score }}{% if o.enhanced %} (enhanced){% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+      <td>{% if question.active %}Yes{% else %}No{% endif %}</td>
+      <td class="whitespace-nowrap text-right">
+        <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'aml:question_edit' question.pk %}" hx-target="#drawer-body">Edit</button>
+        <form method="post" action="{% url 'aml:question_toggle' question.pk %}" class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">{% if question.active %}Switch off{% else %}Switch on{% endif %}</button></form>
+      </td>
+    </tr>{% endfor %}</tbody></table></div>
+{% endblock %}

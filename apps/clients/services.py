@@ -64,7 +64,11 @@ def require(actor, right: str) -> None:
 
 
 def allowed_moves(client: Client) -> list[str]:
-    return list(STATUS_MOVES.get(client.status, ()))
+    """Moves a person may make by hand. Onboarding to active goes through "Make live" (Stage 7)."""
+    moves = list(STATUS_MOVES.get(client.status, ()))
+    if client.status == Client.Status.ONBOARDING:
+        moves.remove(Client.Status.ACTIVE)
+    return moves
 
 
 def retention_dates(ended_on: date) -> tuple[date, date]:
@@ -148,11 +152,23 @@ def change_status(
     actor, client: Client, new_status: str, *, ended_on: date | None = None, reason: str = ""
 ) -> Client:
     require(actor, "clients.status")
+    if client.status == Client.Status.ONBOARDING and new_status == Client.Status.ACTIVE:
+        raise ValidationError(
+            "A client in onboarding is made live from its Onboarding tab, "
+            "once the checklist is done."
+        )
     if new_status not in allowed_moves(client):
         raise ValidationError(
             f"A {client.get_status_display().lower()} client cannot be changed to "
             f"{Client.Status(new_status).label.lower()}."
         )
+    return set_status(actor, client, new_status, ended_on=ended_on, reason=reason)
+
+
+def set_status(
+    actor, client: Client, new_status: str, *, ended_on: date | None = None, reason: str = ""
+) -> Client:
+    """Apply a status change and tell listeners. Callers have already checked the rules."""
     old = client.status
     client.status = new_status
     if new_status == Client.Status.FORMER:

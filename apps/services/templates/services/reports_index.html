@@ -9,5 +9,9 @@
     <span class="flex items-center gap-2 font-semibold">{% icon "calendar" %} Deadlines</span>
     <span class="muted mt-1 block">Every open deadline, with its source. Filter by date, service, manager or client.</span>
   </a>
+  <a href="{% url 'aml:register' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "shield-check" %} AML register</span>
+    <span class="muted mt-1 block">Every client with risk level, state, last assessment, next review and identity progress.</span>
+  </a>
 </div>
 {% endblock %}

@@ -4,7 +4,7 @@ Keep this file under 150 lines. When it grows, shorten older stages to two lines
 
 ## Where things stand
 
-Next stage to build: 7 (Onboarding and AML).
+Next stage to build: 8 (Tasks, part two).
 
 | Stage | State | Merged on |
 |---|---|---|
@@ -15,7 +15,7 @@ Next stage to build: 7 (Onboarding and AML).
 | 4 Services and deadlines | Done | 13/10/2026 |
 | 5 Tasks, part one | Built, in review | |
 | 6 Communications | Built, in review | |
-| 7 Onboarding and AML | Not started | |
+| 7 Onboarding and AML | Built, in review | |
 | 8 Tasks, part two | Not started | |
 | 9 Prospects and proposals | Not started | |
 | 10 Portal and requests | Not started | |
@@ -77,6 +77,12 @@ See `docs/screens/stage-03/`. 499 tests at the time.
 - Client page: Send email (compose window), Log an email, Create a letter (WeasyPrint PDF on the letterhead, saved to Documents). Client list: Email these clients. SMS interface and console/memory backends; hidden until `SMS_BACKEND` is set.
 - Screens in `docs/screens/stage-06/`. No new dependency. 893 tests in all.
 
+## Stage 7: onboarding and AML (built 14/10/2026)
+
+- `apps/onboarding`: checklist (template in Settings, created when status becomes onboarding or a proposal is accepted via `on_proposal_accepted`), go-live gate and `make_live` with owner override and logged reason, engagement letters (parts in Settings, edit, queue, public signing page, signed PDF with signature page, review task), HMRC authorisations, professional clearance, Overview panels. Shared `ActionLink` (hashed token) is in `apps/core`.
+- `apps/aml`: identity checks (sensitive uploads, `IdentityProvider` interface with none behind it), 17 seeded risk questions, scoring, approval rules, Companies House snapshot PDF on approval, review prompts, AML state and header badge, register with CSV, practice records (officer, training, policy documents), daily job `aml_reviews`.
+- Status form can no longer move onboarding to active; use Make live. 991 tests. Screens in `docs/screens/stage-07/`. No new dependency. New setting `SITE_URL` (links in emails).
+
 ## Assumptions
 
 Add one line each time a stage makes a choice that the specs and `docs/DECISIONS.md` did not cover. Give the stage number.
@@ -124,6 +130,14 @@ Add one line each time a stage makes a choice that the specs and `docs/DECISIONS
 - 6: `setup_fee` merges the client's one-off fees (no separate setup fee exists yet). The signature is the existing `email_signature` on the user profile.
 - 6: Log an email adds a note of kind "email" (clients migration 0004).
 
+- 7: Branch is `claude/hopeful-gates-4pfqis` (the session's required branch). No pull request opened: the session rules say only on request.
+- 7: The register export needs `data.export` (CORRECTIONS 16), not "owner only" as the stage file says; the owner and managers hold it.
+- 7: Make live needs `clients.status`; going live with items open also needs `onboarding.override` and a reason.
+- 7: A signing link lasts 14 days. The engagement and signed-copy emails wait in Queued (hold), so nothing reaches a client unapproved. Engagement review date is 12 months after signing.
+- 7: "Verified" identity needs a method, a document type and an uploaded copy. A live client with no assessment and no checklist shows "Needs review (imported)".
+- 7: Higher-risk services that prompt a review are chosen on the AML bands page. HMRC row expires automatically once its link or code date passes while still waiting.
+- 7: Added h2 and h3 to the allowed rich-text tags (letters use them). Demo data adds 3 contacts and some notifications; two earlier demo-count tests were loosened.
+
 ## Known gaps
 
 Things a stage left unfinished or found broken, with the stage number. Remove a line when it is fixed.
@@ -148,3 +162,6 @@ Things a stage left unfinished or found broken, with the stage number. Remove a 
 - 6: Delivery reports (delivered, bounced) have a function but no webhook until Stage 13. No provider is chosen, so only the console and in-memory backends are tested.
 - 6: Text messages have no provider; the Send SMS button and text templates are hidden until `SMS_BACKEND` names one.
 - 6: Letters use the practice logo and address only. The clearance letter wording is Stage 7's.
+
+- 7: The practice owner must read the risk questions and score bands before they are relied on. Letter wording is starter text. The 30-day postal code expiry needs confirming with the practice.
+- 7: Portal form for client details (Stage 10) not built: staff tick "Client details form completed". `SITE_URL` must be set in production (Stage 13).

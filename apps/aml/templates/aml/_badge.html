@@ -1,0 +1,1 @@
+<a href="{% url 'aml:tab' client.pk %}" class="no-underline hover:no-underline" title="Anti-money-laundering status">{% include "components/_badge.html" with text="AML: "|add:label tone=tone icon_name="shield-check" %}{% if level %} <span class="muted text-xs">{{ level|title }} risk</span>{% endif %}</a>

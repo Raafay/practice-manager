@@ -1,0 +1,38 @@
+<div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+  <h2 class="text-base font-semibold">Engagement letters</h2>
+  <form method="post" action="{% url 'onboarding:prepare' client.pk %}">{% csrf_token %}
+    <button type="submit" class="btn btn-primary btn-sm">{% icon "document-text" "size-4" %} {% if services_changed %}Prepare a new engagement letter{% else %}Prepare engagement letter{% endif %}</button>
+  </form>
+</div>
+{% if services_changed %}
+<div class="mb-3 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">The services or fees have changed since the last signed letter. Prepare a new engagement letter; the old one is marked replaced once the new one is signed.</div>
+{% endif %}
+{% if starter_wording %}
+<div class="mb-3 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">Starter text. Replace with the practice's own wording before use. <a href="{% url 'onboarding:letter_parts' %}">Letter wording in Settings</a>.</div>
+{% endif %}
+{% if letters %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th scope="col">Letter</th><th scope="col">State</th><th scope="col">Signer</th><th scope="col">Dates</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+  <tbody>
+  {% for l in letters %}
+  <tr>
+    <td><a class="font-medium text-slate-900" href="{% url 'onboarding:letter' client.pk l.pk %}">Version {{ l.version }}</a><span class="muted block">{{ l.services|length }} service{{ l.services|length|pluralize }}</span></td>
+    <td>{% include "components/_badge.html" with text=l.get_state_display tone=l.tone %}
+      {% if l.state == "sent" or l.state == "viewed" %}{% if l.message and l.message.state != "sent" %}<span class="muted block">Email {{ l.message.get_state_display|lower }}</span>{% endif %}{% endif %}</td>
+    <td>{{ l.signer.full_name|default:"" }}{% if l.typed_name %}<span class="muted block">Signed as {{ l.typed_name }}</span>{% endif %}</td>
+    <td class="whitespace-nowrap">{% if l.signed_at %}Signed {{ l.signed_at|date:"d/m/Y" }}{% if l.review_due %}<span class="muted block">Review {{ l.review_due|date:"d/m/Y" }}</span>{% endif %}{% elif l.sent_at %}Sent {{ l.sent_at|date:"d/m/Y" }}{% else %}Draft{% endif %}</td>
+    <td class="whitespace-nowrap text-right">
+      <a class="btn btn-ghost btn-sm" href="{% url 'onboarding:letter' client.pk l.pk %}">{% if l.state == "draft" %}Edit{% else %}Open{% endif %}</a>
+      {% if l.signed_document %}<a class="btn btn-ghost btn-sm" href="{% url 'clients:document_download' l.signed_document.public_id %}">Signed PDF</a>{% elif l.unsigned_document %}<a class="btn btn-ghost btn-sm" href="{% url 'clients:document_download' l.unsigned_document.public_id %}">PDF</a>{% endif %}
+      {% if l.state == "draft" or l.state == "sent" or l.state == "viewed" %}
+      <form method="post" action="{% url 'onboarding:letter_cancel' client.pk l.pk %}" data-confirm="Cancel version {{ l.version }}? Its signing link stops working." class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Cancel</button></form>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody></table></div>
+{% else %}
+  {% include "components/_empty.html" with title="No engagement letter yet" message="Prepare one from the client's services. You can edit it, then it waits in Queued for approval before the signing link goes out." icon_name="document-text" %}
+{% endif %}
+<h2 class="mb-1 mt-6 text-base font-semibold">Proposals</h2>
+<p class="muted">Proposals for this client will be listed here once the sales pipeline is built.</p>

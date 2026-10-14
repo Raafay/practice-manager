@@ -4,10 +4,12 @@ from django.db import transaction
 
 from apps.accounts import demo as accounts_demo
 from apps.accounts.models import User
+from apps.aml import demo as aml_demo
 from apps.clients import demo as clients_demo
 from apps.comms import demo as comms_demo
 from apps.companieshouse import demo as companieshouse_demo
 from apps.core.models import PracticeSettings
+from apps.onboarding import demo as onboarding_demo
 from apps.services import demo as services_demo
 from apps.tasks import demo as tasks_demo
 
@@ -36,6 +38,8 @@ class Command(BaseCommand):
             counts.update(services_demo.seed())
             counts.update(tasks_demo.seed())
             counts.update(comms_demo.seed())
+            counts.update(aml_demo.seed())
+            counts.update(onboarding_demo.seed())
 
         self.stdout.write(self.style.SUCCESS("Demo data loaded. Everything here is made up."))
         self.stdout.write(
@@ -45,7 +49,9 @@ class Command(BaseCommand):
             f"{counts['client_services']} new client services, "
             f"{counts['deadlines']} new deadlines, "
             f"{counts['tasks']} tasks in all ({counts['advisory_tasks']} new fractional), "
-            f"{counts['messages']} queued messages."
+            f"{counts['messages']} queued messages, "
+            f"{counts['assessments']} new risk assessments, "
+            f"{counts['onboarding_clients']} new onboarding clients."
         )
         self.stdout.write("")
         self.stdout.write("Sign in at /login/ with any of these:")

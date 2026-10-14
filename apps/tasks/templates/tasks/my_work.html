@@ -13,6 +13,7 @@
     {% icon "user-plus" "size-4" %} <strong>{{ unassigned_count }}</strong> unassigned task{{ unassigned_count|pluralize }}
   </a>
 </p>
+{% include "onboarding/_overview_panels.html" %}
 {% for section in sections %}
 <section class="mb-6" aria-labelledby="sec-{{ section.key }}">
   <h2 id="sec-{{ section.key }}" class="mb-2 flex items-center gap-2 text-base">{{ section.label }} <span class="badge {% if section.key == 'overdue' and section.tasks %}badge-red{% else %}badge-neutral{% endif %}">{{ section.tasks|length }}</span></h2>

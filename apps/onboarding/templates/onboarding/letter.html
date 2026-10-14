@@ -1,0 +1,42 @@
+{% extends "layouts/app.html" %}
+{% block title %}Engagement letter{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Engagement letter" subtitle=client.name %}
+  <a href="{% url 'onboarding:engagement' client.pk %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Engagement</a>
+</div>
+{% if starter_wording %}
+<div class="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">Starter text. Replace with the practice's own wording before use. <a href="{% url 'onboarding:letter_parts' %}">Letter wording in Settings</a>.</div>
+{% endif %}
+<p class="mb-3">Version {{ letter.version }} {% include "components/_badge.html" with text=letter.get_state_display tone=letter.tone %}</p>
+{% if letter.is_editable %}
+<form method="post" class="card card-body space-y-4" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-errors" role="alert">{% for e in form.non_field_errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+  {% if problems %}<div class="form-errors" role="alert">{% for p in problems %}<p>{{ p }}</p>{% endfor %}</div>{% endif %}
+  {% include "components/_field.html" with field=form.signer %}
+  <div>
+    <label class="label" for="letter_editor">The letter</label>
+    {{ form.body_html }}
+    <trix-editor input="{{ form.body_html.id_for_label }}" id="letter_editor" class="textarea min-h-96 rich-text" aria-label="The letter"></trix-editor>
+    <p class="help">Fees and services were taken from the client when this version was prepared. Edit the wording here. Sending locks it and makes the PDF.</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <button type="submit" class="btn btn-secondary">Save</button>
+    <button type="submit" name="send" value="1" class="btn btn-primary">{% icon "envelope" "size-4" %} Save and queue for approval</button>
+  </div>
+</form>
+{% else %}
+<article class="card card-body prose-letter">{{ letter.body_html|safe }}</article>
+<div class="card card-body mt-4 text-sm space-y-1">
+  <p><strong>Signer:</strong> {{ letter.signer.full_name }} ({{ letter.signer.email }})</p>
+  {% if letter.sent_at %}<p><strong>Sent:</strong> {{ letter.sent_at|date:"d/m/Y H:i" }}</p>{% endif %}
+  {% if letter.viewed_at %}<p><strong>First opened:</strong> {{ letter.viewed_at|date:"d/m/Y H:i" }}</p>{% endif %}
+  {% if letter.signed_at %}<p><strong>Signed:</strong> {{ letter.typed_name }}, {{ letter.signed_at|date:"d/m/Y H:i" }}, IP {{ letter.ip_address }}</p>{% endif %}
+  {% if letter.fingerprint %}<p class="break-all"><strong>Fingerprint (SHA-256 of the unsigned PDF):</strong> {{ letter.fingerprint }}</p>{% endif %}
+  {% if letter.state == "sent" or letter.state == "viewed" %}
+  <form method="post" action="{% url 'onboarding:letter_cancel_link' client.pk letter.pk %}" data-confirm="Cancel the signing link? The signer will not be able to sign.">{% csrf_token %}<button type="submit" class="btn btn-secondary btn-sm">Cancel the signing link</button></form>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}
