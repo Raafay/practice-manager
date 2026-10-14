@@ -147,3 +147,40 @@ class StoredBankHolidays(TimeStampedModel):
     def save(self, *args, **kwargs):
         self.pk = 1
         super().save(*args, **kwargs)
+
+
+class ActionLink(TimeStampedModel):
+    """A link that lets one person do one thing without signing in (spec 01 section 5).
+
+    The token is 32 random bytes and only its hash is stored. It is tied to one
+    contact, one purpose and one object. The page can be opened many times; the
+    action can be done once.
+    """
+
+    class Purpose(models.TextChoices):
+        SIGN_LETTER = "sign_letter", "Sign an engagement letter"
+        PROPOSAL = "proposal", "Read and accept a proposal"
+        FORM = "form", "Fill in a form"
+
+    token_hash = models.CharField(max_length=64, unique=True)
+    purpose = models.CharField(max_length=20, choices=Purpose.choices)
+    contact = models.ForeignKey(
+        "clients.Contact", on_delete=models.CASCADE, related_name="action_links"
+    )
+    client = models.ForeignKey(
+        "clients.Client", on_delete=models.CASCADE, related_name="action_links"
+    )
+    object_id = models.PositiveBigIntegerField()
+    expires_at = models.DateTimeField()
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    first_opened_at = models.DateTimeField(null=True, blank=True)
+    used_at = models.DateTimeField(null=True, blank=True)
+    created_by = models.ForeignKey(
+        "accounts.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+
+    class Meta:
+        indexes = [models.Index(fields=["purpose", "object_id"])]
+
+    def __str__(self) -> str:
+        return f"{self.get_purpose_display()} link for {self.contact}"

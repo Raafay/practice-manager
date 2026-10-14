@@ -1,0 +1,24 @@
+{% extends "layouts/app.html" %}
+{% block title %}Onboarding checklist{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Onboarding checklist" subtitle="The lines every new client works through. Changes apply to checklists created from now on." %}
+  <div class="flex gap-2">
+    <a href="{% url 'core:settings' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Settings</a>
+    <button type="button" class="btn btn-primary" hx-get="{% url 'onboarding:checklist_add' %}" hx-target="#drawer-body">{% icon "plus" "size-4" %} New item</button>
+  </div>
+</div>
+<div class="table-wrap"><table class="table">
+  <thead><tr><th scope="col">Item</th><th scope="col">Needed before go-live</th><th scope="col">Ticked by</th><th scope="col">On</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+  <tbody>{% for item in items %}
+    <tr>
+      <td class="font-medium text-slate-900">{{ item.name }}</td>
+      <td>{% if item.needed_before_golive %}Yes{% else %}No{% endif %}</td>
+      <td>{% if item.system_ticked %}The system{% else %}Staff{% endif %}</td>
+      <td>{% if item.active %}Yes{% else %}No{% endif %}</td>
+      <td class="whitespace-nowrap text-right">
+        <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'onboarding:checklist_edit' item.pk %}" hx-target="#drawer-body">Edit</button>
+        {% if not item.system_ticked %}<form method="post" action="{% url 'onboarding:checklist_delete' item.pk %}" data-confirm="Delete {{ item.name }} from the template? Existing checklists keep it." class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Delete</button></form>{% endif %}
+      </td>
+    </tr>{% endfor %}</tbody></table></div>
+{% endblock %}

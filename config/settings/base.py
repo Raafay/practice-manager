@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     "apps.services",
     "apps.tasks",
     "apps.comms",
+    "apps.onboarding",
+    "apps.aml",
 ]
 
 MIDDLEWARE = [

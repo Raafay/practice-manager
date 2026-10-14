@@ -252,7 +252,9 @@ def test_a_client_made_live_gets_its_tasks():
     assert not client.tasks.exists()
     from apps.clients import services as client_services
 
-    client_services.change_status(owner(), client, "active")
+    from apps.onboarding import services as onboarding
+
+    onboarding.make_live(owner(), client, override_reason="Test: skip the checklist.")
     assert client.tasks.count() == 2
 
 

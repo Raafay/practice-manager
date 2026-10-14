@@ -1,0 +1,43 @@
+{% if items %}
+<section class="card card-body mb-4" aria-labelledby="onb-progress">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h2 id="onb-progress" class="text-base font-semibold">Onboarding checklist</h2>
+      <p class="muted">{{ progress.done }} of {{ progress.total }} done · {{ progress.needed_done }} of {{ progress.needed }} needed before go-live.</p>
+    </div>
+    {% if can_make_live %}
+    <button type="button" class="btn btn-primary" hx-get="{% url 'onboarding:make_live' client.pk %}" hx-target="#modal-body">{% icon "check-circle" "size-4" %} Make live</button>
+    {% elif client.status == "active" %}
+    {% include "components/_badge.html" with text="Live" tone="green" %}
+    {% endif %}
+  </div>
+  <div class="mt-3 h-2 rounded-full bg-slate-200" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ progress.percent }}" aria-label="Checklist progress">
+    <div class="h-2 rounded-full bg-accent" style="width: {{ progress.percent }}%"></div>
+  </div>
+  {% if problems and client.status == "onboarding" %}
+  <p class="mt-3 text-sm text-amber-900">Still needed before go-live: {{ problems|join:"; " }}.{% if can_make_live and can_override %} You can make the client live early with a written reason.{% endif %}</p>
+  {% endif %}
+</section>
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th scope="col">Item</th><th scope="col">State</th><th scope="col">Done</th><th scope="col">Note</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>
+          <span class="font-medium text-slate-900">{{ item.name }}</span>
+          {% if item.needed_before_golive %}<span class="muted block">Needed before go-live</span>{% endif %}
+          {% if item.set_by_system %}<span class="muted block">Ticked by the system</span>{% endif %}
+        </td>
+        <td>{% include "components/_badge.html" with text=item.get_state_display tone=item.tone %}</td>
+        <td class="whitespace-nowrap">{% if item.done_on %}{{ item.done_on|date:"d/m/Y" }}{% if item.done_by %}<span class="muted block">{{ item.done_by.name }}</span>{% endif %}{% endif %}</td>
+        <td>{{ item.note }}</td>
+        <td class="text-right"><button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'onboarding:item' client.pk item.pk %}" hx-target="#modal-body">Update</button></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  {% include "components/_empty.html" with title="No onboarding checklist" message="The checklist is created when a client's status becomes Onboarding, for example when a proposal is accepted." icon_name="clipboard-document-list" %}
+{% endif %}

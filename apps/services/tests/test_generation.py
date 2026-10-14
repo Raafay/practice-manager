@@ -340,7 +340,10 @@ def test_proposed_services_become_active_when_the_client_is_made_live():
     assert cs.state == ClientService.State.PROPOSED
     assert cs.starts_on is None
     assert client.deadlines.count() == 0
-    client_services.change_status(boss, client, "active")
+    # Stage 7: an onboarding client goes live through the gate; the owner overrides it here.
+    from apps.onboarding import services as onboarding
+
+    onboarding.make_live(boss, client, override_reason="Test: skip the checklist.")
     cs.refresh_from_db()
     assert cs.state == ClientService.State.ACTIVE
     assert cs.starts_on is not None
