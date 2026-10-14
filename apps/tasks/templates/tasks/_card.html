@@ -1,0 +1,14 @@
+{# One board card. Needs: task (with step_total, step_done, tone). #}
+<article id="card-{{ task.pk }}" class="group relative rounded-md border border-slate-200 bg-white p-2.5 shadow-sm {% if task.is_done %}opacity-75{% endif %}" data-card data-task-id="{{ task.pk }}">
+  <span class="absolute inset-y-0 left-0 w-1 rounded-l-md" style="background-color: {{ task.category.colour|default:'#cbd5e1' }}" aria-hidden="true"></span>
+  <div class="pl-1.5">
+    <a href="{% url 'tasks:detail' task.pk %}" hx-get="{% url 'tasks:detail' task.pk %}" hx-target="#drawer-body" class="block text-sm font-medium text-slate-900 no-underline hover:underline {% if task.is_done %}line-through{% endif %}">{{ task.title }}</a>
+    <p class="mt-0.5 truncate text-xs text-slate-600">{% if task.client %}{{ task.client.name }}{% else %}Internal{% endif %}{% if task.category %} · {{ task.category.name }}{% endif %}</p>
+    <div class="mt-2 flex flex-wrap items-center gap-1.5">
+      {% if task.owner %}{% include "components/_avatar.html" with person=task.owner %}{% else %}<span class="avatar bg-slate-200 text-slate-600" title="Unassigned" role="img" aria-label="Unassigned">?</span>{% endif %}
+      {% if task.due_date %}{% include "components/_badge.html" with text=task.due_date|date:"d/m/Y" tone=task.tone icon_name=task.tone_icon %}{% endif %}
+      {% if task.step_total %}<span class="badge badge-neutral" title="Steps ticked">{{ task.step_done }}/{{ task.step_total }}</span>{% endif %}
+      {% if task.priority == "urgent" or task.priority == "high" %}{% include "components/_badge.html" with text=task.get_priority_display tone="red" %}{% endif %}
+    </div>
+  </div>
+</article>

@@ -13,9 +13,23 @@ pytestmark = pytest.mark.django_db
 def world():
     client_row = accounts_client()
     task = make_task(owner(), title="Sample", client=client_row)
-    from apps.tasks.models import TaskCategory, TaskStatus, TaskTemplate
+    from apps.tasks.models import (
+        Project,
+        ProjectSection,
+        RepeatingTask,
+        TaskCategory,
+        TaskStatus,
+        TaskTemplate,
+    )
 
+    project = Project.objects.create(name="Access project")
+    repeating_rule = RepeatingTask.objects.create(
+        title="Access rule", frequency="weekly", first_date=task.created_at.date()
+    )
     return {
+        "project": project,
+        "section": ProjectSection.objects.create(project=project, name="One"),
+        "rule": repeating_rule,
         "task": task,
         "client": client_row,
         "step": client_row.tasks.first().steps.first(),
@@ -51,6 +65,21 @@ def staff_addresses(w):
         ("tasks:description", [t], "post"),
         ("tasks:attach", [t], "post"),
         ("tasks:client_tasks", [c], "get"),
+        ("tasks:board_move", [], "post"),
+        ("tasks:calendar_move", [], "post"),
+        ("tasks:projects", [], "get"),
+        ("tasks:project_new", [], "get"),
+        ("tasks:project_new", [], "post"),
+        ("tasks:project", [w["project"].pk], "get"),
+        ("tasks:project_edit", [w["project"].pk], "get"),
+        ("tasks:project_edit", [w["project"].pk], "post"),
+        ("tasks:project_section_add", [w["project"].pk], "post"),
+        ("tasks:repeating", [], "get"),
+        ("tasks:repeating_new", [], "get"),
+        ("tasks:repeating_new", [], "post"),
+        ("tasks:repeating_edit", [w["rule"].pk], "get"),
+        ("tasks:repeating_toggle", [w["rule"].pk], "post"),
+        ("tasks:workload", [], "get"),
     ]
 
 
@@ -130,4 +159,34 @@ def test_the_tasks_tab_is_on_the_client_page(client, world):
 def test_tasks_are_in_the_navigation(client):
     sign_in(client, staff())
     html = client.get(reverse("overview")).content.decode()
-    assert reverse("tasks:list") in html and "My work" in html
+    assert reverse("tasks:list") in html and "Overview" in html
+
+
+def test_the_board_and_calendar_pages_need_a_staff_sign_in(client, world):
+    for layout in ("board", "calendar"):
+        response = client.get(reverse("tasks:list") + f"?layout={layout}")
+        assert response.status_code == 302 and "/login/" in response["Location"]
+    sign_in(client, portal_user())
+    for layout in ("board", "calendar"):
+        assert client.get(reverse("tasks:list") + f"?layout={layout}").status_code == 403
+
+
+def test_every_staff_member_can_use_the_new_pages(client, world):
+    sign_in(client, staff())
+    for name, args in (
+        ("tasks:projects", []),
+        ("tasks:project", [world["project"].pk]),
+        ("tasks:repeating", []),
+        ("tasks:workload", []),
+        ("overview", []),
+    ):
+        assert client.get(reverse(name, args=args)).status_code == 200, name
+    assert client.get(reverse("tasks:project", args=[999999])).status_code == 404
+    assert client.get(reverse("tasks:list") + "?layout=board").status_code == 200
+    assert client.get(reverse("tasks:list") + "?layout=calendar&date=nonsense").status_code == 200
+
+
+def test_moves_refuse_get_requests(client, world):
+    sign_in(client, staff())
+    assert client.get(reverse("tasks:board_move")).status_code == 405
+    assert client.get(reverse("tasks:calendar_move")).status_code == 405

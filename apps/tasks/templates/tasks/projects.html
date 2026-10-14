@@ -1,0 +1,48 @@
+{% extends "layouts/app.html" %}
+{% block title %}Projects{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Projects" subtitle="Advisory work with several steps." %}
+  <button type="button" class="btn btn-primary" hx-get="{% url 'tasks:project_new' %}" hx-target="#drawer-body">{% icon "plus" "size-4" %} New project</button>
+</div>
+{% url 'tasks:project_new' as project_new_url %}
+{% include "tasks/_subnav.html" with section="projects" %}
+<div class="mb-3 flex flex-wrap gap-1.5" role="group" aria-label="Show projects">
+  {% for key, label in states %}<a href="{% url 'tasks:projects' %}?state={{ key }}" class="chip" {% if key == state %}aria-current="true"{% endif %}>{% if key == state %}{% icon "check" "size-3" "mini" %}{% endif %}{{ label }}</a>{% endfor %}
+</div>
+{% if projects %}
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th scope="col">Project</th><th scope="col">Client</th><th scope="col">Owner</th><th scope="col">State</th><th scope="col">Progress</th><th scope="col">Dates</th></tr></thead>
+    <tbody>
+      {% for project in projects %}
+      <tr>
+        <td><a class="font-medium" href="{% url 'tasks:project' project.pk %}">{{ project.name }}</a></td>
+        <td>{% if project.client %}<a href="{% url 'clients:detail' project.client_id %}">{{ project.client.name }}</a>{% else %}<span class="muted">Internal</span>{% endif %}</td>
+        <td>{% if project.owner %}{% include "components/_avatar.html" with person=project.owner %}{% else %}<span class="muted">Unassigned</span>{% endif %}</td>
+        <td>{% include "components/_badge.html" with text=project.get_state_display tone=project.state_tone %}</td>
+        <td class="w-48">{% include "tasks/_progress.html" with percent=project.percent done=project.n_done total=project.n_total %}</td>
+        <td class="whitespace-nowrap">{% if project.start_date %}{{ project.start_date|date:"d/m/Y" }}{% else %}…{% endif %} to {% if project.end_date %}{{ project.end_date|date:"d/m/Y" }}{% else %}…{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  {% include "components/_empty.html" with title="No projects here" message="Start one from a template, such as a finance function health check, or from scratch." icon_name="rectangle-stack" action_url=project_new_url action_label="New project" %}
+{% endif %}
+{% if templates %}
+<section class="mt-6" aria-labelledby="h-tpl">
+  <h2 id="h-tpl" class="mb-2 text-base">Start from a template</h2>
+  <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    {% for template in templates %}
+    <li class="card card-body">
+      <h3 class="text-sm font-semibold">{{ template.name }}</h3>
+      <p class="muted text-xs">{{ template.description }}</p>
+      <button type="button" class="btn btn-secondary btn-sm mt-2" hx-get="{% url 'tasks:project_new' %}?template={{ template.pk }}" hx-target="#drawer-body">Use this template</button>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

@@ -45,6 +45,15 @@ def _record(actor, verb, summary, task, **data):
     return events.record(actor, verb, summary, client=task.client, target=task, **data)
 
 
+def tell(user, actor, message: str, task: Task, kind: str):
+    """A bell notice for `user` about `task`. Nobody is told about their own action."""
+    if user is None or actor is None or user.pk == actor.pk:
+        return None
+    if not (user.is_active and user.is_staff_kind):
+        return None
+    return events.notify(user, message, task_url(task), kind=kind)
+
+
 # ------------------------------------------------------------------ create
 
 
@@ -64,6 +73,13 @@ def create_task(
     priority: str = Task.Priority.NORMAL,
     source: str = Task.Source.MANUAL,
     contact=None,
+    project=None,
+    section=None,
+    repeating_task=None,
+    start_date: date | None = None,
+    estimate_minutes: int | None = None,
+    period_label: str = "",
+    notify: bool = True,
 ) -> Task:
     title = title.strip()
     if not title:
@@ -85,9 +101,17 @@ def create_task(
         priority=priority,
         source=source,
         created_by=actor,
+        project=project,
+        section=section,
+        repeating_task=repeating_task,
+        start_date=start_date,
+        estimate_minutes=estimate_minutes,
+        period_label=period_label,
     )
     if owner is not None:
         task.followers.add(owner)
+        if notify:
+            tell(owner, actor, f"{who(actor)} assigned you {task.title}.", task, "assigned")
     _record(
         actor,
         "task.created",
@@ -159,6 +183,7 @@ def set_field(actor, task: Task, field: str, value) -> Task:
     task.save()
     if field == "owner" and value is not None:
         task.followers.add(value)
+        tell(value, actor, f"{who(actor)} assigned you {task.title}.", task, "assigned")
     _record(
         actor,
         f"task.{field}_changed",
@@ -231,6 +256,118 @@ def set_description(actor, task: Task, html: str) -> Task:
     return task
 
 
+# ------------------------------------------------------------------ board and calendar moves
+
+POSITION_GAP = 1024.0
+BOARD_FIELDS = ("status", "owner", "category", "client", "section")
+
+
+def _renumber(tasks) -> None:
+    """Give a column's cards evenly spaced positions, in the order they show."""
+    for index, task in enumerate(tasks, 1):
+        value = index * POSITION_GAP
+        if task.position != value:
+            Task.objects.filter(pk=task.pk).update(position=value)
+            task.position = value
+
+
+def place(task: Task, column, before: Task | None, after: Task | None) -> None:
+    """Put a card between two neighbours by changing only its own position.
+
+    `before` is the card above it and `after` the card below, in the column as shown.
+    When the neighbours have no room between them (all new cards share position 0), the
+    column is renumbered once and the move is retried.
+    """
+    for attempt in (1, 2):
+        low = before.position if before else None
+        high = after.position if after else None
+        if low is not None and high is not None:
+            if high - low > 1e-6:
+                value = (low + high) / 2
+            elif attempt == 1:
+                _renumber(list(column))
+                before = next((t for t in column if t.pk == before.pk), before)
+                after = next((t for t in column if t.pk == after.pk), after)
+                continue
+            else:
+                value = high
+        elif low is not None:
+            value = low + POSITION_GAP
+        elif high is not None:
+            value = high - POSITION_GAP
+        else:
+            value = POSITION_GAP
+        break
+    Task.objects.filter(pk=task.pk).update(position=value, updated_at=timezone.now())
+    task.position = value
+
+
+def move_task(
+    actor,
+    task: Task,
+    field: str,
+    value,
+    *,
+    column=None,
+    before: Task | None = None,
+    after: Task | None = None,
+) -> Task:
+    """A drag on the board: change the column's field, then place the card.
+
+    `value` is the new status, owner, category, client or section (None for the
+    "none" column). One activity event is written, and none for a plain reorder.
+    """
+    if field not in BOARD_FIELDS:
+        raise ValidationError("That column cannot be changed by dragging.")
+    if task.is_cancelled:
+        raise ValidationError("A cancelled task cannot be changed.")
+    if field in ("status", "owner", "category"):
+        if field == "status" and value is None:
+            raise ValidationError("Choose a status.")
+        set_field(actor, task, field, value)
+    elif field == "client":
+        if getattr(task, "client_id", None) != (value.pk if value else None):
+            if task.deadline_id:
+                raise ValidationError(
+                    "This task comes from a deadline, so it stays with its client."
+                )
+            old = task.client
+            task.client = value
+            task.save(update_fields=["client", "updated_at"])
+            events.record(
+                actor,
+                "task.client_changed",
+                f"{who(actor)} moved {task.title} from {old.name if old else 'no client'} "
+                f"to {value.name if value else 'no client'}.",
+                client=value or old,
+                target=task,
+                old=old.name if old else "",
+                new=value.name if value else "",
+            )
+    elif field == "section":
+        if value is not None and value.project_id != task.project_id:
+            raise ValidationError("That section belongs to a different project.")
+        if task.section_id != (value.pk if value else None):
+            old = task.section
+            task.section = value
+            task.save(update_fields=["section", "updated_at"])
+            _record(
+                actor,
+                "task.section_changed",
+                f"{who(actor)} moved {task.title} from {old or 'no section'} "
+                f"to {value or 'no section'}.",
+                task,
+            )
+    if column is not None:
+        place(task, column, before, after)
+    return task
+
+
+def move_to_date(actor, task: Task, day: date | None) -> Task:
+    """A drag on the calendar. Only the target date changes, never the due date."""
+    return set_field(actor, task, "target_date", day)
+
+
 # ------------------------------------------------------------------ steps
 
 
@@ -257,6 +394,14 @@ def toggle_step(actor, step: TaskStep, done: bool | None = None) -> TaskStep:
             deadline = task.deadline
             if deadline.is_open:
                 deadlines.mark_done(actor, deadline, evidence=f"Marked filed by {who(actor)}")
+    if ticking:
+        tell(
+            task.owner,
+            actor,
+            f"{who(actor)} ticked “{step.name}” on {task.title}.",
+            task,
+            "step",
+        )
     return step
 
 
@@ -297,9 +442,16 @@ def add_comment(actor, task: Task, body: str) -> TaskComment:
         raise ValidationError("Write a comment first.")
     comment = TaskComment.objects.create(task=task, author=actor, body=body[:5000])
     task.followers.add(actor)
-    for user in mentioned_users(body, exclude=actor):
+    mentioned = mentioned_users(body, exclude=actor)
+    already = {u.pk for u in mentioned}
+    for user in mentioned:
         task.followers.add(user)
-        events.notify(user, f"{who(actor)} mentioned you on {task.title}.", task_url(task))
+        events.notify(
+            user, f"{who(actor)} mentioned you on {task.title}.", task_url(task), kind="mention"
+        )
+    for user in task.followers.filter(is_active=True).exclude(pk=actor.pk):
+        if user.pk not in already:
+            tell(user, actor, f"{who(actor)} commented on {task.title}.", task, "comment")
     _record(actor, "task.commented", f"{who(actor)} commented on {task.title}.", task)
     return comment
 

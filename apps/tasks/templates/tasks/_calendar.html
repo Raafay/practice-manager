@@ -1,0 +1,57 @@
+{# Month and week grids. Tasks sit on their target date (or deadline); deadline markers are fixed. #}
+<div class="mb-3 flex flex-wrap items-center gap-2">
+  <div class="inline-flex items-center gap-1">
+    <a href="{{ base_url }}?{{ cal_links.prev }}" class="btn btn-secondary btn-sm" hx-get="{{ base_url }}?{{ cal_links.prev }}" hx-target="#task-page" hx-push-url="true" aria-label="Previous {{ cal_layout }}">{% icon "chevron-left" "size-4" %}</a>
+    <a href="{{ base_url }}?{{ cal_links.today }}" class="btn btn-secondary btn-sm" hx-get="{{ base_url }}?{{ cal_links.today }}" hx-target="#task-page" hx-push-url="true">Today</a>
+    <a href="{{ base_url }}?{{ cal_links.next }}" class="btn btn-secondary btn-sm" hx-get="{{ base_url }}?{{ cal_links.next }}" hx-target="#task-page" hx-push-url="true" aria-label="Next {{ cal_layout }}">{% icon "chevron-right" "size-4" %}</a>
+  </div>
+  <h2 class="mr-2 text-base font-semibold" aria-live="polite">{{ cal_title }}</h2>
+  <div class="inline-flex gap-1.5" role="group" aria-label="Month or week">
+    <a href="{{ base_url }}?{{ cal_links.month }}" class="chip" {% if cal_layout == "month" %}aria-current="true"{% endif %} hx-get="{{ base_url }}?{{ cal_links.month }}" hx-target="#task-page" hx-push-url="true">Month</a>
+    <a href="{{ base_url }}?{{ cal_links.week }}" class="chip" {% if cal_layout == "week" %}aria-current="true"{% endif %} hx-get="{{ base_url }}?{{ cal_links.week }}" hx-target="#task-page" hx-push-url="true">Week</a>
+  </div>
+  <div class="ml-auto inline-flex items-center gap-1.5" role="group" aria-label="Which date to show tasks on">
+    <span class="text-sm text-slate-600">Show tasks on</span>
+    <a href="{{ base_url }}?{{ cal_links.target }}" class="chip" {% if cal_on == "target" %}aria-current="true"{% endif %} hx-get="{{ base_url }}?{{ cal_links.target }}" hx-target="#task-page" hx-push-url="true">Target date</a>
+    <a href="{{ base_url }}?{{ cal_links.due }}" class="chip" {% if cal_on == "due" %}aria-current="true"{% endif %} hx-get="{{ base_url }}?{{ cal_links.due }}" hx-target="#task-page" hx-push-url="true">Deadline</a>
+  </div>
+</div>
+<p id="board-message" class="mb-2 hidden rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800" role="alert"></p>
+{% if cal_locked %}<p class="muted mb-2">Tasks are shown on their deadline date. Switch to target date to drag them.</p>{% else %}<p class="muted mb-2">Drag a task to another day to change its target date. Deadline markers (with a bookmark) are fixed.</p>{% endif %}
+<div class="grid gap-3 lg:grid-cols-[1fr_16rem]" data-calendar data-move-url="{% url 'tasks:calendar_move' %}" data-csrf="{{ csrf_for_js }}">
+  <div class="table-wrap">
+    <div class="grid min-w-[44rem] grid-cols-7 border-b border-slate-200 bg-slate-50 text-xs font-medium text-slate-600">
+      {% for name in weekday_names %}<div class="px-2 py-1.5">{{ name }}</div>{% endfor %}
+    </div>
+    {% for week in weeks %}
+    <div class="grid min-w-[44rem] grid-cols-7">
+      {% for day in week %}
+      <div class="{% if cal_layout == 'week' %}min-h-64{% else %}min-h-28{% endif %} border-b border-r border-slate-200 p-1 {% if not day.in_range %}bg-slate-50 text-slate-400{% elif day.weekend %}bg-slate-50/60{% endif %}" data-day="{{ day.date|date:'Y-m-d' }}">
+        <div class="flex items-center justify-between">
+          <span class="px-1 text-xs {% if day.today %}rounded-full bg-slate-900 font-semibold text-white{% endif %}">{{ day.date|date:"j" }}{% if day.date.day == 1 or cal_layout == "week" %} {{ day.date|date:"M" }}{% endif %}</span>
+          <a href="{% url 'tasks:new' %}?target_date={{ day.date|date:'Y-m-d' }}" hx-get="{% url 'tasks:new' %}?target_date={{ day.date|date:'Y-m-d' }}" hx-target="#drawer-body" class="btn-icon p-0.5" aria-label="New task on {{ day.date|date:'d/m/Y' }}" title="New task on this day">{% icon "plus" "size-3.5" %}</a>
+        </div>
+        {% if day.markers %}
+        <ul class="mt-0.5 space-y-0.5" aria-label="Deadlines on {{ day.date|date:'d/m/Y' }}">
+          {% for marker in day.markers %}
+          <li class="flex items-center gap-1 truncate rounded bg-amber-50 px-1 py-0.5 text-xs text-amber-900" title="{{ marker.client.name }}: {{ marker.label }} (deadline)">{% icon "bookmark" "size-3 shrink-0" %}<span class="truncate">{{ marker.client.name }}: {{ marker.label }}</span></li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        <ul class="mt-0.5 min-h-6 space-y-0.5" data-day-tasks data-date="{{ day.date|date:'Y-m-d' }}" {% if cal_locked %}data-locked{% endif %}>
+          {% for task in day.tasks %}{% include "tasks/_cal_chip.html" %}{% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+  <aside class="card card-body self-start" aria-labelledby="side-title">
+    <h2 id="side-title" class="mb-1 text-sm">No {% if cal_on == "due" %}deadline{% else %}target date{% endif %}</h2>
+    <p class="muted mb-2 text-xs">{% if cal_locked %}Open tasks with no deadline date.{% else %}Drag a task onto a day to give it a target date.{% endif %}</p>
+    <ul class="min-h-10 space-y-1" data-day-tasks data-date="" {% if cal_locked %}data-locked{% endif %}>
+      {% for task in side_tasks %}{% include "tasks/_cal_chip.html" %}{% endfor %}
+    </ul>
+    {% if not side_tasks %}<p class="muted text-xs" data-side-empty>Nothing waiting for a date.</p>{% endif %}
+  </aside>
+</div>

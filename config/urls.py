@@ -3,10 +3,10 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import RedirectView
 
-from apps.tasks.views import MyWorkView
+from apps.tasks.views import OverviewView
 
 urlpatterns = [
-    path("", MyWorkView.as_view(), name="overview"),
+    path("", OverviewView.as_view(), name="overview"),
     path("control/", admin.site.urls),
     # Email addresses are managed by the owner, not through allauth's own page.
     path("email/", RedirectView.as_view(pattern_name="accounts:profile"), name="account_email"),

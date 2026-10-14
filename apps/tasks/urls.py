@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views, views_settings
+from . import views, views_projects, views_settings
 
 app_name = "tasks"
 
@@ -9,11 +9,39 @@ urlpatterns = [
     path("tasks/new/", views.TaskCreateView.as_view(), name="new"),
     path("tasks/client-options/", views.ClientOptionsView.as_view(), name="client_options"),
     path("tasks/bulk/", views.BulkView.as_view(), name="bulk"),
+    path("tasks/board/move/", views.BoardMoveView.as_view(), name="board_move"),
+    path("tasks/calendar/move/", views.CalendarMoveView.as_view(), name="calendar_move"),
     path("tasks/views/save/", views.SavedViewCreateView.as_view(), name="view_save"),
     path(
         "tasks/views/<int:pk>/default/", views.SavedViewDefaultView.as_view(), name="view_default"
     ),
     path("tasks/views/<int:pk>/delete/", views.SavedViewDeleteView.as_view(), name="view_delete"),
+    path("tasks/projects/", views_projects.ProjectListView.as_view(), name="projects"),
+    path("tasks/projects/new/", views_projects.ProjectCreateView.as_view(), name="project_new"),
+    path("tasks/projects/<int:pk>/", views_projects.ProjectView.as_view(), name="project"),
+    path(
+        "tasks/projects/<int:pk>/edit/",
+        views_projects.ProjectEditView.as_view(),
+        name="project_edit",
+    ),
+    path(
+        "tasks/projects/<int:pk>/sections/add/",
+        views_projects.ProjectSectionView.as_view(),
+        name="project_section_add",
+    ),
+    path("tasks/repeating/", views_projects.RepeatingListView.as_view(), name="repeating"),
+    path("tasks/repeating/new/", views_projects.RepeatingEditView.as_view(), name="repeating_new"),
+    path(
+        "tasks/repeating/<int:pk>/edit/",
+        views_projects.RepeatingEditView.as_view(),
+        name="repeating_edit",
+    ),
+    path(
+        "tasks/repeating/<int:pk>/toggle/",
+        views_projects.RepeatingToggleView.as_view(),
+        name="repeating_toggle",
+    ),
+    path("tasks/workload/", views_projects.WorkloadView.as_view(), name="workload"),
     path("tasks/<int:pk>/", views.TaskDetailView.as_view(), name="detail"),
     path("tasks/<int:pk>/field/<str:field>/", views.TaskFieldView.as_view(), name="field"),
     path(

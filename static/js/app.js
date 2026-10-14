@@ -226,3 +226,135 @@ document.addEventListener("click", (event) => {
     if (plain) plain.value += text;
   }
 });
+
+// ---- Board and calendar: drag with SortableJS, save with fetch, put the card back on failure.
+
+function showBoardMessage(text) {
+  const box = document.getElementById("board-message");
+  if (!box) return;
+  box.textContent = text;
+  box.classList.toggle("hidden", !text);
+}
+
+function putBack(item, from, index) {
+  item.remove();
+  from.insertBefore(item, from.children[index] || null);
+}
+
+async function saveMove(root, url, payload, item, from, oldIndex) {
+  const body = new FormData();
+  Object.entries(payload).forEach(([key, value]) => body.append(key, value));
+  try {
+    const response = await window.fetch(url, {
+      method: "POST",
+      body,
+      headers: { "X-CSRFToken": root.dataset.csrf, "X-Requested-With": "fetch" },
+      credentials: "same-origin",
+    });
+    if (!response.ok) {
+      const text = response.status === 422 ? await response.text() : "";
+      putBack(item, from, oldIndex);
+      showBoardMessage(text || "That change could not be saved. The card was put back.");
+      return false;
+    }
+    const html = await response.text();
+    const holder = document.createElement("template");
+    holder.innerHTML = html.trim();
+    const fresh = holder.content.firstElementChild;
+    if (fresh) {
+      item.replaceWith(fresh);
+      if (window.htmx) window.htmx.process(fresh);
+    }
+    showBoardMessage("");
+    return true;
+  } catch (error) {
+    putBack(item, from, oldIndex);
+    showBoardMessage("That change could not be saved. The card was put back.");
+    return false;
+  }
+}
+
+function recount(root) {
+  root.querySelectorAll("[data-column-box]").forEach((box) => {
+    const count = box.querySelector("[data-column-count]");
+    const cards = box.querySelectorAll("[data-card]").length;
+    if (count) count.textContent = String(cards);
+  });
+}
+
+function initBoard(root) {
+  if (!window.Sortable) return;
+  root.querySelectorAll("[data-board]").forEach((board) => {
+    if (board.dataset.sortableReady) return;
+    board.dataset.sortableReady = "true";
+    board.querySelectorAll("[data-column-cards]").forEach((list) => {
+      window.Sortable.create(list, {
+        group: "board",
+        animation: 150,
+        draggable: "[data-card]",
+        ghostClass: "opacity-50",
+        onEnd: async (event) => {
+          if (event.from === event.to && event.oldIndex === event.newIndex) return;
+          const item = event.item;
+          const before = item.previousElementSibling;
+          const after = item.nextElementSibling;
+          const ok = await saveMove(
+            board,
+            board.dataset.moveUrl,
+            {
+              task: item.dataset.taskId,
+              by: board.dataset.board,
+              to: event.to.dataset.columnKey,
+              before: before && before.dataset.taskId ? before.dataset.taskId : "",
+              after: after && after.dataset.taskId ? after.dataset.taskId : "",
+            },
+            item,
+            event.from,
+            event.oldIndex,
+          );
+          if (ok !== undefined) recount(board);
+        },
+      });
+    });
+  });
+}
+
+function initCalendar(root) {
+  if (!window.Sortable) return;
+  root.querySelectorAll("[data-calendar]").forEach((calendar) => {
+    if (calendar.dataset.sortableReady) return;
+    calendar.dataset.sortableReady = "true";
+    calendar.querySelectorAll("[data-day-tasks]").forEach((list) => {
+      window.Sortable.create(list, {
+        group: "calendar",
+        animation: 150,
+        draggable: "[data-calendar-task]",
+        sort: false,
+        disabled: list.hasAttribute("data-locked"),
+        ghostClass: "opacity-50",
+        onEnd: async (event) => {
+          if (event.from === event.to) return;
+          await saveMove(
+            calendar,
+            calendar.dataset.moveUrl,
+            { task: event.item.dataset.taskId, date: event.to.dataset.date },
+            event.item,
+            event.from,
+            event.oldIndex,
+          );
+          const empty = calendar.querySelector("[data-side-empty]");
+          if (empty) empty.hidden = calendar.querySelector("aside [data-calendar-task]") !== null;
+        },
+      });
+    });
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  initBoard(document);
+  initCalendar(document);
+});
+document.addEventListener("htmx:load", (event) => {
+  initBoard(event.detail.elt);
+  initCalendar(event.detail.elt);
+});

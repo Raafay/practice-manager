@@ -1,0 +1,7 @@
+{# A progress bar with the words beside it. Needs: percent, done, total. #}
+<div class="flex items-center gap-2">
+  <div class="h-2 w-full overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100" aria-label="Tasks done">
+    <div class="h-full rounded-full bg-green-600" style="width: {{ percent }}%"></div>
+  </div>
+  <span class="whitespace-nowrap text-xs text-slate-600">{{ done }} of {{ total }}</span>
+</div>

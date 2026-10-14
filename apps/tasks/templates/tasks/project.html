@@ -1,0 +1,28 @@
+{% extends "layouts/app.html" %}
+{% block title %}{{ project.name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <p class="text-sm"><a href="{% url 'tasks:projects' %}">Projects</a></p>
+    <h1>{{ project.name }} {% include "components/_badge.html" with text=project.get_state_display tone=project.state_tone %}</h1>
+    <p class="muted">{% if project.client %}<a href="{% url 'clients:detail' project.client_id %}">{{ project.client.name }}</a>{% else %}Internal project{% endif %}{% if project.owner %} · Owner {{ project.owner.name }}{% endif %}{% if project.start_date %} · {{ project.start_date|date:"d/m/Y" }}{% endif %}{% if project.end_date %} to {{ project.end_date|date:"d/m/Y" }}{% endif %}</p>
+  </div>
+  <div class="flex gap-2">
+    <button type="button" class="btn btn-secondary" hx-get="{% url 'tasks:project_edit' project.pk %}" hx-target="#drawer-body">{% icon "pencil-square" "size-4" %} Edit</button>
+    <button type="button" class="btn btn-primary" hx-get="{% url 'tasks:new' %}?project={{ project.pk }}{% if project.client_id %}&client={{ project.client_id }}{% endif %}" hx-target="#drawer-body">{% icon "plus" "size-4" %} New task</button>
+  </div>
+</div>
+<section class="card card-body mb-4 grid gap-4 sm:grid-cols-3" aria-label="Progress">
+  <div class="sm:col-span-2"><p class="label">Progress</p>{% include "tasks/_progress.html" with percent=progress.percent done=progress.done total=progress.total %}</div>
+  <div><p class="label">Hours planned{% if progress.budget_hours %} against budget{% endif %}</p>
+    <p class="text-sm"><strong>{{ progress.planned_hours|floatformat:1 }}</strong>{% if progress.budget_hours %} of {{ progress.budget_hours }} hours {% if progress.over_budget %}{% include "components/_badge.html" with text="Over budget" tone="red" %}{% endif %}{% else %} hours estimated{% endif %}</p></div>
+  {% if project.description %}<p class="sm:col-span-3 text-sm text-slate-700">{{ project.description }}</p>{% endif %}
+</section>
+<form method="post" action="{% url 'tasks:project_section_add' project.pk %}" class="mb-3 flex flex-wrap items-end gap-2">
+  {% csrf_token %}
+  <div><label class="label" for="section-name">Add a section</label><input id="section-name" name="name" class="input" maxlength="120" required></div>
+  <button type="submit" class="btn btn-secondary">Add section</button>
+</form>
+<div id="task-page">{% include "tasks/_page.html" %}</div>
+{% endblock %}
+{% block drawer_attrs %}{% endblock %}
