@@ -1,3 +1,4 @@
+import re
 from datetime import timedelta
 
 import pytest
@@ -133,7 +134,9 @@ def test_the_client_page_hides_the_fee_without_the_right(client):
     c = prospect("Info Ltd", fee="888")
     sign_in(client, no_fee_staff())
     html = client.get(reverse("clients:detail", args=[c.pk])).content.decode()
-    assert "Sales" in html and "888" not in html
+    assert "Sales" in html
+    # Standalone only: random tokens on the page (CSRF, ids) can contain the digits.
+    assert not re.search(r"(?<![A-Za-z0-9])888(?![0-9A-Za-z])", html)
 
 
 def test_an_empty_board_says_what_to_do(client):

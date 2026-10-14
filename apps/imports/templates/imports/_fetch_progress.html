@@ -1,0 +1,11 @@
+{# Companies House progress for an import run. Polls itself while the fetch is under way. #}
+<div id="fetch-progress" {% if run.fetch_active %}hx-get="{% url 'imports:progress' run.pk %}" hx-trigger="every 3s" hx-swap="outerHTML"{% endif %} aria-live="polite">
+  {% if run.fetch_state == "waiting" %}
+    <p class="text-sm">Waiting for the background worker to start{% if not worker_seen %}. <strong>No worker has checked in yet</strong>: start one with <code>manage.py worker</code>{% endif %}.</p>
+  {% elif run.fetch_state == "running" or run.fetch_state == "done" %}
+    {% with processed=run.fetch_done|add:run.fetch_failed %}
+    <p class="text-sm">{% if run.fetch_state == "done" %}Finished:{% else %}Fetching:{% endif %} {{ processed }} of {{ run.fetch_total }} companies{% if run.fetch_failed %}, {{ run.fetch_failed }} could not be fetched (see each client's Companies House tab){% endif %}.</p>
+    <progress class="mt-2 h-2 w-full" max="{{ run.fetch_total }}" value="{{ processed }}">{{ processed }} of {{ run.fetch_total }}</progress>
+    {% endwith %}
+  {% endif %}
+</div>

@@ -177,6 +177,12 @@
     <article class="card card-body prose-letter max-w-xl"><h2>Standard terms</h2><p>Letter text shown on a page, such as an engagement letter, uses this style.</p><ul><li>A list item</li></ul></article>
   </section>
 
+  <section id="steps" aria-labelledby="h-steps" class="space-y-3">
+    <h2 id="h-steps">Wizard steps</h2>
+    <p class="muted">For a job done in a fixed order, such as an import. Done steps show a tick as well as a colour.</p>
+    {% include "components/_steps.html" with steps=wizard_steps current=2 %}
+  </section>
+
   <section id="icons" aria-labelledby="h-icons" class="space-y-3">
     <h2 id="h-icons">Icons</h2>
     <div class="flex flex-wrap gap-3 text-slate-600">

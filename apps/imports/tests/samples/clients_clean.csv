@@ -1,0 +1,5 @@
+Client Code,Client Name,Client Type,Company Number,Year End,Manager,Email,Telephone,Address Line 1,Town,Postcode,VAT Number,VAT Quarter,UTR,Client Since,Source,Tags,Notes
+X001,Juniper Example Trading Ltd,Limited Company,9999901,31/03,Sam Example,office@juniper.example.com,01632 960001,1 Sample Street,Testville,ZZ1 1ZZ,GB000000001,Mar/Jun/Sep/Dec,1111111111,01/04/2019,Word of mouth,Bookkeeping;Payroll,Moved from the old system.
+X002,Quillon Example Partners LLP,LLP,OC999905,30/06,sam.example@example.com,hello@quillon.example.com,01632 960002,2 Sample Road,Testville,ZZ1 1ZZ,,,,2020-07-15,Website,,
+X003,Rowan Example (Sole Trader),Sole trader,,05/04,Sam Example,rowan@example.com,,3 Sample Lane,Testville,ZZ1 1ZZ,,,2222222222,15/09/2021,,Personal tax,
+X004,Teasel Example Holdings Ltd,Ltd,16999902,31 December,,accounts@teasel.example.com,01632 960004,4 Sample Close,Testville,ZZ1 1ZZ,GB000000004,2,,01/01/2022,Client referral,,

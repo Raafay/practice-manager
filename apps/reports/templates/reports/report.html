@@ -1,0 +1,60 @@
+{% extends "layouts/app.html" %}
+{% load report_tags %}
+{% block title %}{{ report.title }} report{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title=report.title subtitle=report.description %}
+  <div class="flex gap-2">
+    <a href="{% url 'reports:index' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Reports</a>
+    {% if user|can:"data.export" %}<a href="{% url 'reports:'|add:report.key|add:'_export' %}?{{ keep_query }}" class="btn btn-secondary">{% icon "arrow-down-tray" "size-4" %} Export CSV</a>{% endif %}
+  </div>
+</div>
+<form method="get" class="card card-body mb-4 space-y-3" aria-label="Filter the {{ report.title }} report">
+  {% if form.errors %}<div class="form-errors" role="alert"><p>Check the filters: some could not be used.</p></div>{% endif %}
+  <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+    {% for field in form.visible_fields %}{% include "components/_field.html" with field=field %}{% endfor %}
+  </div>
+  <div class="flex gap-2">
+    <button type="submit" class="btn btn-primary">{% icon "funnel" "size-4" %} Apply</button>
+    <a href="{% url 'reports:'|add:report.key %}" class="btn btn-ghost">Clear</a>
+  </div>
+</form>
+
+{% if result.figures %}
+<dl class="mb-4 flex flex-wrap gap-x-8 gap-y-2 text-sm" role="status">
+  {% for label, value in result.figures %}<div><dt class="muted">{{ label }}</dt><dd class="text-lg font-semibold tabular-nums">{{ value|cell }}</dd></div>{% endfor %}
+</dl>
+{% endif %}
+
+{% if result.sections and result.rows %}
+<div class="mb-6 grid gap-4 lg:grid-cols-3">
+  {% for section in result.sections %}
+  <section class="card" aria-label="{{ section.title }}">
+    <h2 class="border-b border-slate-100 px-4 py-2 text-sm font-semibold">{{ section.title }}</h2>
+    {% if section.rows %}
+    <table class="table text-sm">
+      <thead><tr>{% for c in section.columns %}<th scope="col" {% if c.numeric %}class="text-right"{% endif %}>{{ c.label }}</th>{% endfor %}</tr></thead>
+      <tbody>{% for row in section.rows %}<tr>{% for value in row %}<td {% if forloop.counter0 > 0 %}class="text-right tabular-nums"{% endif %}>{{ value|cell }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+    </table>
+    {% else %}<p class="muted px-4 py-2 text-sm">None.</p>{% endif %}
+  </section>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if page.object_list %}
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr>{% for c in result.columns %}<th scope="col" {% if c.numeric %}class="text-right"{% endif %}>{{ c.label }}</th>{% endfor %}</tr></thead>
+    <tbody>
+      {% for row in table %}
+      <tr>{% for value, numeric in row %}<td class="{% if forloop.first %}font-medium{% endif %}{% if numeric %} text-right tabular-nums{% endif %}">{{ value|cell }}</td>{% endfor %}</tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "components/_pagination.html" %}
+{% else %}
+  {% include "components/_empty.html" with title="Nothing to show" message=report.empty icon_name=report.icon %}
+{% endif %}
+{% endblock %}

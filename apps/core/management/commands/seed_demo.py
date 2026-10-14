@@ -10,6 +10,7 @@ from apps.comms import demo as comms_demo
 from apps.companieshouse import demo as companieshouse_demo
 from apps.core.models import PracticeSettings
 from apps.finance import demo as finance_demo
+from apps.imports import demo as imports_demo
 from apps.onboarding import demo as onboarding_demo
 from apps.pipeline import demo as pipeline_demo
 from apps.portal import demo as portal_demo
@@ -37,6 +38,8 @@ class Command(BaseCommand):
             people = accounts_demo.seed()
             staff = {u.email: u for u in User.objects.filter(email__in=[p[1] for p in people])}
             counts = clients_demo.seed(staff)
+            # Straight after the clients, so later seeds treat imported clients the same each run.
+            counts.update(imports_demo.seed())
             counts.update(companieshouse_demo.seed())
             counts.update(services_demo.seed())
             counts.update(tasks_demo.seed())

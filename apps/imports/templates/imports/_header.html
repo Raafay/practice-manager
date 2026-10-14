@@ -1,0 +1,5 @@
+<div class="page-header">
+  {% include "components/_page_header.html" with title=title subtitle=subtitle %}
+  <a href="{% url 'imports:index' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} All imports</a>
+</div>
+{% include "components/_steps.html" with steps=wizard_steps current=step %}

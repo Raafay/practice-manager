@@ -1,0 +1,28 @@
+{% extends "layouts/app.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Reports" subtitle="Lists across the whole practice. Each has filters, a table and, if you may export, a CSV download." %}
+</div>
+<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <a href="{% url 'services:report_deadlines' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "calendar" %} Deadlines</span>
+    <span class="muted mt-1 block">Every open deadline, with its source. Filter by date, service, manager or client.</span>
+  </a>
+  {% for report in reports %}
+  <a href="{% url 'reports:'|add:report.key %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon report.icon %} {{ report.title }}</span>
+    <span class="muted mt-1 block">{{ report.description }}</span>
+  </a>
+  {% endfor %}
+  <a href="{% url 'clients:list' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "building-office-2" %} Client list</span>
+    <span class="muted mt-1 block">Choose the columns and filter the clients, then export. Saved views keep your choices.</span>
+  </a>
+  <a href="{% url 'aml:register' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "shield-check" %} AML register</span>
+    <span class="muted mt-1 block">Every client with risk level, state, last assessment, next review and identity progress.</span>
+  </a>
+</div>
+<p class="muted mt-6 text-sm">A one-page summary of a single client is on each client's page: <strong>Generate report</strong>.</p>
+{% endblock %}

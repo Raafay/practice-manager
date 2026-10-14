@@ -4,7 +4,7 @@
 <div class="page-header">
   {% include "components/_page_header.html" with title="Deadlines" subtitle="Every open deadline in the practice, soonest first." %}
   <div class="flex gap-2">
-    <a href="{% url 'services:reports' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Reports</a>
+    <a href="{% url 'reports:index' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Reports</a>
     {% if user|can:"data.export" %}<a href="{% url 'services:report_deadlines_export' %}?{{ keep_query }}" class="btn btn-secondary">{% icon "arrow-down-tray" "size-4" %} Export CSV</a>{% endif %}
   </div>
 </div>

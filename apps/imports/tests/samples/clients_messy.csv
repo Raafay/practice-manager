@@ -1,0 +1,8 @@
+﻿Ref;Name;Type;Company No;YE;Client Since;Email;Status;Notes
+  M001 ;  Hazel Example Ltd  ;Limited Company;1234;31/03;01/02/2020;hazel@example.com;Active;
+M002;Ivy Example Ltd;Ltd;8999903;30/09;2021-03-31;ivy@example.com;live;
+M003;Hazel Example Ltd;Ltd;;31/03;01/02/2020;;Active;Same name as row 2
+M004;Larch Example Services;Company of some kind;;31/12;;;Active;
+M005;Maple Example Ltd;Ltd;;31/05;31/02/2020;;Active;=HYPERLINK("http://example.com","click")
+
+M006;Nettle Example Ltd;Private Limited Company;7999904;31/08;15/08/2018;nettle@example.com;Active;

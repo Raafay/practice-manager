@@ -29,6 +29,7 @@ class StyleguideView(StaffRequiredMixin, TemplateView):
         tabs = [("Info", "info"), ("Services", "services"), ("Activity", "activity")]
         context["styleguide_tabs"] = [(label, f"{here}?tab={key}#tabs", key) for label, key in tabs]
         context["tab"] = self.request.GET.get("tab", "info")
+        context["wizard_steps"] = ["Upload", "Match columns", "Check", "Import"]
         context["people"] = User.objects.staff().filter(is_active=True)[:5]
         context["sample_rows"] = [
             {

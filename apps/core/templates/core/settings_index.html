@@ -69,6 +69,12 @@
     <span class="muted mt-1 block">Extra details held on every client.</span>
   </a>
   {% endif %}
+  {% if user|can:"data.import" %}
+  <a href="{% url 'imports:index' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "arrow-up-tray" %} Import</span>
+    <span class="muted mt-1 block">Bring clients, contacts, services and fees across from a CSV file. Clear old deadlines.</span>
+  </a>
+  {% endif %}
   {% if user|can:"users.manage" %}
   <a href="{% url 'accounts:users' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
     <span class="flex items-center gap-2 font-semibold">{% icon "users" %} Users</span>

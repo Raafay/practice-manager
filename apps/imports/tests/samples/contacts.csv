@@ -1,0 +1,7 @@
+Client Code,Title,First Name,Surname,Email,Mobile,Date of Birth,Role,Main Contact,Reminders
+X001,Ms,Alex,Sampleton,alex@juniper.example.com,07700 900001,01/02/1980,Director,Yes,Y
+X001,Mr,Blake,Sampleton,blake@juniper.example.com,07700 900002,,Director; Shareholder,no,true
+Quillon Example Partners LLP,Dr,Casey,Testwood,casey@quillon.example.com,,1975-06-30,Designated member,1,on
+X003,,Rowan,Exampleby,rowan@example.com,07700 900003,,Other,yes,yes
+X009,,Drew,Nobody,drew@example.com,,,Director,no,no
+X004,,Eden,Fieldfare,,,,Wizard,no,no

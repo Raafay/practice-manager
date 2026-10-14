@@ -1,0 +1,75 @@
+{% extends "layouts/app.html" %}
+{% block title %}Match columns · {{ run.file_name }}{% endblock %}
+{% block content %}
+{% include "imports/_header.html" with title="Match columns" subtitle=run.file_name %}
+
+<p class="muted mb-4">{{ run.get_kind_display }} · {{ run.row_count }} row{{ run.row_count|pluralize }} · {{ run.encoding }} · columns split by {% if run.delimiter == "," %}commas{% elif run.delimiter == ";" %}semicolons{% elif run.delimiter == "	" %}tabs{% else %}“{{ run.delimiter }}”{% endif %}.</p>
+
+{% if run.matching %}
+<div class="mb-4 rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-900" role="status">
+  {% icon "check-circle" "size-4 inline" %} These headings match your saved matching “{{ run.matching.name }}”, so it has been used. Check it and carry on.
+</div>
+{% endif %}
+
+<section class="mb-6" aria-labelledby="preview-title">
+  <h2 id="preview-title" class="mb-2 text-base font-semibold">The first {{ preview|length }} row{{ preview|length|pluralize }}</h2>
+  <div class="table-wrap max-h-80 overflow-auto">
+    <table class="table text-xs">
+      <thead><tr>{% for heading in run.headers %}<th scope="col" class="whitespace-nowrap">{{ heading }}</th>{% endfor %}</tr></thead>
+      <tbody>
+        {% for row in preview %}<tr>{% for cell in row %}<td class="whitespace-nowrap">{{ cell|truncatechars:40 }}</td>{% endfor %}</tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% if matchings %}
+<form method="post" class="mb-4 flex flex-wrap items-end gap-2" aria-label="Use a saved matching">
+  {% csrf_token %}
+  <div>
+    <label class="label" for="use-matching">Use a saved matching</label>
+    <select id="use-matching" name="use_matching" class="select">
+      {% for m in matchings %}<option value="{{ m.pk }}" {% if m.pk == run.matching_id %}selected{% endif %}>{{ m.name }}</option>{% endfor %}
+    </select>
+  </div>
+  <button type="submit" class="btn btn-secondary">Use it</button>
+</form>
+{% endif %}
+
+<form method="post" class="space-y-4" novalidate aria-label="Match columns">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-errors" role="alert">{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>{% endif %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th scope="col">Column in the file</th><th scope="col">Fills this field</th><th scope="col">First values</th></tr></thead>
+      <tbody>
+        {% for field, values in columns %}
+        <tr>
+          <th scope="row" class="font-medium"><label for="{{ field.id_for_label }}">{{ field.label }}</label></th>
+          <td class="w-72">{{ field|styled }}{% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}</td>
+          <td class="muted text-xs">{% for v in values|slice:":3" %}{% if v %}<span class="mr-2 inline-block max-w-48 truncate align-bottom">{{ v }}</span>{% endif %}{% endfor %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card card-body grid gap-4 sm:grid-cols-2">
+    {% include "components/_field.html" with field=form.overwrite %}
+    {% include "components/_field.html" with field=form.save_as %}
+  </div>
+  <details class="card card-body text-sm">
+    <summary class="cursor-pointer font-medium">How values are read</summary>
+    <ul class="muted mt-2 list-disc space-y-1 pl-5">
+      <li>Spaces are trimmed. Company numbers are padded to eight characters, so 1234 becomes 00001234.</li>
+      <li>Dates as dd/mm/yyyy or yyyy-mm-dd. Money may have a £ sign and commas.</li>
+      <li>Yes and no columns accept yes, y, true, 1 and on.</li>
+      <li>Types, statuses and other fixed lists accept common spellings such as “Ltd” or “Limited Company”. Anything else is listed as a problem to fix, never guessed.</li>
+      <li>An existing record is found by {% if run.kind == "clients" %}client reference, then company number, then exact name{% elif run.kind == "contacts" %}email, then full name within the same client{% else %}client and service{% endif %}. Only its empty fields are filled unless you tick “Overwrite”.</li>
+    </ul>
+  </details>
+  <div class="flex gap-2">
+    <button type="submit" class="btn btn-primary">Check the rows {% icon "chevron-right" "size-4" %}</button>
+    <a href="{% url 'imports:index' %}" class="btn btn-ghost">Cancel</a>
+  </div>
+</form>
+{% endblock %}
