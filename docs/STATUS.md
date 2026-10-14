@@ -58,7 +58,7 @@ Older stages are shortened to two lines each. Details are in git history and eac
 - Matching to existing records and cleaning rules as spec 11. ImportRun, SavedMatching, ImportedRecord (tags each created record). Undo deletes what is untouched and lists what it kept. "Fetch from Companies House" runs as job `import_fetch` with a progress panel. "Clear old deadlines" helper.
 - `apps/reports`: one Reports page; shared pattern (`apps/reports/base.py`): filter form, figures, table, CSV export with `data.export`, logged. New: Tasks, Services, Time, Requests, Pipeline, Communications. Deadlines, Client list and AML register are listed there too. Client summary PDF ("Generate report" on the client page).
 - `apps/core/csvexport.py`: every CSV export goes through `safe_cell`, so a cell starting = + - @ gets a quote mark. Clients, deadlines and AML register moved onto it.
-- Wizard steps component added to the styleguide. Demo data: a past import with one failed row and a saved matching. Screens in `docs/screens/stage-12/`. No new dependency.
+- Wizard steps component added to the styleguide. Demo data: a past import with one failed row and a saved matching. Screens in `docs/screens/stage-12/`. No new dependency. 1475 tests.
 
 ## Assumptions
 
