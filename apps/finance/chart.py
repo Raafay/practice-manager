@@ -129,12 +129,12 @@ def forecast_svg(rows) -> str:
     legend = [
         (CONTRACTED, "Contracted"),
         (WEIGHTED, "Weighted pipeline"),
-        (PAST, "Past months: contracted"),
+        (PAST, "Past: contracted"),
         (TARGET, "Target (dashed line)"),
-        (INK, "Invoiced in Xero (past months)"),
+        (INK, "Invoiced in Xero (past)"),
     ]
     for i, (colour, text) in enumerate(legend):
-        lx = LEFT + i * 164
+        lx = LEFT + i * 152
         parts.append(
             f'<rect x="{lx}" y="{HEIGHT - 14}" width="12" height="12" fill="{colour}"/>'
             f'<text x="{lx + 17}" y="{HEIGHT - 4}" font-size="11" fill="{INK}">'
