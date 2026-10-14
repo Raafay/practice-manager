@@ -232,15 +232,31 @@ XERO_TRANSPORT = env("XERO_TRANSPORT", "live")
 # Read refreshed bank holidays from the database as well as the bundled list.
 BANK_HOLIDAYS_FROM_DATABASE = True
 
-# Logs carry no personal data. Request warnings include the path, which can
-# hold a token, so django.request only logs errors.
+# Logs carry no personal data. Every line passes through RedactFilter, which takes
+# tokens out of addresses (apps/core/logs.py). Request warnings include the path,
+# so django.request only logs errors. LOG_FORMAT=json gives one JSON object a line.
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "filters": {"redact": {"()": "apps.core.logs.RedactFilter"}},
+    "formatters": {
+        "plain": {"format": "%(levelname)s %(name)s %(message)s"},
+        "json": {"()": "apps.core.logs.JsonFormatter"},
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "filters": ["redact"],
+            "formatter": "json" if env("LOG_FORMAT") == "json" else "plain",
+        }
+    },
     "root": {"handlers": ["console"], "level": env("LOG_LEVEL", "INFO")},
     "loggers": {
+        "django": {"handlers": ["console"], "level": "INFO", "propagate": False},
         "django.request": {"handlers": ["console"], "level": "ERROR", "propagate": False},
+        "django.security": {"handlers": ["console"], "level": "WARNING", "propagate": False},
         "axes": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+        "fontTools": {"level": "WARNING"},
+        "weasyprint": {"level": "WARNING"},
     },
 }
