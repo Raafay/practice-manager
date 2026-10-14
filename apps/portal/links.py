@@ -17,7 +17,7 @@ from .models import PortalItem
 def _task_for(ctx):
     if ctx.task is not None:
         return ctx.task
-    if ctx.deadline is not None:
+    if ctx.deadline is not None and ctx.deadline.pk:
         return ctx.deadline.tasks.filter(cancelled_at__isnull=True).order_by("-id").first()
     return None
 

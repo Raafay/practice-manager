@@ -121,7 +121,7 @@ def _date_text(value: date | None) -> str:
 
 
 def details_sections(client: Client, viewer: Contact | None = None) -> list[Section]:
-    """viewer: the portal user filling the form. Others' personal details are never shown to them."""
+    """viewer: the contact filling the form. Other people's details are never shown to them."""
     business = Section(
         "business",
         "The business",

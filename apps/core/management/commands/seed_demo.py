@@ -11,6 +11,7 @@ from apps.companieshouse import demo as companieshouse_demo
 from apps.core.models import PracticeSettings
 from apps.onboarding import demo as onboarding_demo
 from apps.pipeline import demo as pipeline_demo
+from apps.portal import demo as portal_demo
 from apps.services import demo as services_demo
 from apps.tasks import demo as tasks_demo
 
@@ -42,6 +43,7 @@ class Command(BaseCommand):
             counts.update(aml_demo.seed())
             counts.update(onboarding_demo.seed())
             counts.update(pipeline_demo.seed())
+            counts.update(portal_demo.seed())
 
         self.stdout.write(self.style.SUCCESS("Demo data loaded. Everything here is made up."))
         self.stdout.write(
@@ -56,6 +58,10 @@ class Command(BaseCommand):
             f"{counts['onboarding_clients']} new onboarding clients, "
             f"{counts['prospects']} new prospects ({counts['proposals']} proposals, "
             f"{counts['won']} won, {counts['lost']} lost)."
+        )
+        self.stdout.write(
+            f"  {counts['portal_users']} portal users, {counts['portal_items']} things to do, "
+            f"{counts['requests']} requests."
         )
         self.stdout.write("")
         self.stdout.write("Sign in at /login/ with any of these:")

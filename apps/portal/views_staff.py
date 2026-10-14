@@ -24,6 +24,7 @@ from .forms_staff import (
     LogRequestForm,
     ReplyForm,
     SetClientForm,
+    category_choices,
 )
 from .models import Request, RequestFile
 
@@ -165,6 +166,7 @@ class ConvertView(StaffRequiredMixin, View):
             "title": obj.subject,
             "target_date": add_working_days(timezone.localdate(), 3),
             "owner": (obj.client.manager if obj.client else None) or None,
+            "category": category_choices().first(),
         }
         return ConvertForm(data, initial=initial, request_obj=obj)
 

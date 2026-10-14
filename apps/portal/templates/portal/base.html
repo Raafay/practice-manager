@@ -27,12 +27,12 @@
     {% else %}
     <p class="mb-2 text-sm text-slate-600">{{ portal_client.name }}</p>
     {% endif %}
-    <nav aria-label="Portal" class="flex gap-1 overflow-x-auto">
+    <nav aria-label="Portal" class="tabs overflow-x-auto">
       {% with name=request.resolver_match.url_name %}
-      <a href="{% url 'portal:home' %}" class="nav-link" {% if name == "home" %}aria-current="page"{% endif %}>Home</a>
-      <a href="{% url 'portal:documents' %}" class="nav-link" {% if name == "documents" or name == "upload" %}aria-current="page"{% endif %}>Documents</a>
-      <a href="{% url 'portal:requests' %}" class="nav-link" {% if name == "requests" or name == "request_new" or name == "request_detail" %}aria-current="page"{% endif %}>Requests</a>
-      <a href="{% url 'portal:details' %}" class="nav-link" {% if name == "details" %}aria-current="page"{% endif %}>Details</a>
+      <a href="{% url 'portal:home' %}" class="tab" {% if name == "home" %}aria-current="page"{% endif %}>Home</a>
+      <a href="{% url 'portal:documents' %}" class="tab" {% if name == "documents" or name == "upload" %}aria-current="page"{% endif %}>Documents</a>
+      <a href="{% url 'portal:requests' %}" class="tab" {% if name == "requests" or name == "request_new" or name == "request_detail" %}aria-current="page"{% endif %}>Requests</a>
+      <a href="{% url 'portal:details' %}" class="tab" {% if name == "details" %}aria-current="page"{% endif %}>Details</a>
       {% endwith %}
     </nav>
   </div>
