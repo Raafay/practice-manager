@@ -4,7 +4,7 @@ Keep this file under 150 lines. When it grows, shorten older stages to two lines
 
 ## Where things stand
 
-Next stage to build: 8 (Tasks, part two).
+Next stage to build: 9 (Prospects and proposals).
 
 | Stage | State | Merged on |
 |---|---|---|
@@ -16,7 +16,7 @@ Next stage to build: 8 (Tasks, part two).
 | 5 Tasks, part one | Built, in review | |
 | 6 Communications | Built, in review | |
 | 7 Onboarding and AML | Built, in review | |
-| 8 Tasks, part two | Not started | |
+| 8 Tasks, part two | Built, in review | |
 | 9 Prospects and proposals | Not started | |
 | 10 Portal and requests | Not started | |
 | 11 Time, fees, Xero and forecast | Not started | |
@@ -83,6 +83,13 @@ See `docs/screens/stage-03/`. 499 tests at the time.
 - `apps/aml`: identity checks (sensitive uploads, `IdentityProvider` interface with none behind it), 17 seeded risk questions, scoring, approval rules, Companies House snapshot PDF on approval, review prompts, AML state and header badge, register with CSV, practice records (officer, training, policy documents), daily job `aml_reviews`.
 - Status form can no longer move onboarding to active; use Make live. 991 tests. Screens in `docs/screens/stage-07/`. No new dependency. New setting `SITE_URL` (links in emails).
 
+## Stage 8: tasks, part two (built 14/10/2026)
+
+- Tasks page has a Table / Board / Calendar switch (`layout=` in the address, so saved views remember it). Board: columns by status, owner, category, client (section inside a project); SortableJS drags saved by `fetch`, card put back on failure; float `position` with gaps, one row updated; Done column shows 14 days. Calendar: server-built month and week, target date or deadline date, fixed deadline markers, side list of undated tasks, `+` on a day opens New task. `static/js/keys.js` holds `g t`, `g c`, `g o`, `?`.
+- Projects (list, page with table by section or board, progress, hours against budget, four seeded templates), repeating tasks (list, form from New menu and client tab, job `repeating_tasks` 03:45), Workload page, Overview as home page (my work, deadlines for my clients, waiting on me, panels).
+- Notices: assigned, mentioned, comment on a followed task, step ticked by someone else, deadline within 7 days while To do (job `task_notices` 07:00, once per task). Daily email job `daily_task_email` 08:00 on working days; three profile switches. Notification gained `kind` and `key`; User gained `email_overdue`, `email_today`, `email_week`.
+- Task now has real links `project`, `section`, `repeating_task`. Screens in `docs/screens/stage-08/`. No new dependency (Sortable now loads on every page).
+
 ## Assumptions
 
 Add one line each time a stage makes a choice that the specs and `docs/DECISIONS.md` did not cover. Give the stage number.
@@ -138,6 +145,14 @@ Add one line each time a stage makes a choice that the specs and `docs/DECISIONS
 - 7: Higher-risk services that prompt a review are chosen on the AML bands page. HMRC row expires automatically once its link or code date passes while still waiting.
 - 7: Added h2 and h3 to the allowed rich-text tags (letters use them). Demo data adds 3 contacts and some notifications; two earlier demo-count tests were loosened.
 
+- 8: Branch is `claude/peaceful-cerf-16u8mo` (the session's required branch). No pull request opened.
+- 8: The board ignores "Show done" and always shows done work from the last 14 days. Dragging on the calendar works only while it shows target dates; in deadline mode cards are fixed. Dropping a task on the side list clears its target date.
+- 8: A board move to another client is refused for tasks that come from a deadline. A plain reorder writes no activity event.
+- 8: Workload counts open tasks by target date, else deadline, in the next 14 days (overdue work is in its own column, not in the hours). Overdue and this-week links use the same filters as the counts; "next week" is a hidden chip.
+- 8: The three email switches are overdue, due today and due this week. The daily email is sent straight to staff (not queued; it is not a client message) and leaves out tasks waiting on the client. Overview "my clients" means manager or partner. The system never notifies on generated tasks.
+- 8: A repeating task makes only the current period; periods missed while nothing ran are skipped. Its target date is the period start plus "days to finish"; no hard due date.
+- 8: Project templates have no editor in Settings yet.
+
 ## Known gaps
 
 Things a stage left unfinished or found broken, with the stage number. Remove a line when it is fixed.
@@ -165,3 +180,5 @@ Things a stage left unfinished or found broken, with the stage number. Remove a 
 
 - 7: The practice owner must read the risk questions and score bands before they are relied on. Letter wording is starter text. The 30-day postal code expiry needs confirming with the practice.
 - 7: Portal form for client details (Stage 10) not built: staff tick "Client details form completed". `SITE_URL` must be set in production (Stage 13).
+
+- 8: Project templates cannot be edited in Settings. The calendar's deadline markers follow the client (and fixed client) only, not the other filters. Drag and drop was checked through the endpoints and page markup, not in a live browser.

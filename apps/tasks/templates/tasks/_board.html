@@ -20,7 +20,7 @@
       <button type="button" class="btn-icon p-1" @click="toggle" :aria-expanded="!open" aria-label="Fold or unfold {{ column.label }}">{% icon "chevron-down" "size-4" %}</button>
     </header>
     {% if column.note %}<p class="px-3 pb-1 text-xs text-slate-500">{{ column.note }}</p>{% endif %}
-    <div class="min-h-16 space-y-2 px-2 pb-2" data-column-cards data-column-key="{{ column.key }}" aria-label="{{ column.label }} cards">
+    <div class="max-h-[70vh] min-h-16 space-y-2 overflow-y-auto px-2 pb-2" data-column-cards data-column-key="{{ column.key }}" aria-label="{{ column.label }} cards">
       {% for task in column.tasks %}{% include "tasks/_card.html" %}{% endfor %}
     </div>
     {% if column.hidden > 0 %}<p class="px-3 pb-2 text-xs text-slate-500">{{ column.hidden }} more not shown. Use the filters.</p>{% endif %}

@@ -163,11 +163,20 @@ def _seed_projects(today: date) -> dict:
     return {"projects": Project.objects.count(), "repeating": RepeatingTask.objects.count()}
 
 
+def _seed_estimates() -> None:
+    """Estimates on most open tasks so Workload has something to show. Safe to run twice."""
+    sizes = [90, 180, 300, 480, 240]
+    for task in Task.objects.filter(estimate_minutes__isnull=True, status__is_done=False):
+        if task.pk % 4 != 0:
+            Task.objects.filter(pk=task.pk).update(estimate_minutes=sizes[task.pk % 5])
+
+
 def seed(today: date | None = None) -> dict:
     today = today or timezone.localdate()
     generation.catch_up(today=today)
     finished = _tidy_generated(today)
     extras = _seed_projects(today)
+    _seed_estimates()
     if Task.objects.filter(source=Task.Source.MANUAL, title=ADVISORY[0][0]).exists():
         return {
             "tasks": Task.objects.count(),
