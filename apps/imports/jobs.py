@@ -2,6 +2,8 @@
 
 from datetime import time
 
+from django.utils import timezone
+
 from apps.companieshouse import api
 from apps.companieshouse import services as ch_services
 from apps.jobs.registry import Daily, register
@@ -38,11 +40,10 @@ def fetch_run(run: ImportRun, ch=None) -> dict:
             continue
         in_a_row = 0
         run.fetch_done += 1
-        client.refresh_from_db(fields=["updated_at"])
         # The fetch is the system's own change: undo still treats the client as untouched.
         ImportedRecord.objects.filter(
             run=run, model=ImportedRecord.Model.CLIENT, object_id=client.pk
-        ).update(stamp=client.updated_at)
+        ).update(stamp=timezone.now())
         ImportRun.objects.filter(pk=run.pk).update(fetch_done=run.fetch_done)
     ImportRun.objects.filter(pk=run.pk).update(fetch_state=ImportRun.FetchState.DONE)
     return {"fetched": run.fetch_done, "failed": run.fetch_failed}

@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from datetime import timedelta
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
@@ -998,15 +997,17 @@ def _restamp(run: ImportRun, model: str, klass) -> None:
 # ---------------------------------------------------------------- undo
 
 
-def _changed_clients(run: ImportRun, ids: list[int]) -> dict[int, str]:
-    """Clients somebody has worked on since the import, with the reason."""
-    since = run.imported_at or run.created_at
+def _changed_clients(stamps: dict[int, object]) -> dict[int, str]:
+    """Clients somebody has worked on since their stamp, with the reason."""
+    if not stamps:
+        return {}
     reasons = {}
-    for pk, verb in ActivityEvent.objects.filter(
-        client_id__in=ids, created_at__gt=since
-    ).values_list("client_id", "verb"):
-        if not verb.startswith(QUIET_VERBS):
+    for pk, verb, at in ActivityEvent.objects.filter(
+        client_id__in=stamps, created_at__gt=min(stamps.values())
+    ).values_list("client_id", "verb", "created_at"):
+        if at > stamps[pk] and not verb.startswith(QUIET_VERBS):
             reasons.setdefault(pk, "Somebody has worked on this client since the import.")
+    ids = list(stamps)
     for pk in (
         Task.objects.filter(client_id__in=ids)
         .exclude(source=Task.Source.GENERATED)
@@ -1031,10 +1032,9 @@ def undo(actor, run: ImportRun) -> ImportRun:
     by_model: dict[str, list[ImportedRecord]] = {}
     for r in records:
         by_model.setdefault(r.model, []).append(r)
-    late = timedelta(seconds=1)
 
     def stale(record, obj) -> bool:
-        return obj.updated_at > record.stamp + late
+        return obj.updated_at > record.stamp
 
     with transaction.atomic():
         # Services first, then links, people and clients, so nothing is left hanging.
@@ -1101,7 +1101,7 @@ def undo(actor, run: ImportRun) -> ImportRun:
 
         recs = by_model.get(ImportedRecord.Model.CLIENT, [])
         found = {c.pk: c for c in Client.objects.filter(pk__in=[r.object_id for r in recs])}
-        changed = _changed_clients(run, list(found))
+        changed = _changed_clients({r.object_id: r.stamp for r in recs if r.object_id in found})
         for record in recs:
             client = found.get(record.object_id)
             if client is None:
@@ -1113,7 +1113,17 @@ def undo(actor, run: ImportRun) -> ImportRun:
             if reason:
                 kept.append({"label": record.label, "reason": reason})
                 continue
+            # People Companies House added to this client go with it, if nothing else
+            # links to them.
+            fetched = list(
+                client.client_contacts.filter(
+                    source=ClientContact.Source.COMPANIES_HOUSE
+                ).values_list("contact_id", flat=True)
+            )
             client.delete()
+            Contact.objects.filter(
+                pk__in=fetched, client_links__isnull=True, portal_user__isnull=True
+            ).delete()
             record.delete()
             removed += 1
 
