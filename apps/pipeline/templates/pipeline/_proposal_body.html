@@ -1,0 +1,34 @@
+{# The proposal itself. Used on the client's page, in the PDF and on staff screens. Needs the view model. #}
+<div class="proposal-body">
+  <p><strong>{{ practice.practice_name }}</strong></p>
+  {% if proposal.contact %}<p>Dear {{ proposal.contact.first_name }},</p>{% endif %}
+  {% if proposal.opening_text %}<p>{{ proposal.opening_text }}</p>{% endif %}
+  <h2>Services</h2>
+  {% if recurring or one_offs %}
+  <ul>
+    {% for row in recurring %}<li><strong>{{ row.service }}</strong>{% if show_breakdown and row.fee_text %}: {{ row.fee_text }}{% endif %}{% if row.description %}<br>{{ row.description }}{% endif %}</li>{% endfor %}
+    {% for row in one_offs %}<li><strong>{{ row.service }}</strong>{% if show_breakdown and row.fee_text %}: {{ row.fee_text }}{% endif %}{% if row.description %}<br>{{ row.description }}{% endif %}</li>{% endfor %}
+  </ul>
+  {% endif %}
+  <h2>Charges</h2>
+  {% if monthly_text %}<p><strong>Monthly charge: {{ monthly_text }} per month</strong></p>{% endif %}
+  {% if one_off_text and not show_breakdown %}<p>One-off charges: {{ one_off_text }}</p>{% endif %}
+  {% if setup_text %}<p>One-off setup fee: {{ setup_text }}</p>{% endif %}
+  {% if not has_charges %}<p>No charges are listed.</p>{% endif %}
+  <p>This proposal is open until {{ proposal.valid_until|date:"d/m/Y" }}.</p>
+  {% if proposal.what_next_html %}<h2>What happens next</h2>{{ proposal.what_next_html|safe }}{% endif %}
+  {% if acceptance %}
+  <div style="page-break-before: always">
+    <h1>Acceptance record</h1>
+    <p>This page records the electronic acceptance of proposal version {{ acceptance.version }}.</p>
+    <table>
+      <tr><th style="text-align:left;padding:4px 10px 4px 0">Accepted by</th><td>{{ acceptance.name }}</td></tr>
+      <tr><th style="text-align:left;padding:4px 10px 4px 0">Email address</th><td>{{ acceptance.email }}</td></tr>
+      <tr><th style="text-align:left;padding:4px 10px 4px 0">Time (UK)</th><td>{{ acceptance.uk_time }}</td></tr>
+      <tr><th style="text-align:left;padding:4px 10px 4px 0">IP address</th><td>{{ acceptance.ip }}</td></tr>
+      <tr><th style="text-align:left;padding:4px 10px 4px 0">Browser</th><td style="word-break:break-all">{{ acceptance.browser }}</td></tr>
+      <tr><th style="text-align:left;padding:4px 10px 4px 0">Document fingerprint (SHA-256 of the sent PDF)</th><td style="word-break:break-all">{{ acceptance.fingerprint }}</td></tr>
+    </table>
+  </div>
+  {% endif %}
+</div>

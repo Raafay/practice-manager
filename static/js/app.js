@@ -358,3 +358,49 @@ document.addEventListener("htmx:load", (event) => {
   initBoard(event.detail.elt);
   initCalendar(event.detail.elt);
 });
+
+// ---- Prospects board: drag between stages. Lost and Won open a dialog first.
+
+function initProspectBoard(root) {
+  if (!window.Sortable) return;
+  root.querySelectorAll('[data-board="prospect"]').forEach((board) => {
+    if (board.dataset.sortableReady) return;
+    board.dataset.sortableReady = "true";
+    board.querySelectorAll("[data-column-cards]").forEach((list) => {
+      window.Sortable.create(list, {
+        group: "prospects",
+        animation: 150,
+        draggable: "[data-card]",
+        filter: "[data-locked]",
+        sort: false,
+        ghostClass: "opacity-50",
+        onEnd: async (event) => {
+          if (event.from === event.to) return;
+          const item = event.item;
+          const kind = event.to.dataset.stageKind;
+          if (kind === "lost" || kind === "won") {
+            putBack(item, event.from, event.oldIndex);
+            if (window.htmx) {
+              window.htmx.ajax("GET", item.dataset.moveUrl + "?to=" + event.to.dataset.stageId, {
+                target: "#modal-body",
+              });
+            }
+            return;
+          }
+          const ok = await saveMove(
+            board,
+            item.dataset.moveUrl,
+            { to: event.to.dataset.stageId },
+            item,
+            event.from,
+            event.oldIndex,
+          );
+          if (ok) window.location.reload();
+        },
+      });
+    });
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => initProspectBoard(document));
+document.addEventListener("htmx:load", (event) => initProspectBoard(event.detail.elt));

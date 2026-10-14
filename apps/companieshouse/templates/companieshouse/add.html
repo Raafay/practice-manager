@@ -7,10 +7,11 @@
   <a href="{% url 'clients:list' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Clients</a>
 </div>
 <form method="get" action="{% url 'companieshouse:add' %}" class="card card-body mb-4" role="search">
+  {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
   <label for="ch-q" class="label">Company name or number</label>
   <div class="flex gap-2">
     <input id="ch-q" type="search" name="q" value="{{ q }}" class="input" autocomplete="off" autofocus
-      hx-get="{% url 'companieshouse:add' %}" hx-trigger="input changed delay:400ms, search" hx-target="#ch-results" hx-push-url="true">
+      hx-get="{% url 'companieshouse:add' %}" hx-trigger="input changed delay:400ms, search" hx-target="#ch-results" hx-push-url="true" hx-include="[name=status]">
     <button type="submit" class="btn btn-primary">{% icon "magnifying-glass" "size-4" %} Search</button>
   </div>
   <p class="help">For example “Example Trading” or “09999901”. Up to ten matches are shown.</p>

@@ -1,0 +1,12 @@
+{# Quiet prospects, on the Overview. Needs: quiet_rows, quiet_total. #}
+<section class="card card-body mb-6" aria-labelledby="ov-quiet">
+  <h2 id="ov-quiet" class="mb-2 flex items-center gap-2 text-base">Quiet prospects <span class="badge {% if quiet_total %}badge-amber{% else %}badge-neutral{% endif %}">{{ quiet_total }}</span></h2>
+  {% if quiet_rows %}
+  <ul class="divide-y divide-slate-100 text-sm">
+    {% for row in quiet_rows %}
+    <li class="flex items-center justify-between gap-2 py-1.5"><a href="{% url 'clients:detail' row.details.client_id %}" class="truncate">{{ row.details.client.name }}</a><span class="muted whitespace-nowrap">{{ row.reason }}</span></li>
+    {% endfor %}
+  </ul>
+  <p class="mt-2 text-sm"><a href="{% url 'pipeline:prospects' %}?quiet=on">See them on the Prospects page</a></p>
+  {% else %}<p class="muted">No prospects have gone quiet. Good.</p>{% endif %}
+</section>

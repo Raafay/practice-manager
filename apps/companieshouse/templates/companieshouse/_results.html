@@ -11,7 +11,7 @@
         <td class="tabular-nums">{{ item.company_number }}</td>
         <td>{% if item.company_status == "active" %}{% include "components/_badge.html" with text="Active" tone="green" %}{% else %}{% include "components/_badge.html" with text=item.company_status|capfirst tone="amber" %}{% endif %}</td>
         <td class="tabular-nums">{{ item.date_of_creation|slice:"8:10" }}/{{ item.date_of_creation|slice:"5:7" }}/{{ item.date_of_creation|slice:":4" }}</td>
-        <td class="text-right"><a href="{% url 'companieshouse:preview' item.company_number %}" class="btn btn-secondary btn-sm">Preview</a></td>
+        <td class="text-right"><a href="{% url 'companieshouse:preview' item.company_number %}{% if status %}?status={{ status }}{% endif %}" class="btn btn-secondary btn-sm">Preview</a></td>
       </tr>
       {% endfor %}
     </tbody>

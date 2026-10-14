@@ -40,6 +40,14 @@
     <span class="flex items-center gap-2 font-semibold">{% icon "bell" %} Reminders</span>
     <span class="muted mt-1 block">Schedules that draft client reminders into the Queued list.</span>
   </a>
+  <a href="{% url 'pipeline:stages' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "funnel" %} Pipeline stages</span>
+    <span class="muted mt-1 block">The columns of the Prospects board and the chance of winning at each.</span>
+  </a>
+  <a href="{% url 'pipeline:rules' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "document-text" %} Proposal wording and rules</span>
+    <span class="muted mt-1 block">When a prospect goes quiet, how long a proposal lasts, and "What happens next".</span>
+  </a>
   <a href="{% url 'onboarding:checklist' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
     <span class="flex items-center gap-2 font-semibold">{% icon "clipboard-document-list" %} Onboarding checklist</span>
     <span class="muted mt-1 block">The lines every new client works through before going live.</span>

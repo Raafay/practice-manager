@@ -26,7 +26,9 @@ class AddSearchView(StaffRequiredMixin, View):
                 results = api.get_client().search(query)
             except api.CompaniesHouseError as failure:
                 error = failure.public_message
-        context = {"q": query, "results": results, "error": error}
+        status = request.GET.get("status", "")
+        status = status if status in ("active", "onboarding", "prospect") else ""
+        context = {"q": query, "results": results, "error": error, "status": status}
         if request.htmx and not request.htmx.history_restore_request:
             return render(request, "companieshouse/_results.html", context)
         return render(request, "companieshouse/add.html", context)
@@ -47,10 +49,17 @@ class AddPreviewView(StaffRequiredMixin, View):
 
     def get(self, request, number):
         data, error = self._preview(number)
+        status = request.GET.get("status", "")
+        initial = {"status": status} if status in ("active", "onboarding", "prospect") else {}
         return render(
             request,
             "companieshouse/preview.html",
-            {"data": data, "error": error, "form": AddCompanyForm(), "number": number},
+            {
+                "data": data,
+                "error": error,
+                "form": AddCompanyForm(initial=initial),
+                "number": number,
+            },
         )
 
     def post(self, request, number):
@@ -77,6 +86,11 @@ class AddPreviewView(StaffRequiredMixin, View):
             return redirect("companieshouse:preview", number=number)
         people_note = f" {result.contacts_created} people added." if result.contacts_created else ""
         messages.success(request, f"{client.name} is filled in from Companies House.{people_note}")
+        if client.status == "prospect":
+            from apps.pipeline.services import ensure_details
+
+            ensure_details(client, request.user)
+            return redirect("clients:detail", pk=client.pk)
         return redirect("companieshouse:tab", pk=client.pk)
 
 

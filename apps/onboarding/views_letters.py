@@ -21,8 +21,12 @@ class EngagementTabView(ClientTabView):
     tab_template = "onboarding/tabs/_engagement.html"
 
     def context_engagement(self, request, client):
+        from apps.pipeline.views_proposals import tab_context
+
         rows = list(client.engagement_letters.select_related("signer", "message"))
         return {
+            **tab_context(client),
+            "can_fees": request.user.can("fees.view"),
             "letters": rows,
             "has_draft": any(r.state == "draft" for r in rows),
             "services_changed": letters.services_changed_since_signed(client),

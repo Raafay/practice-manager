@@ -51,6 +51,7 @@ FIELDS: dict[str, tuple[str, str]] = {
     "upload_link": ("Links", "Button: upload documents"),
     "request_link": ("Links", "Button: make a request"),
     "cs01_data": ("Blocks", "What Companies House holds, to confirm"),
+    "proposal_summary": ("Blocks", "The proposal's services and charges"),
     "outstanding_invoices": ("Blocks", "Overdue invoices (from Stage 11)"),
     "today": ("Date", "Today's date"),
 }
@@ -274,6 +275,8 @@ def render(source: str, ctx: Context, *, html: bool = True) -> Rendered:
                 block_cache[name] = _services_block(ctx.client)
             elif name == "cs01_data":
                 block_cache[name] = _cs01_block(ctx.client)
+            elif name == "proposal_summary":  # built by Stage 9 so it follows the fee switches
+                block_cache[name] = ctx.extra.get("proposal_summary_block", ("", ""))
             else:  # outstanding_invoices: empty until Stage 11
                 block_cache[name] = ("", "")
         return block_cache[name]
@@ -301,7 +304,7 @@ def render(source: str, ctx: Context, *, html: bool = True) -> Rendered:
                     if as_html
                     else f"{{{{ {name} }}}}"
                 )
-            if name in ("services_list", "cs01_data", "outstanding_invoices"):
+            if name in ("services_list", "cs01_data", "outstanding_invoices", "proposal_summary"):
                 h, t = block(name)
                 return str(h) if as_html else t
             if name in LINK_FIELDS:

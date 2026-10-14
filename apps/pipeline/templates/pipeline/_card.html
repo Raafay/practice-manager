@@ -1,0 +1,16 @@
+{# One prospect card. Needs: card, can_fees. #}
+<article id="card-{{ card.client.pk }}" class="relative rounded-md border border-slate-200 bg-white p-2.5 shadow-sm" data-card data-client-id="{{ card.client.pk }}" data-move-url="{% url 'pipeline:move' card.client.pk %}" {% if card.details.stage.is_won %}data-locked{% endif %}>
+  <span class="absolute inset-y-0 left-0 w-1 rounded-l-md" style="background-color: {{ card.details.stage.colour }}" aria-hidden="true"></span>
+  <div class="pl-1.5">
+    <a href="{% url 'clients:detail' card.client.pk %}" class="block text-sm font-medium text-slate-900 no-underline hover:underline">{{ card.client.name }}</a>
+    <p class="mt-0.5 truncate text-xs text-slate-600">{% if card.main_contact %}{{ card.main_contact.full_name }}{% else %}No contact yet{% endif %}</p>
+    {% if can_fees and card.fee %}<p class="mt-1 text-sm font-medium tabular-nums">£{{ card.fee }} <span class="muted text-xs font-normal">a month</span></p>{% endif %}
+    {% if card.details.next_action %}<p class="mt-1 text-xs {% if card.overdue %}font-medium text-red-700{% else %}text-slate-700{% endif %}">{% if card.overdue %}{% icon "exclamation-triangle" "size-3 inline" "mini" %} Overdue: {% endif %}{{ card.details.next_action }}{% if card.details.next_action_date %} ({{ card.details.next_action_date|date:"d/m/Y" }}){% endif %}</p>{% endif %}
+    <div class="mt-2 flex flex-wrap items-center gap-1.5">
+      {% if card.details.owner %}{% include "components/_avatar.html" with person=card.details.owner %}{% else %}<span class="avatar bg-slate-200 text-slate-600" title="No owner" role="img" aria-label="No owner">?</span>{% endif %}
+      <span class="badge badge-neutral" title="Days in this stage">{{ card.days_in_stage }} day{{ card.days_in_stage|pluralize }}</span>
+      {% if card.quiet %}{% include "components/_badge.html" with text="Quiet" tone="amber" icon_name="clock" %}{% endif %}
+      {% if card.details.stage.is_lost and card.details.lost_reason %}{% include "components/_badge.html" with text=card.details.get_lost_reason_display tone="red" %}{% endif %}
+    </div>
+  </div>
+</article>

@@ -1,0 +1,26 @@
+{% extends "layouts/app.html" %}
+{% block title %}Pipeline stages{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Pipeline stages" subtitle="The columns of the Prospects board and the chance of winning at each." %}
+  <div class="flex gap-2">
+    <a href="{% url 'core:settings' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Settings</a>
+    <button type="button" class="btn btn-primary" hx-get="{% url 'pipeline:stage_add' %}" hx-target="#modal-body">{% icon "plus" "size-4" %} New stage</button>
+  </div>
+</div>
+<div class="table-wrap"><table class="table">
+  <thead><tr><th scope="col">Order</th><th scope="col">Stage</th><th scope="col">Chance of winning</th><th scope="col">Kind</th><th scope="col">Prospects</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+  <tbody>{% for st in stages %}
+    <tr>
+      <td class="tabular-nums">{{ st.position }}</td>
+      <td class="font-medium text-slate-900"><span class="mr-2 inline-block size-2.5 rounded-full" style="background-color: {{ st.colour }}" aria-hidden="true"></span>{{ st.name }}</td>
+      <td class="tabular-nums">{{ st.chance }}%</td>
+      <td>{% if st.is_won %}Won{% elif st.is_lost %}Lost{% elif st.is_on_hold %}On hold (never quiet){% else %}Open{% endif %}</td>
+      <td class="tabular-nums">{{ st.uses }}</td>
+      <td class="whitespace-nowrap text-right">
+        <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'pipeline:stage_edit' st.pk %}" hx-target="#modal-body">Edit</button>
+        {% if not st.is_won and not st.is_lost and not st.is_on_hold %}<form method="post" action="{% url 'pipeline:stage_delete' st.pk %}" data-confirm="Remove the stage {{ st.name }}?" class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Remove</button></form>{% endif %}
+      </td>
+    </tr>{% endfor %}</tbody></table></div>
+<p class="muted mt-3">Won, Lost and On hold are needed by the board and cannot be removed. Their names, colours and order can change.</p>
+{% endblock %}
