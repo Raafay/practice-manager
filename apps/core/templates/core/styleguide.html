@@ -167,6 +167,16 @@
     {% include "components/_empty.html" with title="No tasks yet" message="Tasks appear here when a service creates them, or add one by hand." action_url=sg_url action_label="Add a task" icon_name="clipboard-document-list" %}
   </section>
 
+  <section id="progress" aria-labelledby="h-progress" class="space-y-3">
+    <h2 id="h-progress">Progress bar, notices and letter text</h2>
+    <div class="card card-body max-w-xl">
+      <p class="muted">7 of 12 done · 3 of 5 needed before go-live.</p>
+      <div class="mt-3 h-2 rounded-full bg-slate-200" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="58" aria-label="Checklist progress"><div class="h-2 rounded-full bg-accent" style="width: 58%"></div></div>
+    </div>
+    <div class="max-w-xl rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">Starter text. Replace with the practice's own wording before use.</div>
+    <article class="card card-body prose-letter max-w-xl"><h2>Standard terms</h2><p>Letter text shown on a page, such as an engagement letter, uses this style.</p><ul><li>A list item</li></ul></article>
+  </section>
+
   <section id="icons" aria-labelledby="h-icons" class="space-y-3">
     <h2 id="h-icons">Icons</h2>
     <div class="flex flex-wrap gap-3 text-slate-600">

@@ -16,8 +16,15 @@ class LetterForm(StyledFormMixin, forms.Form):
 
 
 class SignForm(StyledFormMixin, forms.Form):
-    agree = forms.BooleanField(required=False, label="I have read and agree to this letter")
-    typed_name = forms.CharField(max_length=200, label="Type your full name", required=False)
+    agree = forms.BooleanField(
+        label="I have read and agree to this letter",
+        error_messages={"required": "Tick the box to say you have read and agree to the letter."},
+    )
+    typed_name = forms.CharField(
+        max_length=200,
+        label="Type your full name",
+        error_messages={"required": "Type your full name."},
+    )
 
 
 class LetterPartForm(StyledFormMixin, forms.ModelForm):
