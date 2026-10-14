@@ -9,6 +9,7 @@ from apps.clients import demo as clients_demo
 from apps.comms import demo as comms_demo
 from apps.companieshouse import demo as companieshouse_demo
 from apps.core.models import PracticeSettings
+from apps.finance import demo as finance_demo
 from apps.onboarding import demo as onboarding_demo
 from apps.pipeline import demo as pipeline_demo
 from apps.portal import demo as portal_demo
@@ -44,6 +45,7 @@ class Command(BaseCommand):
             counts.update(onboarding_demo.seed())
             counts.update(pipeline_demo.seed())
             counts.update(portal_demo.seed())
+            counts.update(finance_demo.seed())
 
         self.stdout.write(self.style.SUCCESS("Demo data loaded. Everything here is made up."))
         self.stdout.write(
@@ -62,6 +64,10 @@ class Command(BaseCommand):
         self.stdout.write(
             f"  {counts['portal_users']} portal users, {counts['portal_items']} things to do, "
             f"{counts['requests']} requests."
+        )
+        self.stdout.write(
+            f"  {counts['time_entries']} new time entries, {counts['xero_invoices']} made-up "
+            f"Xero invoices, {counts['targets']} new monthly targets."
         )
         self.stdout.write("")
         self.stdout.write("Sign in at /login/ with any of these:")

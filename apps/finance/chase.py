@@ -89,6 +89,7 @@ def draft_chase_emails(actor, today: date | None = None) -> dict:
             skipped.append((client.name, "No contact with an email address"))
             continue
         ctx = comms.build_context(client, user=actor, contact=recipients[0])
+        ctx.extra["today"] = today
         subject, html, text, _problems = comms.render_template(template, ctx)
         message = comms.create_message(
             client,

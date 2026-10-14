@@ -197,31 +197,28 @@ def _services_block(client):
     )
 
 
-def _outstanding_block(client):
-    """A table of the client's overdue invoices. Empty when there are none."""
+def _outstanding_block(client, today=None):
+    """A list of the client's overdue invoices. Empty when there are none."""
     if client is None or not client.pk:
         return "", ""
     from apps.finance.invoicing import overdue_invoices
 
-    today = timezone.localdate()
+    today = today or timezone.localdate()
     invoices = list(
         overdue_invoices(today).filter(contact__client=client).order_by("due_date", "id")
     )
     if not invoices:
         return "", ""
-    rows = format_html_join(
+    # A list, not a table: the cleaner that runs on every message drops table tags.
+    items = format_html_join(
         "",
-        "<tr><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>",
+        "<li>{}: {} due {} ({} days overdue)</li>",
         (
-            (i.number, _fmt_date(i.due_date), _money(i.amount_due), i.days_overdue(today))
+            (i.number, _money(i.amount_due), _fmt_date(i.due_date), i.days_overdue(today))
             for i in invoices
         ),
     )
-    html = format_html(
-        "<table><thead><tr><th>Invoice</th><th>Due</th><th>Amount due</th><th>Days overdue</th>"
-        "</tr></thead><tbody>{}</tbody></table>",
-        rows,
-    )
+    html = format_html("<ul>{}</ul>", items)
     text = "\n".join(
         f"• {i.number}: {_money(i.amount_due)} due {_fmt_date(i.due_date)} "
         f"({i.days_overdue(today)} days overdue)"
@@ -313,7 +310,7 @@ def render(source: str, ctx: Context, *, html: bool = True) -> Rendered:
             elif name == "proposal_summary":  # built by Stage 9 so it follows the fee switches
                 block_cache[name] = ctx.extra.get("proposal_summary_block", ("", ""))
             else:  # outstanding_invoices: read from the Xero data (Stage 11)
-                block_cache[name] = _outstanding_block(ctx.client)
+                block_cache[name] = _outstanding_block(ctx.client, ctx.extra.get("today"))
         return block_cache[name]
 
     def link(name):
