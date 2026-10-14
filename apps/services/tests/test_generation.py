@@ -4,7 +4,6 @@ import pytest
 
 from apps import events  # noqa: F401
 from apps.accounts.tests.factories import owner
-from apps.clients import services as client_services
 from apps.clients.models import Client
 from apps.companieshouse.services import client_synced
 from apps.events.models import ActivityEvent

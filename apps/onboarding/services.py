@@ -201,3 +201,26 @@ def make_live(actor, client: Client, *, override_reason: str = "") -> Client:
             target=client,
         )
     return client
+
+
+def responsible_user(client: Client):
+    """Manager, then partner, then an owner (CORRECTIONS 19)."""
+    from apps.accounts.models import User
+
+    for user in (client.manager, client.partner):
+        if user is not None and user.is_active:
+            return user
+    return User.objects.active_owners().order_by("pk").first()
+
+
+def notify_staff(client: Client, message: str, link: str, *extra) -> None:
+    """Tell the people looking after a client."""
+    seen = set()
+    for user in (client.manager, client.partner, *extra):
+        if user is not None and user.is_active and user.pk not in seen:
+            seen.add(user.pk)
+            events.notify(user, message, link)
+    if not seen:
+        owner = responsible_user(client)
+        if owner is not None:
+            events.notify(owner, message, link)

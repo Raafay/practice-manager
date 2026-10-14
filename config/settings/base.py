@@ -14,6 +14,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = False
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS")
+# The address clients use, for links in emails. Set it in production (Stage 13).
+SITE_URL = env("SITE_URL", "http://localhost:8000").rstrip("/")
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 
 INSTALLED_APPS = [

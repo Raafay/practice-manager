@@ -1,0 +1,15 @@
+{% extends "layouts/app.html" %}
+{% block title %}Engagement letter wording{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Engagement letter wording" subtitle="The covering letter, standard terms and privacy notice. The schedule for each service is edited under Settings, Services." %}
+  <a href="{% url 'core:settings' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Settings</a>
+</div>
+<div class="table-wrap"><table class="table">
+  <thead><tr><th scope="col">Part</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+  <tbody>{% for part in parts %}
+    <tr><td class="font-medium text-slate-900">{{ part.get_key_display }}</td>
+    <td>{% if part.starter %}{% include "components/_badge.html" with text="Starter text" tone="amber" icon_name="exclamation-triangle" %} <span class="muted">Starter text. Replace with the practice's own wording before use.</span>{% else %}{% include "components/_badge.html" with text="Edited" tone="green" %}{% endif %}</td>
+    <td class="text-right"><a class="btn btn-ghost btn-sm" href="{% url 'onboarding:letter_part' part.key %}">Edit</a></td></tr>{% endfor %}</tbody></table></div>
+<p class="muted mt-3 max-w-prose">Engagement letters are legal documents. Your professional body publishes model wording; use it.</p>
+{% endblock %}

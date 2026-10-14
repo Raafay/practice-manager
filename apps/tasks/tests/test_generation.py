@@ -250,7 +250,6 @@ def test_a_client_made_live_gets_its_tasks():
     )
     take(client, "accounts", state="proposed")
     assert not client.tasks.exists()
-    from apps.clients import services as client_services
 
     from apps.onboarding import services as onboarding
 

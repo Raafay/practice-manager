@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% comment %}A page for people who are not signed in, reached by a private link. No navigation.{% endcomment %}
+{% block body %}
+<main id="main" class="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-4 py-6 sm:py-10">
+  <div class="mb-4 flex items-center gap-2 text-slate-700">
+    {% icon "building-office" "size-6 text-accent" %}
+    <span class="text-lg font-semibold">{{ practice.practice_name }}</span>
+  </div>
+  {% block content %}{% endblock content %}
+</main>
+{% endblock body %}

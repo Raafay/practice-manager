@@ -1,0 +1,29 @@
+{% extends "layouts/public.html" %}
+{% block title %}Engagement letter{% endblock %}
+{% block content %}
+<div class="card card-body">
+  <h1 class="text-xl">Engagement letter for {{ client_name }}</h1>
+  {% if error and signed %}<div class="form-errors mt-3" role="alert"><p>{{ error }}</p></div>{% endif %}
+  {% if signed %}
+    <div class="mt-3 rounded-md border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-900" role="status">
+      {% icon "check-circle" "size-5 inline" %} This letter was signed by {{ letter.typed_name }} on {{ letter.signed_at|date:"d/m/Y" }} at {{ letter.signed_at|time:"H:i" }}. Thank you. You will be emailed a copy.
+    </div>
+    <p class="mt-3"><a class="btn btn-secondary" href="{% url 'onboarding:sign_pdf' token %}">{% icon "arrow-down-tray" "size-4" %} Download the signed PDF</a></p>
+  {% else %}
+    <p class="muted mt-1">Please read the letter below. If you agree, tick the box, type your full name and press Sign.</p>
+    <p class="mt-2"><a class="btn btn-secondary btn-sm" href="{% url 'onboarding:sign_pdf' token %}">{% icon "arrow-down-tray" "size-4" %} Download a PDF copy</a></p>
+  {% endif %}
+</div>
+<article class="card card-body mt-4 prose-letter" aria-label="The letter">{{ letter.body_html|safe }}</article>
+{% if not signed %}
+<form method="post" class="card card-body mt-4 space-y-4" novalidate>
+  {% csrf_token %}
+  {% if error %}<div class="form-errors" role="alert"><p>{{ error }}</p></div>{% endif %}
+  {% if form.errors and not error %}<div class="form-errors" role="alert"><p>Please check the form.</p></div>{% endif %}
+  <div>{% include "components/_field.html" with field=form.agree %}</div>
+  {% include "components/_field.html" with field=form.typed_name %}
+  <p class="help">Signing is recorded with your name, the time, your IP address and your browser.</p>
+  <div><button type="submit" class="btn btn-primary w-full sm:w-auto">Sign the letter</button></div>
+</form>
+{% endif %}
+{% endblock %}

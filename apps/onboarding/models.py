@@ -117,6 +117,9 @@ class EngagementLetter(PublicIdModel, TimeStampedModel):
         "clients.Document", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
     )
     fingerprint = models.CharField(max_length=64, blank=True)
+    message = models.ForeignKey(
+        "comms.QueuedMessage", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
     prepared_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
     )

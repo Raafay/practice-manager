@@ -342,6 +342,7 @@ def tab_nav(client: Client) -> list[tuple[str, str, str]]:
     # Stage 7: compliance tabs. The checklist shows while it matters or once it exists.
     if client.status in ("prospect", "onboarding") or client.onboarding_items.exists():
         tabs.append(("onboarding", "Onboarding", "onboarding:tab"))
+    tabs.append(("engagement", "Engagement", "onboarding:engagement"))
     return [(label, reverse(name, args=[client.pk]), key) for key, label, name in tabs]
 
 

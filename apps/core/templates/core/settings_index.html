@@ -44,6 +44,10 @@
     <span class="flex items-center gap-2 font-semibold">{% icon "clipboard-document-list" %} Onboarding checklist</span>
     <span class="muted mt-1 block">The lines every new client works through before going live.</span>
   </a>
+  <a href="{% url 'onboarding:letter_parts' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "document-text" %} Engagement letter wording</span>
+    <span class="muted mt-1 block">Covering letter, standard terms and privacy notice.</span>
+  </a>
   <a href="{% url 'clients:custom_fields' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
     <span class="flex items-center gap-2 font-semibold">{% icon "adjustments-horizontal" %} Custom fields</span>
     <span class="muted mt-1 block">Extra details held on every client.</span>

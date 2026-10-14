@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views, views_settings
+from . import views, views_letters, views_settings, views_sign
 
 app_name = "onboarding"
 
@@ -28,4 +28,37 @@ urlpatterns = [
         views_settings.ChecklistDeleteView.as_view(),
         name="checklist_delete",
     ),
+    # Engagement letters (staff)
+    path(
+        "clients/<int:pk>/engagement/", views_letters.EngagementTabView.as_view(), name="engagement"
+    ),
+    path(
+        "clients/<int:pk>/engagement/prepare/", views_letters.PrepareView.as_view(), name="prepare"
+    ),
+    path(
+        "clients/<int:pk>/engagement/<int:letter_pk>/",
+        views_letters.LetterView.as_view(),
+        name="letter",
+    ),
+    path(
+        "clients/<int:pk>/engagement/<int:letter_pk>/cancel/",
+        views_letters.LetterActionView.as_view(action="cancel"),
+        name="letter_cancel",
+    ),
+    path(
+        "clients/<int:pk>/engagement/<int:letter_pk>/cancel-link/",
+        views_letters.LetterActionView.as_view(action="cancel_link"),
+        name="letter_cancel_link",
+    ),
+    path(
+        "settings/engagement-letter/", views_letters.LetterPartsView.as_view(), name="letter_parts"
+    ),
+    path(
+        "settings/engagement-letter/<str:key>/",
+        views_letters.LetterPartEditView.as_view(),
+        name="letter_part",
+    ),
+    # Signing: no sign-in, a private link
+    path("sign/<str:token>/", views_sign.SignView.as_view(), name="sign"),
+    path("sign/<str:token>/pdf/", views_sign.SignPdfView.as_view(), name="sign_pdf"),
 ]
