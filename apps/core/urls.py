@@ -15,4 +15,8 @@ urlpatterns = [
     path("settings/practice/", views.PracticeSettingsView.as_view(), name="practice_settings"),
     path("settings/practice/logo/", views.PracticeLogoView.as_view(), name="practice_logo"),
     path("settings/security/", views.SecuritySettingsView.as_view(), name="security_settings"),
+    path("settings/system/", views.SystemView.as_view(), name="system"),
+    path(
+        "settings/system/backup-note/", views.SystemBackupNoteView.as_view(), name="system_backup"
+    ),
 ]

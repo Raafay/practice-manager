@@ -113,6 +113,8 @@ core:settings                       staff
 core:practice_settings              settings.manage
 core:practice_logo                  staff
 core:security_settings              users.manage
+core:system                         system.view
+core:system_backup                  system.view
 
 accounts:profile                    staff
 accounts:accept_invitation          public

@@ -98,6 +98,11 @@ class PracticeSettings(TimeStampedModel):
         "Copy every sent email to the practice address", default=False
     )
     comms_paused = models.BooleanField("Pause all automatic sending", default=False)
+
+    # Settings, System (Stage 13): the last backup check, typed by hand by the owner.
+    backup_note = models.TextField("Last backup check", blank=True)
+    backup_note_on = models.DateField(null=True, blank=True)
+    backup_note_by = models.CharField(max_length=150, blank=True)
     comms_paused_at = models.DateTimeField(null=True, blank=True)
     comms_paused_by = models.ForeignKey(
         "accounts.User", on_delete=models.SET_NULL, null=True, blank=True, related_name="+"

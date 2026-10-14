@@ -16,6 +16,9 @@ DEBUG = False
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS")
 # The address clients use, for links in emails. Set it in production (Stage 13).
 SITE_URL = env("SITE_URL", "http://localhost:8000").rstrip("/")
+# Which release is running, shown on Settings, System. Set by the deploy (a git tag
+# or commit), for example APP_VERSION=2026.10.1.
+APP_VERSION = env("APP_VERSION", "development")
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 
 INSTALLED_APPS = [

@@ -9,6 +9,12 @@
     <span class="flex items-center gap-2 font-semibold">{% icon "user-circle" %} Your profile</span>
     <span class="muted mt-1 block">Name, initials, colour, password and two-factor.</span>
   </a>
+  {% if user|can:"system.view" %}
+  <a href="{% url 'core:system' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "cog-6-tooth" %} System</span>
+    <span class="muted mt-1 block">Is everything working? Version, backups, jobs, email, Companies House and Xero.</span>
+  </a>
+  {% endif %}
   {% if user|can:"retention.manage" %}
   <a href="{% url 'clients:retention' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
     <span class="flex items-center gap-2 font-semibold">{% icon "archive-box" %} Retention report</span>
