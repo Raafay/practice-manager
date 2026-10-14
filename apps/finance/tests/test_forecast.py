@@ -214,8 +214,9 @@ def test_close_to_full_line():
     live_client("Busy", "accounts", 100, since=date(2026, 5, 1))
     Target.objects.create(month=NOV, amount=D("1000"))
     # September 2026 has 22 working days: 176 hours available for one 40 hour person.
-    time_services.log_time(person, minutes=170 * 60, on_date=date(2026, 9, 2))
-    time_services.log_time(person, minutes=2 * 60, on_date=date(2026, 9, 3))
+    for day in range(1, 22):  # 21 days of 8 hours plus 4 hours
+        time_services.log_time(person, minutes=8 * 60, on_date=date(2026, 9, day))
+    time_services.log_time(person, minutes=4 * 60, on_date=date(2026, 9, 22))
     _, _, fb = figures(NOV)
     line = next(line for line in fb.lines if line.startswith("The team logged"))
     assert "172.0 hours last month against 176.0 hours available." in line
