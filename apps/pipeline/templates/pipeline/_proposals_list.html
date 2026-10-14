@@ -1,7 +1,7 @@
 {# Proposals, in the Engagement tab. Needs: proposals, client, and the flags from tab_context. #}
 <div class="mb-3 mt-6 flex flex-wrap items-center justify-between gap-2">
   <h2 class="text-base font-semibold">Proposals</h2>
-  {% if can_propose %}
+  {% if can_propose and can_fees %}
   <form method="post" action="{% url 'pipeline:proposal_new' client.pk %}">{% csrf_token %}
     <button type="submit" class="btn btn-primary btn-sm">{% icon "document-text" "size-4" %} {% if proposals %}Make a new version{% else %}Make a proposal{% endif %}</button>
   </form>
@@ -15,12 +15,12 @@
   <tbody>
   {% for p in proposals %}
   <tr>
-    <td><a class="font-medium text-slate-900" href="{% url 'pipeline:proposal' client.pk p.pk %}">Version {{ p.version }}</a><span class="muted block">{{ p.lines|length }} service{{ p.lines|length|pluralize }}{% if can_fees %} · £{{ p.monthly_total }} a month{% endif %}</span></td>
+    <td>{% if can_fees %}<a class="font-medium text-slate-900" href="{% url 'pipeline:proposal' client.pk p.pk %}">Version {{ p.version }}</a>{% else %}<span class="font-medium">Version {{ p.version }}</span>{% endif %}<span class="muted block">{{ p.lines|length }} service{{ p.lines|length|pluralize }}{% if can_fees %} · £{{ p.monthly_total }} a month{% endif %}</span></td>
     <td>{% include "components/_badge.html" with text=p.get_state_display tone=p.tone %}{% if p.decline_reason %}<span class="muted block">{{ p.decline_reason }}</span>{% endif %}</td>
     <td>{{ p.sent_to|default:"" }}</td>
     <td class="whitespace-nowrap">{% if p.decided_at %}{{ p.get_state_display }} {{ p.decided_at|date:"d/m/Y" }}{% if p.decided_by %}<span class="muted block">by {{ p.decided_by }}</span>{% endif %}{% elif p.viewed_at %}Opened {{ p.viewed_at|date:"d/m/Y" }}{% elif p.sent_at %}Sent {{ p.sent_at|date:"d/m/Y" }}{% else %}Draft{% endif %}<span class="muted block">Valid until {{ p.valid_until|date:"d/m/Y" }}</span></td>
     <td class="whitespace-nowrap text-right">
-      {% if p.state == "draft" %}<a class="btn btn-ghost btn-sm" href="{% url 'pipeline:proposal_send' client.pk p.pk %}">Send</a>{% else %}<a class="btn btn-ghost btn-sm" href="{% url 'pipeline:proposal' client.pk p.pk %}">Open</a>{% endif %}
+      {% if not can_fees %}{% elif p.state == "draft" %}<a class="btn btn-ghost btn-sm" href="{% url 'pipeline:proposal_send' client.pk p.pk %}">Send</a>{% else %}<a class="btn btn-ghost btn-sm" href="{% url 'pipeline:proposal' client.pk p.pk %}">Open</a>{% endif %}
       {% if p.accepted_document %}<a class="btn btn-ghost btn-sm" href="{% url 'clients:document_download' p.accepted_document.public_id %}">Accepted PDF</a>{% elif p.document %}<a class="btn btn-ghost btn-sm" href="{% url 'clients:document_download' p.document.public_id %}">PDF</a>{% endif %}
       {% if p.state == "draft" or p.state == "sent" or p.state == "viewed" %}
       <form method="post" action="{% url 'pipeline:proposal_withdraw' client.pk p.pk %}" data-confirm="Withdraw version {{ p.version }}? Its link stops working." class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Withdraw</button></form>

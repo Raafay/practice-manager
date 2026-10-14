@@ -126,12 +126,19 @@ class MessageView(StaffRequiredMixin, View):
             "attachments": message.attachments.all(),
         }
 
-    def get(self, request, pk):
+    def get_message(self, request, pk):
         message = get_object_or_404(message_queryset(), pk=pk)
+        # A message that carries fees is not shown to a role that cannot see fees.
+        if services.shows_fees(message) and not request.user.can("fees.view"):
+            raise PermissionDenied
+        return message
+
+    def get(self, request, pk):
+        message = self.get_message(request, pk)
         return render(request, "comms/message.html", self._context(request, message))
 
     def post(self, request, pk):
-        message = get_object_or_404(message_queryset(), pk=pk)
+        message = self.get_message(request, pk)
         action = request.POST.get("action", "save")
         try:
             if action == "cancel":

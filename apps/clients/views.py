@@ -135,7 +135,7 @@ class ClientListView(StaffRequiredMixin, View):
         chosen_columns = cols.clean_columns(
             params.getlist("cols") or cols.DEFAULT_COLUMNS, request.user
         )
-        sort = cols.valid_sort(params.get("sort", ""))
+        sort = cols.valid_sort(params.get("sort", ""), request.user)
         queryset = filtered_clients(form).order_by(*cols.ordering_for(sort))
         page = paginate(request, queryset, per_page=50)
         keep = params.copy()
@@ -184,7 +184,7 @@ class ClientExportView(CapabilityRequiredMixin, View):
         form = ClientFilterForm(params)
         keys = cols.clean_columns(params.getlist("cols") or cols.DEFAULT_COLUMNS, request.user)
         queryset = filtered_clients(form).order_by(
-            *cols.ordering_for(cols.valid_sort(params.get("sort", "")))
+            *cols.ordering_for(cols.valid_sort(params.get("sort", ""), request.user))
         )
         response, writer = csv_response("clients.csv")
         writer.writerow([cols.COLUMNS[k][0] for k in keys])
@@ -217,7 +217,7 @@ class SavedViewCreateView(StaffRequiredMixin, View):
         saved.columns = cols.clean_columns(
             source.getlist("cols") or cols.DEFAULT_COLUMNS, request.user
         )
-        saved.sort = cols.valid_sort(source.get("sort", ""))
+        saved.sort = cols.valid_sort(source.get("sort", ""), request.user)
         saved.save()
         events.record(
             request.user,

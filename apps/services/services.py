@@ -67,10 +67,6 @@ def _fee_change(actor, cs, old_amount, old_frequency, *, reason="", effective_on
     )
 
 
-def _money(value) -> str:
-    return "no fee" if value is None else f"£{Decimal(value):,.2f}"
-
-
 # Sent after a service is switched on for a client (client, client_service, actor).
 service_added = django.dispatch.Signal()
 
@@ -113,16 +109,14 @@ def switch_on(
         events.record(
             actor,
             "service.added",
+            # No amounts in the summary: the timeline is shown to people who may not
+            # see fees. The fee is kept in the event's data.
             f"{actor} switched on {service.name} for {client.name} "
-            f"({'proposed' if proposed else 'active'}"
-            + (
-                f", {_money(fee_amount)} {cs.get_fee_frequency_display().lower()}"
-                if fee_amount is not None
-                else ""
-            )
-            + ").",
+            f"({'proposed' if proposed else 'active'}).",
             client=client,
             target=cs,
+            fee_amount=fee_amount,
+            fee_frequency=fee_frequency,
         )
     deadlines.generate_for_client(client, actor=actor)
     service_added.send(sender=ClientService, client=client, client_service=cs, actor=actor)
@@ -186,8 +180,7 @@ def change_fee(
     events.record(
         actor,
         "service.fee_changed",
-        f"{actor} changed the fee for {cs.service.name} on {cs.client.name} from "
-        f"{_money(old_amount)} {old_frequency} to {_money(amount)} {frequency}.",
+        f"{actor} changed the fee for {cs.service.name} on {cs.client.name}.",
         client=cs.client,
         target=cs,
         old_amount=old_amount,

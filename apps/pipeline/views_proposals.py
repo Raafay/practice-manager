@@ -10,7 +10,7 @@ from apps.clients.models import Client
 from apps.clients.views_base import get_client
 from apps.comms import services as comms
 from apps.core.models import PracticeSettings
-from apps.core.permissions import StaffRequiredMixin
+from apps.core.permissions import CapabilityRequiredMixin
 
 from . import proposals
 from .forms import ProposalComposeForm
@@ -31,12 +31,15 @@ def tab_context(client: Client) -> dict:
     }
 
 
-class ProposalMixin(StaffRequiredMixin):
+class ProposalMixin(CapabilityRequiredMixin):
+    # A proposal is a fee document, so it needs the right to see fees.
+    required_rights = ("fees.view",)
+
     def proposal(self, pk, proposal_pk) -> Proposal:
         return get_object_or_404(Proposal, pk=proposal_pk, client_id=pk)
 
 
-class ProposalCreateView(StaffRequiredMixin, View):
+class ProposalCreateView(ProposalMixin, View):
     def post(self, request, pk):
         client = get_client(pk)
         try:

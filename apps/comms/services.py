@@ -200,7 +200,21 @@ def has_unfilled_fields(message: QueuedMessage) -> list[str]:
     """Merge fields that were never filled in, or placeholders, still in the message."""
     found = merge.unknown_fields(message.subject, message.body_html, message.body_text)
     marked = "merge-unknown" in message.body_html or "not available yet]" in message.body_text
-    return found + (["a link that is not available yet"] if marked else [])
+    hidden = "[fee hidden]" in message.body_html or "[fee hidden]" in message.body_text
+    return (
+        found
+        + (["a link that is not available yet"] if marked else [])
+        + (["a fee hidden from the person who wrote it"] if hidden else [])
+    )
+
+
+def shows_fees(message: QueuedMessage) -> bool:
+    """True if the message came from a template that puts fees or invoices in it."""
+    template = message.template
+    return template is not None and (
+        template.group == MessageTemplate.Group.FEES
+        or merge.mentions_money(template.subject, template.body)
+    )
 
 
 # ---------------------------------------------------------------- approving
