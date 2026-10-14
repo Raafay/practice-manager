@@ -548,13 +548,19 @@ def send_now(message: QueuedMessage, user) -> QueuedMessage:
     return send_one(message)
 
 
+def recent_delivery_problems(days: int = 30) -> int:
+    """Messages that bounced or were marked as spam in the last `days` days."""
+    since = timezone.now() - timedelta(days=days)
+    return QueuedMessage.objects.filter(
+        delivery_state__in=["bounced", "complained"], updated_at__gte=since
+    ).count()
+
+
 def record_delivery(provider_message_id: str, delivery: str) -> int:
-    """A delivery report from the provider (wired up in Stage 13)."""
-    if delivery not in QueuedMessage.Delivery.values or not provider_message_id:
-        return 0
-    return QueuedMessage.objects.filter(provider_message_id=provider_message_id).update(
-        delivery_state=delivery
-    )
+    """A delivery report from the provider. See apps/comms/delivery.py."""
+    from .delivery import record
+
+    return record(provider_message_id, delivery)
 
 
 # ---------------------------------------------------------------- logging by hand

@@ -59,7 +59,11 @@ class QueueView(StaffRequiredMixin, View):
         template = request.GET.get("template", "")
         manager = request.GET.get("manager", "")
         q = request.GET.get("q", "").strip()
-        if state:
+        delivery = request.GET.get("delivery", "")
+        if delivery == "problem":
+            # Bounced or marked as spam, newest first, whatever their state.
+            queryset = queryset.filter(delivery_state__in=["bounced", "complained"])
+        elif state:
             queryset = queryset.filter(state=state)
         else:
             # The default shows what needs doing, and recent history.
@@ -96,6 +100,8 @@ class QueueView(StaffRequiredMixin, View):
             "paused": services.is_paused(),
             "can_pause": request.user.can("comms.pause"),
             "waiting": services.pending_count(),
+            "delivery": delivery,
+            "bounced_recently": services.recent_delivery_problems(),
         }
         return render(request, "comms/queue.html", context)
 

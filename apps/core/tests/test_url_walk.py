@@ -268,6 +268,7 @@ comms:compose                       staff
 comms:log_email                     staff
 comms:letter                        staff
 comms:sms                           staff
+comms:webhook                       open
 comms:templates                     settings.manage
 comms:template_add                  settings.manage
 comms:template_edit                 settings.manage

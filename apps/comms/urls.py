@@ -1,10 +1,12 @@
 from django.urls import path
 
-from . import views, views_settings
+from . import delivery, views, views_settings
 
 app_name = "comms"
 
 urlpatterns = [
+    # Delivery reports from the email provider. Public, checked by a shared secret.
+    path("email/events/", delivery.delivery_webhook, name="webhook"),
     path("messages/", views.QueueView.as_view(), name="queue"),
     path("messages/bulk-approve/", views.BulkApproveView.as_view(), name="bulk_approve"),
     path("messages/pause/", views.PauseView.as_view(), name="pause"),

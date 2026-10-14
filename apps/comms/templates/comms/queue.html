@@ -15,6 +15,13 @@
   {% endif %}
 </div>
 
+{% if bounced_recently and delivery != "problem" %}
+<div class="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-900" role="status">
+  <p>{% icon "exclamation-triangle" "size-4 inline" %} {{ bounced_recently }} email{{ bounced_recently|pluralize }} bounced or {{ bounced_recently|pluralize:"was,were" }} marked as spam in the last 30 days. Check the addresses.</p>
+  <a class="btn btn-secondary btn-sm" href="?delivery=problem">Show them</a>
+</div>
+{% endif %}
+{% if delivery == "problem" %}<p class="mb-3 text-sm">Showing emails that bounced or were marked as spam. <a href="{% url 'comms:queue' %}">Show everything</a>.</p>{% endif %}
 <form method="get" class="card card-body mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5" aria-label="Filter messages">
   <div><label class="label" for="q">Client or subject</label><input class="input" id="q" name="q" value="{{ q }}"></div>
   <div><label class="label" for="state">State</label>
@@ -54,7 +61,9 @@
           {% elif m.state == "failed" %}{% include "components/_badge.html" with text="Failed" tone="red" icon_name="exclamation-triangle" %}
           {% elif m.state == "approved" %}{% include "components/_badge.html" with text="Approved" tone="accent" %}
           {% else %}{% include "components/_badge.html" with text=m.get_state_display %}{% endif %}
-          {% if m.delivery_state %}<span class="muted block">{{ m.get_delivery_state_display }}</span>{% endif %}
+          {% if m.delivery_state == "bounced" %}<span class="mt-1 block">{% include "components/_badge.html" with text="Bounced: check the address" tone="red" icon_name="exclamation-triangle" %}</span>
+          {% elif m.delivery_state == "complained" %}<span class="mt-1 block">{% include "components/_badge.html" with text="Marked as spam" tone="red" icon_name="exclamation-triangle" %}</span>
+          {% elif m.delivery_state %}<span class="muted block">{{ m.get_delivery_state_display }}</span>{% endif %}
           {% if m.problems and m.state != "failed" %}<span class="muted block">{{ m.problems|first }}</span>{% endif %}
           {% if m.error %}<span class="block text-xs text-red-700">{{ m.error }}</span>{% endif %}
         </td>

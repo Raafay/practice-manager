@@ -222,6 +222,9 @@ FIELD_ENCRYPTION_KEYS = env_list("FIELD_ENCRYPTION_KEYS")
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "Practice Manager <no-reply@example.com>")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 EMAIL_BACKEND = env("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+# The email company in production (prod.py). Here: console, so no delivery reports.
+EMAIL_PROVIDER = "console"
+ANYMAIL = {"WEBHOOK_SECRET": env("EMAIL_WEBHOOK_SECRET")}
 # Text messages stay off until a provider class is named here (Stage 6, spec 07 section 7).
 SMS_BACKEND = env("SMS_BACKEND", "")
 
