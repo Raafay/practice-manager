@@ -9,6 +9,7 @@
   <table class="table">
     <thead><tr>
       <th scope="col">Person</th><th scope="col" class="text-right">Open</th><th scope="col" class="text-right">Overdue</th><th scope="col" class="text-right">Due this week</th><th scope="col" class="text-right">Due next week</th>
+      <th scope="col" class="text-right">Logged this week</th>
       <th scope="col" class="w-80">Estimated hours, next {{ window }} days</th>
     </tr></thead>
     <tbody>
@@ -19,6 +20,7 @@
         <td class="text-right">{% if row.overdue %}<a href="{% url 'tasks:list' %}?owner={{ row.owner_param }}&chip=overdue" class="font-medium text-red-700">{{ row.overdue }}</a>{% else %}0{% endif %}</td>
         <td class="text-right"><a href="{% url 'tasks:list' %}?owner={{ row.owner_param }}&chip=this_week">{{ row.this_week }}</a></td>
         <td class="text-right"><a href="{% url 'tasks:list' %}?owner={{ row.owner_param }}&chip=next_week">{{ row.next_week }}</a></td>
+        <td class="text-right">{% if row.user %}{{ row.logged_hours }} h{% else %}–{% endif %}</td>
         <td>
           {% if row.capacity_hours %}
           <div class="flex items-center gap-2">

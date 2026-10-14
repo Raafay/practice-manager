@@ -1,0 +1,34 @@
+<div class="mb-3 flex justify-end">
+  <a href="{% url 'timekeeping:client_log' client.pk %}" class="btn btn-primary" hx-get="{% url 'timekeeping:client_log' client.pk %}" hx-target="#modal-body">{% icon "plus" "size-4" %} Log time</a>
+</div>
+{% if entries %}
+<div class="mb-4 grid gap-4 md:grid-cols-3">
+  <section class="card card-body" aria-labelledby="tt-months"><h2 id="tt-months" class="mb-2 text-base">By month</h2>
+    <ul class="text-sm">{% for key, minutes in totals.months %}<li class="flex justify-between py-0.5"><span>{{ key }}</span><span>{{ minutes|duration }}</span></li>{% endfor %}</ul></section>
+  <section class="card card-body" aria-labelledby="tt-services"><h2 id="tt-services" class="mb-2 text-base">By service</h2>
+    <ul class="text-sm">{% for name, minutes in totals.services %}<li class="flex justify-between py-0.5"><span>{{ name }}</span><span>{{ minutes|duration }}</span></li>{% endfor %}</ul></section>
+  <section class="card card-body" aria-labelledby="tt-people"><h2 id="tt-people" class="mb-2 text-base">By person</h2>
+    <ul class="text-sm">{% for name, minutes in totals.people %}<li class="flex justify-between py-0.5"><span>{{ name }}</span><span>{{ minutes|duration }}</span></li>{% endfor %}</ul></section>
+</div>
+<p class="mb-2 text-sm"><strong>{{ totals.total|duration }}</strong> logged in all.</p>
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th scope="col">Date</th><th scope="col">Person</th><th scope="col">Task or note</th><th scope="col">Service</th><th scope="col" class="text-right">Time</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+    <tbody>
+    {% for e in entries %}
+      <tr>
+        <td class="whitespace-nowrap">{{ e.date|date:"d/m/Y" }}</td><td>{{ e.user.name }}</td>
+        <td>{% if e.task %}{{ e.task.title }}{% endif %}{% if e.note %}<span class="muted block text-xs">{{ e.note }}</span>{% endif %}{% if not e.billable %} {% include "components/_badge.html" with text="Not billable" tone="neutral" %}{% endif %}</td>
+        <td>{{ e.service.name|default:"" }}</td>
+        <td class="text-right">{{ e.minutes|duration }}</td>
+        <td class="text-right whitespace-nowrap">{% if e.editable %}
+          <a href="{% url 'timekeeping:edit' e.pk %}" class="btn btn-ghost btn-sm" hx-get="{% url 'timekeeping:edit' e.pk %}" hx-target="#modal-body">Edit</a>
+          <form method="post" action="{% url 'timekeeping:delete' e.pk %}" class="inline" data-confirm="Delete this time entry?">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm text-red-700">Delete</button></form>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+{% include "components/_empty.html" with title="No time logged for this client" message="Press Log time, or start a timer from one of the client's tasks." icon_name="clock" %}
+{% endif %}

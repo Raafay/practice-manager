@@ -1,0 +1,10 @@
+{% if running_timer %}
+<form method="post" action="{% url 'timekeeping:timer_stop' %}" class="flex items-center gap-1.5 rounded-md bg-white/10 py-0.5 pr-0.5 pl-2 text-sm" role="status">
+  {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+  <span class="size-2 rounded-full bg-red-500" aria-hidden="true"></span>
+  <span class="hidden max-w-40 truncate lg:inline" title="{{ running_timer.label }}">{{ running_timer.label }}</span>
+  <span class="sr-only">Timer running since {{ running_timer.started_at|time:"H:i" }}.</span>
+  <span class="text-xs text-slate-300">since {{ running_timer.started_at|time:"H:i" }}</span>
+  <button type="submit" class="btn btn-sm border-white/20 bg-white/10 text-white shadow-none hover:bg-white/20" aria-label="Stop the timer">{% icon "stop" "size-4" %} Stop</button>
+</form>
+{% endif %}

@@ -1,0 +1,75 @@
+{% extends "layouts/app.html" %}
+{% block title %}Time{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Time" subtitle="Your hours for the week. Type into a box, such as 1:30 or 1.5, and it saves when you move away." %}
+  <div class="flex flex-wrap items-center gap-2">
+    <a href="{% url 'timekeeping:log' %}" class="btn btn-primary" hx-get="{% url 'timekeeping:log' %}" hx-target="#modal-body">{% icon "plus" "size-4" %} Log time</a>
+  </div>
+</div>
+<div class="mb-3 flex flex-wrap items-center gap-2">
+  <a class="btn btn-secondary btn-sm" href="?week={{ prev_week|date:'Y-m-d' }}{% if user_param %}&user={{ user_param }}{% endif %}" aria-label="Previous week">{% icon "chevron-left" "size-4" %}</a>
+  <strong class="text-sm">Week of {{ week|date:"d/m/Y" }}</strong>
+  <a class="btn btn-secondary btn-sm" href="?week={{ next_week|date:'Y-m-d' }}{% if user_param %}&user={{ user_param }}{% endif %}" aria-label="Next week">{% icon "chevron-right" "size-4" %}</a>
+  {% if week != this_week %}<a class="btn btn-ghost btn-sm" href="?{% if user_param %}user={{ user_param }}{% endif %}">This week</a>{% endif %}
+  {% if can_pick_person %}
+  <form method="get" class="ml-auto flex items-center gap-2">
+    <input type="hidden" name="week" value="{{ week|date:'Y-m-d' }}">
+    <label for="ts-person" class="text-sm">Person</label>
+    <select id="ts-person" name="user" class="select">
+      {% for p in people %}<option value="{{ p.pk }}" {% if p.pk == person.pk %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
+    </select>
+    <button class="btn btn-secondary btn-sm" type="submit">Show</button>
+  </form>
+  {% endif %}
+</div>
+{% if grid.rows %}
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr>
+      <th scope="col">Client and task</th>
+      {% for day in grid.days %}<th scope="col" class="text-right whitespace-nowrap">{{ day|date:"D j" }}</th>{% endfor %}
+      <th scope="col" class="text-right">Total</th>
+    </tr></thead>
+    <tbody>
+      {% for row in grid.rows %}
+      <tr>
+        <th scope="row" class="font-medium">
+          {% if row.client %}<a href="{% url 'clients:detail' row.client.pk %}">{{ row.client.name }}</a>{% else %}Internal{% endif %}
+          {% if row.task %}<span class="muted block text-xs">{{ row.task.title }}</span>{% endif %}
+        </th>
+        {% for cell in row.cells %}
+        <td class="text-right">
+          {% if cell.count > 1 %}
+            <span title="{{ cell.count }} entries">{{ cell.minutes|duration }}</span>
+          {% elif cell.day > today %}
+            <span class="muted">–</span>
+          {% else %}
+          <form method="post" action="{% url 'timekeeping:cell' %}" hx-post="{% url 'timekeeping:cell' %}" hx-trigger="change" hx-swap="none">
+            {% csrf_token %}
+            <input type="hidden" name="client" value="{{ row.client.pk|default:'' }}"><input type="hidden" name="task" value="{{ row.task.pk|default:'' }}">
+            <input type="hidden" name="date" value="{{ cell.day|date:'Y-m-d' }}"><input type="hidden" name="user" value="{{ person.pk }}">
+            <label class="sr-only" for="c-{{ forloop.parentloop.counter }}-{{ forloop.counter }}">Time on {{ cell.day|date:"l j F" }}</label>
+            <input id="c-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" name="value" value="{{ cell.minutes|clock }}" class="input w-16 text-right" inputmode="decimal" autocomplete="off">
+          </form>
+          {% endif %}
+        </td>
+        {% endfor %}
+        <td class="text-right font-medium">{{ row.total|duration }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr class="font-semibold">
+        <th scope="row">Daily total</th>
+        {% for total in grid.daily %}<td class="text-right">{{ total|duration|default:"–" }}</td>{% endfor %}
+        <td class="text-right">{{ grid.weekly|duration|default:"0m" }}</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+<p class="mt-2 text-sm">{{ grid.weekly|duration|default:"0m" }} of {{ weekly_hours|floatformat:"-1" }} hours this week{% if grid.percent is not None %} ({{ grid.percent }}%){% endif %}.</p>
+{% else %}
+{% include "components/_empty.html" with title="No time logged this week" message="Press Log time, or start a timer from a task. Your entries will appear here as rows." icon_name="clock" %}
+{% endif %}
+{% endblock %}

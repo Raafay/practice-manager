@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     "apps.aml",
     "apps.pipeline",
     "apps.portal",
+    "apps.timekeeping",
+    "apps.finance",
 ]
 
 MIDDLEWARE = [

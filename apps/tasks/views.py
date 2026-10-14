@@ -21,6 +21,8 @@ from apps.clients.views import ClientTabView
 from apps.clients.views_base import done, get_client, render_form, respond, wants_partial
 from apps.core.permissions import StaffRequiredMixin
 from apps.events.models import ActivityEvent
+from apps.timekeeping import services as time_services
+from apps.timekeeping.models import Timer
 
 from . import board as board_mod
 from . import calview, filters, listing, overview, services
@@ -394,6 +396,8 @@ def drawer_context(request, task: Task, extra: dict | None = None) -> dict:
         "kinds": TaskKind.choices,
         "priorities": Task.Priority.choices,
         "teams": list(Team.objects.all()),
+        "time_logged": time_services.task_minutes(task),
+        "timer_on_task": Timer.objects.filter(user=request.user, task=task).exists(),
         "total_steps": len(task.step_list),
         "done_steps": sum(1 for s in task.step_list if s.done_at),
         "today": today,

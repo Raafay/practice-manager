@@ -20,4 +20,7 @@ def layout(request):
             from apps.portal.models import Request
 
             context["requests_new"] = Request.objects.filter(state=Request.State.NEW).count()
+            from apps.timekeeping.services import running_timer
+
+            context["running_timer"] = running_timer(user)
     return context

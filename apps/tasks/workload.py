@@ -30,10 +30,15 @@ class Row:
     estimate_minutes: int = 0
     without_estimate: int = 0
     capacity_hours: Decimal | None = None
+    logged_minutes: int = 0  # time logged this week (Stage 11)
 
     @property
     def hours(self) -> Decimal:
         return (Decimal(self.estimate_minutes) / Decimal(60)).quantize(Decimal("0.1"))
+
+    @property
+    def logged_hours(self) -> Decimal:
+        return (Decimal(self.logged_minutes) / Decimal(60)).quantize(Decimal("0.1"))
 
     @property
     def percent(self) -> int | None:
@@ -95,8 +100,16 @@ def build(today: date | None = None) -> list[Row]:
             row.without_estimate = data["n_blank"]
         return row
 
+    from apps.timekeeping.models import TimeEntry
+
+    logged = dict(
+        TimeEntry.objects.filter(date__range=(this_first, this_last))
+        .values_list("user_id")
+        .annotate(total=Sum("minutes"))
+    )
     for user in User.objects.staff().filter(is_active=True).order_by("name"):
         row = Row(user, user.name, capacity_hours=user.weekly_hours * 2)
+        row.logged_minutes = logged.get(user.pk, 0)
         result.append(fill(row, by_owner.get(user.pk)))
     result.append(fill(Row(None, "Unassigned"), by_owner.get(None)))
     return result
