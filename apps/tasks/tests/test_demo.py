@@ -16,7 +16,7 @@ def test_demo_tasks_are_a_spread_and_safe_to_run_twice():
     call_command("seed_demo", stdout=io.StringIO())
     assert first == Task.objects.count()
     today = timezone.localdate()
-    advisory = Task.objects.filter(kind=TaskKind.ADVISORY)
+    advisory = Task.objects.filter(kind=TaskKind.ADVISORY, source=Task.Source.MANUAL)
     assert advisory.count() == 25
     assert advisory.filter(owner__isnull=True).exists()
     assert advisory.filter(target_date__lt=today, status__is_done=False).exists()

@@ -11,8 +11,17 @@ from django.utils import timezone
 from apps.accounts.models import User
 from apps.clients.models import Client
 
-from . import generation, services
-from .models import Task, TaskCategory, TaskKind, TaskStatus, TaskStep
+from . import generation, projects, repeating, services
+from .models import (
+    Project,
+    ProjectTemplate,
+    RepeatingTask,
+    Task,
+    TaskCategory,
+    TaskKind,
+    TaskStatus,
+    TaskStep,
+)
 
 ADVISORY = [
     ("Monthly cash flow forecast refresh", "Cash flow and funding", 5),
@@ -85,12 +94,87 @@ def _tidy_generated(today: date) -> int:
     return count
 
 
+REPEATING = [
+    ("Weekly finance catch-up call", "weekly", 2, "Operations"),
+    ("Monthly board pack", "monthly", 10, "Reporting and budgets"),
+    ("Quarterly insurance and renewals check", "quarterly", 14, "Insurance"),
+]
+
+
+def _seed_projects(today: date) -> dict:
+    """Two projects from templates at different points, and three repeating tasks."""
+    if Project.objects.exists():
+        return {"projects": Project.objects.count(), "repeating": RepeatingTask.objects.count()}
+    people = list(_people().values())
+    clients = list(
+        Client.objects.filter(
+            status=Client.Status.ACTIVE, client_services__service__kind="advisory"
+        )
+        .distinct()
+        .order_by("name")
+    ) or list(Client.objects.filter(status=Client.Status.ACTIVE).order_by("name")[:3])
+    if not people or not clients:
+        return {"projects": 0, "repeating": 0}
+    done = TaskStatus.done_status()
+    progress = TaskStatus.objects.filter(name="In progress").first() or TaskStatus.default()
+    plans = [
+        ("Finance function health check", 21, 6, 2),
+        ("New starter finance training (12 weeks)", 5, 1, 1),
+    ]
+    for index, (template_name, started_days_ago, n_done, n_started) in enumerate(plans):
+        template = ProjectTemplate.objects.filter(name=template_name).first()
+        if template is None:
+            continue
+        owner = people[index % len(people)]
+        project = projects.create_project(
+            owner,
+            name=f"{template_name.split(' (')[0]} for {clients[index % len(clients)].name}",
+            client=clients[index % len(clients)],
+            owner=owner,
+            state=Project.State.ACTIVE,
+            start_date=today - timedelta(days=started_days_ago),
+            end_date=today + timedelta(days=75 if index else 50),
+            budget_hours=40 if index == 0 else 60,
+            description="Made-up demo project.",
+            template=template,
+        )
+        tasks = list(project.tasks.order_by("position", "id"))
+        for number, task in enumerate(tasks):
+            helper = people[(index + number) % len(people)]
+            if number < n_done and done:
+                services.set_field(helper, task, "status", done)
+            elif number < n_done + n_started:
+                services.set_field(helper, task, "status", progress)
+    for index, (title, frequency, days, category) in enumerate(REPEATING):
+        client = clients[index % len(clients)] if index < 2 else None
+        repeating.save(
+            people[index % len(people)],
+            RepeatingTask(
+                client=client,
+                title=title,
+                category=TaskCategory.objects.filter(name=category).first(),
+                owner=people[(index + 1) % len(people)],
+                frequency=frequency,
+                first_date=today - timedelta(days=60),
+                days_until_due=days,
+            ),
+        )
+    repeating.create_due(today)
+    return {"projects": Project.objects.count(), "repeating": RepeatingTask.objects.count()}
+
+
 def seed(today: date | None = None) -> dict:
     today = today or timezone.localdate()
     generation.catch_up(today=today)
     finished = _tidy_generated(today)
+    extras = _seed_projects(today)
     if Task.objects.filter(source=Task.Source.MANUAL, title=ADVISORY[0][0]).exists():
-        return {"tasks": Task.objects.count(), "advisory_tasks": 0, "finished_tasks": finished}
+        return {
+            "tasks": Task.objects.count(),
+            "advisory_tasks": 0,
+            "finished_tasks": finished,
+            **extras,
+        }
 
     people = _people()
     team = list(people.values())
@@ -130,4 +214,9 @@ def seed(today: date | None = None) -> dict:
         if index % 4 == 0 and author:
             services.add_comment(author, task, COMMENTS[index % len(COMMENTS)])
         made += 1
-    return {"tasks": Task.objects.count(), "advisory_tasks": made, "finished_tasks": finished}
+    return {
+        "tasks": Task.objects.count(),
+        "advisory_tasks": made,
+        "finished_tasks": finished,
+        **extras,
+    }

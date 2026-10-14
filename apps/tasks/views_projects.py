@@ -122,9 +122,11 @@ class ProjectEditView(StaffRequiredMixin, View):
             return self._render(request, project, form, 422)
         data = form.cleaned_data
         try:
+            # The form has already written the new values onto its instance, so compare
+            # against a fresh copy.
             projects.update_project(
                 request.user,
-                project,
+                Project.objects.get(pk=project.pk),
                 name=data["name"],
                 client=data["client_text"],
                 owner=data["owner"],
