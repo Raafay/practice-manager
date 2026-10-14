@@ -201,3 +201,17 @@ def test_lockout_and_the_activity_log_use_the_visitors_address(client, settings)
     )
     event = ActivityEvent.objects.filter(verb="auth.sign_in_failed").latest("pk")
     assert event.ip_address == "203.0.113.77"
+
+
+def test_two_factor_can_be_reset_from_the_console():
+    from allauth.mfa.models import Authenticator
+    from django.core.management import call_command
+
+    from apps.accounts.tests.factories import add_totp, owner
+    from apps.events.models import ActivityEvent
+
+    boss = owner(email="boss.sample@example.com")
+    add_totp(boss)
+    call_command("reset_two_factor", email="boss.sample@example.com")
+    assert not Authenticator.objects.filter(user=boss).exists()
+    assert ActivityEvent.objects.filter(verb="user.mfa_reset", target_id=boss.pk).exists()

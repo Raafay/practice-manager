@@ -42,6 +42,9 @@ if not env("SITE_URL").startswith("https://"):
 
 DEBUG = False
 SECRET_KEY = env("SECRET_KEY")
+# While changing the secret key, put the old one here for a day so signed values made
+# with it (password reset links, "trust this browser") keep working. See RUNBOOK.md.
+SECRET_KEY_FALLBACKS = env_list("SECRET_KEY_FALLBACKS")
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 SITE_URL = env("SITE_URL").rstrip("/")
