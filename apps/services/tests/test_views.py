@@ -53,7 +53,7 @@ def addresses(w):
         ("services:deadline_not_required", [c, d], "get"),
         ("services:deadline_reopen", [c, d], "get"),
         ("services:deadline_date", [c, d], "get"),
-        ("services:reports", [], "get"),
+        ("reports:index", [], "get"),
         ("services:report_deadlines", [], "get"),
         ("services:report_deadlines_export", [], "get"),
     ]

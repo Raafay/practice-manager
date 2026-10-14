@@ -58,7 +58,6 @@ urlpatterns = [
         name="deadline_date",
     ),
     # Reports
-    path("reports/", views.ReportsIndexView.as_view(), name="reports"),
     path("reports/deadlines/", views.DeadlineReportView.as_view(), name="report_deadlines"),
     path(
         "reports/deadlines/export/",

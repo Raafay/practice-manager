@@ -4,7 +4,7 @@
 <div class="page-header">
   {% include "components/_page_header.html" with title="AML register" subtitle="Every client with its risk level, state, last assessment and next review." %}
   <div class="flex gap-2">
-    <a href="{% url 'services:reports' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Reports</a>
+    <a href="{% url 'reports:index' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Reports</a>
     {% if user|can:"data.export" %}<a href="{{ export_url }}?{{ keep_query }}" class="btn btn-secondary">{% icon "arrow-down-tray" "size-4" %} Export CSV</a>{% endif %}
   </div>
 </div>

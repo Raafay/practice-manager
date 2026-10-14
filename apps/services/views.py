@@ -402,11 +402,6 @@ class DeadlineActionView(StaffRequiredMixin, View):
 # ------------------------------------------------------------------ Reports
 
 
-class ReportsIndexView(StaffRequiredMixin, View):
-    def get(self, request):
-        return render(request, "services/reports_index.html")
-
-
 def filtered_deadlines(form: DeadlineFilterForm):
     queryset = (
         Deadline.objects.open()
