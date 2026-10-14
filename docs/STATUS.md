@@ -4,7 +4,7 @@ Keep this file under 150 lines. When it grows, shorten older stages to two lines
 
 ## Where things stand
 
-Next stage to build: 9 (Prospects and proposals).
+Next stage to build: 10 (Portal and requests).
 
 | Stage | State | Merged on |
 |---|---|---|
@@ -17,7 +17,7 @@ Next stage to build: 9 (Prospects and proposals).
 | 6 Communications | Built, in review | |
 | 7 Onboarding and AML | Built, in review | |
 | 8 Tasks, part two | Built, in review | |
-| 9 Prospects and proposals | Not started | |
+| 9 Prospects and proposals | Built, in review | |
 | 10 Portal and requests | Not started | |
 | 11 Time, fees, Xero and forecast | Not started | |
 | 12 Import and reports | Not started | |
@@ -90,6 +90,12 @@ See `docs/screens/stage-03/`. 499 tests at the time.
 - Notices: assigned, mentioned, comment on a followed task, step ticked by someone else, deadline within 7 days while To do (job `task_notices` 07:00, once per task). Daily email job `daily_task_email` 08:00 on working days; three profile switches. Notification gained `kind` and `key`; User gained `email_overdue`, `email_today`, `email_week`.
 - Task now has real links `project`, `section`, `repeating_task`. Screens in `docs/screens/stage-08/`. No new dependency (Sortable now loads on every page).
 
+## Stage 9: prospects and proposals (built 14/10/2026)
+
+- `apps/pipeline`: PipelineStage (8 seeded), ProspectDetails, Meeting, Proposal, PipelineSettings. Prospects page (board with drag, list, filters, header figures), new prospect form, Sales and Meetings panels on the Info tab, quiet rule with daily job `pipeline_daily` (06:50, also expires proposals), quiet panel on Overview, `g p` shortcut.
+- Proposals: made from proposed services, versions (older ones withdrawn), three fee switches, compose page, sent through the queue (approved at once if the sender may approve), public page behind the Stage 7 action link (view, accept, question, decline), PDFs to Documents, `on_proposal_accepted` calls Stage 7's onboarding hook. Settings: Pipeline stages, Proposal wording and rules. Engagement tab lists proposals.
+- Merge field `proposal_summary` added. Screens in `docs/screens/stage-09/`. No new dependency.
+
 ## Assumptions
 
 Add one line each time a stage makes a choice that the specs and `docs/DECISIONS.md` did not cover. Give the stage number.
@@ -153,6 +159,12 @@ Add one line each time a stage makes a choice that the specs and `docs/DECISIONS
 - 8: A repeating task makes only the current period; periods missed while nothing ran are skipped. Its target date is the period start plus "days to finish"; no hard due date.
 - 8: Project templates have no editor in Settings yet.
 
+- 9: Source and referrer stay on the client (Internal panel), not copied to ProspectDetails. Moving a card to Won or Lost needs no `clients.status` right.
+- 9: Weighted pipeline value needs `finance.owner` (CORRECTIONS 15); open value and column totals need `fees.view`. Quiet prospects on Overview: your own, or all for `finance.owner`.
+- 9: VAT switches apply only if the practice is VAT registered; "inc. VAT" is added to amounts shown with VAT. A quarterly or annual fee shows as its own frequency with breakdown on; the monthly charge is the rounded monthly total. One-offs and the setup fee are shown apart.
+- 9: A proposal link lasts to the end of the valid-until day. Wrong, expired and cancelled links all give the same plain 404 page. Won cards cannot be dragged back. Accepting does not draft the engagement letter; staff prepare it on the Engagement tab. Link buttons in the email arrive as plain links (nh3).
+- 9: Board drops other than Lost and Won reload the page so column totals stay right.
+
 ## Known gaps
 
 Things a stage left unfinished or found broken, with the stage number. Remove a line when it is fixed.
@@ -182,3 +194,4 @@ Things a stage left unfinished or found broken, with the stage number. Remove a 
 - 7: Portal form for client details (Stage 10) not built: staff tick "Client details form completed". `SITE_URL` must be set in production (Stage 13).
 
 - 8: Project templates cannot be edited in Settings. The calendar's deadline markers follow the client (and fixed client) only, not the other filters. Drag and drop was checked through the endpoints and page markup, not in a live browser.
+- 9: Drag and drop was checked through the endpoints and markup, not in a live browser. The Prospects list has no CSV export.
