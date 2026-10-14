@@ -344,6 +344,7 @@ def tab_nav(client: Client) -> list[tuple[str, str, str]]:
         tabs.append(("onboarding", "Onboarding", "onboarding:tab"))
     tabs.append(("engagement", "Engagement", "onboarding:engagement"))
     tabs.append(("risk", "Risk", "aml:tab"))
+    tabs.append(("hmrc", "HMRC", "onboarding:hmrc"))
     return [(label, reverse(name, args=[client.pk]), key) for key, label, name in tabs]
 
 

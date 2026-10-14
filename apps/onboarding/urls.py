@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views, views_letters, views_settings, views_sign
+from . import views, views_hmrc, views_letters, views_settings, views_sign
 
 app_name = "onboarding"
 
@@ -61,4 +61,17 @@ urlpatterns = [
     # Signing: no sign-in, a private link
     path("sign/<str:token>/", views_sign.SignView.as_view(), name="sign"),
     path("sign/<str:token>/pdf/", views_sign.SignPdfView.as_view(), name="sign_pdf"),
+    # HMRC authorisations
+    path("clients/<int:pk>/hmrc/", views_hmrc.HmrcTabView.as_view(), name="hmrc"),
+    path("clients/<int:pk>/hmrc/add/", views_hmrc.AuthorisationAddView.as_view(), name="hmrc_add"),
+    path(
+        "clients/<int:pk>/hmrc/<int:auth_pk>/",
+        views_hmrc.AuthorisationEditView.as_view(),
+        name="hmrc_edit",
+    ),
+    path(
+        "clients/<int:pk>/hmrc/<int:auth_pk>/reveal/",
+        views_hmrc.AuthorisationRevealView.as_view(),
+        name="hmrc_reveal",
+    ),
 ]

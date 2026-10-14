@@ -1,0 +1,24 @@
+<div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+  <div>
+    <h2 class="text-base font-semibold">HMRC agent authorisations</h2>
+    {% if needed %}
+      <p class="muted">The services need: {% for name, taxes in needed %}{{ name }}{% if not forloop.last %}, {% endif %}{% endfor %}.{% if missing %} Not yet authorised: {{ missing|join:", " }}.{% else %} All authorised.{% endif %}</p>
+    {% else %}<p class="muted">None of this client's services need an HMRC authorisation yet.</p>{% endif %}
+  </div>
+  <button type="button" class="btn btn-primary btn-sm" hx-get="{% url 'onboarding:hmrc_add' client.pk %}" hx-target="#modal-body">{% icon "plus" "size-4" %} Add a tax</button>
+</div>
+{% if auths %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th scope="col">Tax</th><th scope="col">Method</th><th scope="col">State</th><th scope="col">Code</th><th scope="col">Expires</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+  <tbody>{% for a in auths %}
+    <tr>
+      <td class="font-medium text-slate-900">{{ a.get_tax_display }}{% if a.contact %}<span class="muted block">{{ a.contact.full_name }}</span>{% endif %}</td>
+      <td>{{ a.get_method_display }}</td>
+      <td>{% include "components/_badge.html" with text=a.get_state_display tone=a.tone %}{% if a.authorised_on %}<span class="muted block">{{ a.authorised_on|date:"d/m/Y" }}</span>{% endif %}</td>
+      <td>{% if a.masked_code %}<span id="reveal-hmrc-{{ a.pk }}"><span class="font-mono">{{ a.masked_code }}</span> <button type="button" class="btn btn-ghost btn-sm" hx-post="{% url 'onboarding:hmrc_reveal' client.pk a.pk %}" hx-target="#reveal-hmrc-{{ a.pk }}" hx-swap="outerHTML" aria-label="Show the {{ a.get_tax_display }} code">Show</button></span>{% else %}<span class="muted">None</span>{% endif %}</td>
+      <td class="whitespace-nowrap">{% if a.expiry %}{{ a.expiry|date:"d/m/Y" }}{% endif %}</td>
+      <td class="text-right"><button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'onboarding:hmrc_edit' client.pk a.pk %}" hx-target="#drawer-body">Update</button></td>
+    </tr>{% endfor %}</tbody></table></div>
+{% else %}
+  {% include "components/_empty.html" with title="No authorisations recorded" message="Add a row for each tax you need to act for this client on, then track the request until HMRC confirms it." icon_name="key" %}
+{% endif %}
