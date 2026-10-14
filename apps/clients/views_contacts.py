@@ -187,7 +187,8 @@ class ContactRevealView(StaffRequiredMixin, View):
         client = None
         client_id = request.POST.get("client")
         if client_id and client_id.isdigit():
-            client = Client.objects.filter(pk=client_id).first()
+            # Only a client this person is linked to: the reveal is logged on its timeline.
+            client = Client.objects.filter(pk=client_id, client_contacts__contact=contact).first()
         value = services.reveal_value(request.user, contact, field, client=client)
         response = render(request, "clients/_revealed.html", {"value": value, "name": field})
         response["Cache-Control"] = "no-store"

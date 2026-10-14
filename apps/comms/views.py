@@ -6,6 +6,7 @@ from django.db.models import Case, IntegerField, Q, Value, When
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 
 from apps.accounts.models import User
@@ -58,7 +59,11 @@ class QueueView(StaffRequiredMixin, View):
         template = request.GET.get("template", "")
         manager = request.GET.get("manager", "")
         q = request.GET.get("q", "").strip()
-        if state:
+        delivery = request.GET.get("delivery", "")
+        if delivery == "problem":
+            # Bounced or marked as spam, newest first, whatever their state.
+            queryset = queryset.filter(delivery_state__in=["bounced", "complained"])
+        elif state:
             queryset = queryset.filter(state=state)
         else:
             # The default shows what needs doing, and recent history.
@@ -95,6 +100,8 @@ class QueueView(StaffRequiredMixin, View):
             "paused": services.is_paused(),
             "can_pause": request.user.can("comms.pause"),
             "waiting": services.pending_count(),
+            "delivery": delivery,
+            "bounced_recently": services.recent_delivery_problems(),
         }
         return render(request, "comms/queue.html", context)
 
@@ -126,12 +133,19 @@ class MessageView(StaffRequiredMixin, View):
             "attachments": message.attachments.all(),
         }
 
-    def get(self, request, pk):
+    def get_message(self, request, pk):
         message = get_object_or_404(message_queryset(), pk=pk)
+        # A message that carries fees is not shown to a role that cannot see fees.
+        if services.shows_fees(message) and not request.user.can("fees.view"):
+            raise PermissionDenied
+        return message
+
+    def get(self, request, pk):
+        message = self.get_message(request, pk)
         return render(request, "comms/message.html", self._context(request, message))
 
     def post(self, request, pk):
-        message = get_object_or_404(message_queryset(), pk=pk)
+        message = self.get_message(request, pk)
         action = request.POST.get("action", "save")
         try:
             if action == "cancel":
@@ -154,9 +168,12 @@ class MessageView(StaffRequiredMixin, View):
                 )
             data = form.cleaned_data
             if message.channel == Channel.SMS:
-                message.body_text = data["body"] and services.merge.html_to_text(data["body"])
-                message.to = data["to"]
-                message.save()
+                services.update_text(
+                    message,
+                    request.user,
+                    to=data["to"],
+                    body_text=data["body"] and services.merge.html_to_text(data["body"]),
+                )
             else:
                 services.update_draft(
                     message,
@@ -216,7 +233,10 @@ class PauseView(StaffRequiredMixin, View):
             if paused
             else "Sending has resumed.",
         )
-        return redirect(request.POST.get("next") or "comms:queue")
+        target = request.POST.get("next", "")
+        if not url_has_allowed_host_and_scheme(target, allowed_hosts={request.get_host()}):
+            target = reverse("comms:queue")
+        return redirect(target)
 
 
 # ------------------------------------------------------------------ one client

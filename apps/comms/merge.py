@@ -80,20 +80,39 @@ class Context:
     extra: dict = field(default_factory=dict)  # link urls by field name, for tests and Stage 7+
 
 
+# Fields that show a client's fees or invoices. They are filled in only for a sender
+# who holds fees.view (or for the system); otherwise they block sending.
+MONEY_FIELDS = ("monthly_fee", "setup_fee", "outstanding_invoices")
+
+
+def mentions_money(*sources: str) -> bool:
+    return any(
+        match.group(1) in MONEY_FIELDS
+        for source in sources
+        for match in FIELD_PATTERN.finditer(source or "")
+    )
+
+
 @dataclass
 class Rendered:
     html: str
     text: str
     unknown: list = field(default_factory=list)
     placeholders: list = field(default_factory=list)
+    hidden: list = field(default_factory=list)
 
     @property
     def blocked(self) -> bool:
-        return bool(self.unknown or self.placeholders)
+        return bool(self.unknown or self.placeholders or self.hidden)
 
     def problems(self) -> list[str]:
         out = [f"Unknown merge field {{{{ {name} }}}}." for name in self.unknown]
         out += [f"{name} is not available yet." for name in self.placeholders]
+        out += [
+            f"{name} shows fees, which your role cannot see. Ask a colleague who can "
+            "see fees to send this."
+            for name in self.hidden
+        ]
         return out
 
 
@@ -299,7 +318,9 @@ def render(source: str, ctx: Context, *, html: bool = True) -> Rendered:
     plain = _plain_values(ctx)
     unknown: list[str] = []
     placeholders: list[str] = []
+    hidden: list[str] = []
     block_cache: dict[str, tuple] = {}
+    fees_hidden = ctx.user is not None and not ctx.user.can("fees.view")
 
     def block(name):
         if name not in block_cache:
@@ -336,6 +357,12 @@ def render(source: str, ctx: Context, *, html: bool = True) -> Rendered:
                     if as_html
                     else f"{{{{ {name} }}}}"
                 )
+            if name in MONEY_FIELDS and fees_hidden:
+                if name not in hidden:
+                    hidden.append(name)
+                return (
+                    '<mark class="merge-unknown">[fee hidden]</mark>' if as_html else "[fee hidden]"
+                )
             if name in ("services_list", "cs01_data", "outstanding_invoices", "proposal_summary"):
                 h, t = block(name)
                 return str(h) if as_html else t
@@ -367,7 +394,9 @@ def render(source: str, ctx: Context, *, html: bool = True) -> Rendered:
     else:
         text = FIELD_PATTERN.sub(swap(False), source)
         body_html = str(linebreaks(escape(text)))
-    return Rendered(html=body_html, text=text, unknown=unknown, placeholders=placeholders)
+    return Rendered(
+        html=body_html, text=text, unknown=unknown, placeholders=placeholders, hidden=hidden
+    )
 
 
 def _text_source(source: str) -> str:

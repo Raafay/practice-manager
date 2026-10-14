@@ -62,6 +62,12 @@ class Team(TimeStampedModel):
 
 
 class UserQuerySet(models.QuerySet):
+    def select_for_update(self, *args, **kwargs):
+        # The manager joins the role (a nullable link), and PostgreSQL cannot lock
+        # the nullable side of an outer join. Lock the user row only.
+        kwargs.setdefault("of", ("self",))
+        return super().select_for_update(*args, **kwargs)
+
     def staff(self):
         return self.filter(kind=User.Kind.STAFF)
 

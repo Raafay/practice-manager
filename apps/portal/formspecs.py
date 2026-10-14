@@ -27,6 +27,8 @@ class Field:
     help: str = ""
     # We hold a value but do not show it (another person's details, to a portal user).
     held: bool = False
+    # Another person's details: a saved draft answer is never shown to this viewer.
+    private: bool = False
 
 
 @dataclass
@@ -161,6 +163,7 @@ def details_sections(client: Client, viewer: Contact | None = None) -> list[Sect
                 "date",
                 current=dob if own else "",
                 held=bool(dob) and not own,
+                private=not own,
                 target=("contact", contact.pk, "date_of_birth"),
             ),
             Field(
@@ -169,6 +172,7 @@ def details_sections(client: Client, viewer: Contact | None = None) -> list[Sect
                 "textarea",
                 current=home if own else "",
                 held=bool(home) and not own,
+                private=not own,
                 target=("contact", contact.pk, "home_address"),
             ),
         ]
@@ -213,6 +217,7 @@ def details_sections(client: Client, viewer: Contact | None = None) -> list[Sect
                 secret=True,
                 current=mask(utr) if utr and own else "",
                 held=bool(utr) and not own,
+                private=not own,
                 target=("contact", contact.pk, "personal_utr"),
             ),
             Field(
@@ -222,6 +227,7 @@ def details_sections(client: Client, viewer: Contact | None = None) -> list[Sect
                 secret=True,
                 current=mask(ni) if ni and own else "",
                 held=bool(ni) and not own,
+                private=not own,
                 target=("contact", contact.pk, "ni_number"),
             ),
         ]

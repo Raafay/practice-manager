@@ -8,6 +8,7 @@ from datetime import date
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from apps.accounts.models import Team, User
+from apps.core.models import PracticeSettings
 
 from . import services
 from .models import (
@@ -361,3 +362,33 @@ def _links() -> None:
         b = Client.objects.filter(name=second).first()
         if a and b and not ClientLink.objects.filter(client_a=a, client_b=b).exists():
             services.add_link(None, a, b, relationship)
+
+
+RETENTION_CLIENT = "Elmstead Pottery Ltd"
+
+
+def seed_retention() -> dict:
+    """Stage 13: a long-gone former client and a person nobody keeps, so the retention
+    report has something to show. Made up; safe to run twice."""
+    if Client.objects.filter(name=RETENTION_CLIENT).exists():
+        return {}
+    client = services.create_client(
+        None,
+        name=RETENTION_CLIENT,
+        client_type=Client.Type.LTD,
+        status=S.ACTIVE,
+        email="office.elmstead@example.com",
+    )
+    owner = User.objects.filter(role__slug="owner").first()
+    services.change_status(owner, client, S.FORMER, ended_on=date(2018, 3, 31))
+    person = Contact.objects.create(
+        first_name="Dale", last_name="Example", email="dale.example@example.com"
+    )
+    ClientContact.objects.create(client=client, contact=person, roles=["director"], is_main=True)
+    practice = PracticeSettings.load()
+    if not practice.backup_note:
+        practice.backup_note = "Demo: restore test done; a known client was found."
+        practice.backup_note_on = date(2026, 10, 1)
+        practice.backup_note_by = "Morgan Hale"
+        practice.save()
+    return {}

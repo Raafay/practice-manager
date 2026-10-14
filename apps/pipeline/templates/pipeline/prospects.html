@@ -12,7 +12,7 @@
 
 <section class="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-5" aria-label="Pipeline figures">
   <div class="card card-body"><p class="muted text-xs">Open prospects</p><p class="text-xl font-semibold">{{ figures.open_count }}</p></div>
-  {% if can_fees %}<div class="card card-body"><p class="muted text-xs">Open pipeline a month</p><p class="text-xl font-semibold">£{{ figures.open_value }}</p></div>{% endif %}
+  {% if can_owner_figures %}<div class="card card-body"><p class="muted text-xs">Open pipeline a month</p><p class="text-xl font-semibold">£{{ figures.open_value }}</p></div>{% endif %}
   {% if can_owner_figures %}<div class="card card-body"><p class="muted text-xs">Weighted a month</p><p class="text-xl font-semibold">£{{ figures.weighted_value }}</p></div>{% endif %}
   <div class="card card-body"><p class="muted text-xs">Proposals waiting for an answer</p><p class="text-xl font-semibold">{{ figures.waiting }}</p></div>
   <div class="card card-body"><p class="muted text-xs">Won, last 12 months</p>
@@ -49,7 +49,7 @@
         <h2 id="stage-{{ column.stage.pk }}" class="flex-1 truncate text-sm font-semibold">{{ column.stage.name }}</h2>
         <span class="badge badge-neutral" data-column-count>{{ column.count }}</span>
       </div>
-      {% if can_fees and column.stage.is_open and column.count %}<p class="muted mt-0.5 text-xs">£{{ column.total }} a month</p>{% endif %}
+      {% if can_owner_figures and column.stage.is_open and column.count %}<p class="muted mt-0.5 text-xs">£{{ column.total }} a month</p>{% endif %}
     </header>
     <div class="max-h-[70vh] min-h-16 space-y-2 overflow-y-auto px-2 pb-2" data-column-cards data-stage-id="{{ column.stage.pk }}" data-stage-kind="{% if column.stage.is_lost %}lost{% elif column.stage.is_won %}won{% else %}open{% endif %}" aria-label="{{ column.stage.name }} cards">
       {% for card in column.cards %}{% include "pipeline/_card.html" %}{% endfor %}

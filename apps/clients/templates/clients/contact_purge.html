@@ -1,0 +1,26 @@
+{% extends "layouts/app.html" %}
+{% block title %}Remove {{ contact.full_name }} for good{% endblock %}
+{% block content_class %}max-w-2xl{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Remove a person for good" subtitle=contact.full_name %}
+</div>
+<div class="card card-body space-y-3">
+  {% if blocked_reason %}
+  <div class="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">{% icon "lock-closed" "size-4 inline" %} This cannot be done yet. {{ blocked_reason }}</div>
+  <a class="btn btn-secondary" href="{% url 'clients:contact_detail' contact.pk %}">Back to {{ contact.display_name }}</a>
+  {% else %}
+  <p>This removes {{ contact.full_name }}'s details, their links to clients, their identity checks and every document about them, with the files. It cannot be undone.</p>
+  <p class="muted text-sm">Export everything first if a copy may be needed. The activity log keeps a line saying a person was removed, without their name.</p>
+  <p><a class="btn btn-secondary btn-sm" href="{% url 'clients:contact_export' contact.pk %}">{% icon "arrow-down-tray" "size-4" %} Export everything first</a></p>
+  <form method="post" class="space-y-3" novalidate>{% csrf_token %}
+    <div class="{% if error %}has-error{% endif %}">
+      <label class="label" for="typed_name">Type their full name to confirm: <strong>{{ contact.full_name }}</strong></label>
+      <input class="input" id="typed_name" name="typed_name" autocomplete="off" required>
+      {% if error %}<p class="field-error">{{ error }}</p>{% endif %}
+    </div>
+    <button type="submit" class="btn btn-danger">Remove for good</button>
+  </form>
+  {% endif %}
+</div>
+{% endblock %}

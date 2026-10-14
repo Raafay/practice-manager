@@ -2,7 +2,9 @@ from .context import RequestInfo, reset, set_current
 
 
 def request_ip(request) -> str | None:
-    return request.META.get("REMOTE_ADDR") or None
+    from apps.core.ratelimit import client_ip
+
+    return client_ip(request) or None
 
 
 class RequestContextMiddleware:

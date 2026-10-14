@@ -1,8 +1,8 @@
 <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
   <h2 class="text-base font-semibold">Engagement letters</h2>
-  <form method="post" action="{% url 'onboarding:prepare' client.pk %}">{% csrf_token %}
+  {% if can_fees %}<form method="post" action="{% url 'onboarding:prepare' client.pk %}">{% csrf_token %}
     <button type="submit" class="btn btn-primary btn-sm">{% icon "document-text" "size-4" %} {% if services_changed %}Prepare a new engagement letter{% else %}Prepare engagement letter{% endif %}</button>
-  </form>
+  </form>{% else %}<p class="muted text-sm">Letters and proposals show fees, so they need the right to see fees.</p>{% endif %}
 </div>
 {% if services_changed %}
 <div class="mb-3 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">The services or fees have changed since the last signed letter. Prepare a new engagement letter; the old one is marked replaced once the new one is signed.</div>
@@ -16,15 +16,15 @@
   <tbody>
   {% for l in letters %}
   <tr>
-    <td><a class="font-medium text-slate-900" href="{% url 'onboarding:letter' client.pk l.pk %}">Version {{ l.version }}</a><span class="muted block">{{ l.services|length }} service{{ l.services|length|pluralize }}</span></td>
+    <td>{% if can_fees %}<a class="font-medium text-slate-900" href="{% url 'onboarding:letter' client.pk l.pk %}">Version {{ l.version }}</a>{% else %}<span class="font-medium">Version {{ l.version }}</span>{% endif %}<span class="muted block">{{ l.services|length }} service{{ l.services|length|pluralize }}</span></td>
     <td>{% include "components/_badge.html" with text=l.get_state_display tone=l.tone %}
       {% if l.state == "sent" or l.state == "viewed" %}{% if l.message and l.message.state != "sent" %}<span class="muted block">Email {{ l.message.get_state_display|lower }}</span>{% endif %}{% endif %}</td>
     <td>{{ l.signer.full_name|default:"" }}{% if l.typed_name %}<span class="muted block">Signed as {{ l.typed_name }}</span>{% endif %}</td>
     <td class="whitespace-nowrap">{% if l.signed_at %}Signed {{ l.signed_at|date:"d/m/Y" }}{% if l.review_due %}<span class="muted block">Review {{ l.review_due|date:"d/m/Y" }}</span>{% endif %}{% elif l.sent_at %}Sent {{ l.sent_at|date:"d/m/Y" }}{% else %}Draft{% endif %}</td>
     <td class="whitespace-nowrap text-right">
-      <a class="btn btn-ghost btn-sm" href="{% url 'onboarding:letter' client.pk l.pk %}">{% if l.state == "draft" %}Edit{% else %}Open{% endif %}</a>
+      {% if can_fees %}<a class="btn btn-ghost btn-sm" href="{% url 'onboarding:letter' client.pk l.pk %}">{% if l.state == "draft" %}Edit{% else %}Open{% endif %}</a>{% endif %}
       {% if l.signed_document %}<a class="btn btn-ghost btn-sm" href="{% url 'clients:document_download' l.signed_document.public_id %}">Signed PDF</a>{% elif l.unsigned_document %}<a class="btn btn-ghost btn-sm" href="{% url 'clients:document_download' l.unsigned_document.public_id %}">PDF</a>{% endif %}
-      {% if l.state == "draft" or l.state == "sent" or l.state == "viewed" %}
+      {% if can_fees and l.state == "draft" or can_fees and l.state == "sent" or can_fees and l.state == "viewed" %}
       <form method="post" action="{% url 'onboarding:letter_cancel' client.pk l.pk %}" data-confirm="Cancel version {{ l.version }}? Its signing link stops working." class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Cancel</button></form>
       {% endif %}
     </td>

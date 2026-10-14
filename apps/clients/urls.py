@@ -1,10 +1,21 @@
 from django.urls import path
 
-from . import views, views_contacts, views_documents, views_settings
+from . import views, views_contacts, views_documents, views_retention, views_settings
 
 app_name = "clients"
 
 urlpatterns = [
+    path("settings/retention/", views_retention.RetentionReportView.as_view(), name="retention"),
+    path(
+        "contacts/<int:pk>/export/",
+        views_retention.ContactExportView.as_view(),
+        name="contact_export",
+    ),
+    path(
+        "contacts/<int:pk>/remove/",
+        views_retention.ContactPurgeView.as_view(),
+        name="contact_purge",
+    ),
     path("clients/", views.ClientListView.as_view(), name="list"),
     path("clients/new/", views.ClientCreateView.as_view(), name="new"),
     path("clients/export/", views.ClientExportView.as_view(), name="export"),

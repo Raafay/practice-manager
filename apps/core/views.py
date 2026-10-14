@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.http import FileResponse, Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
 
@@ -163,3 +164,53 @@ def server_error(request):
     from django.template import loader
 
     return HttpResponseServerError(loader.get_template("500.html").render())
+
+
+def healthz(request):
+    """For the host's health check: is the database answering? Public, says nothing else."""
+    from .middleware import health_response
+
+    return health_response()
+
+
+class SystemView(CapabilityRequiredMixin, View):
+    """Settings, System: is everything working? For the owner."""
+
+    required_rights = ("system.view",)
+
+    def get(self, request):
+        from . import system
+
+        context = {
+            "version": system.version(),
+            "jobs": system.jobs_status(),
+            "email": system.email_status(),
+            "integrations": system.integrations_status(request.user),
+            "practice": PracticeSettings.load(),
+            "can_pause": request.user.can("comms.pause"),
+        }
+        return render(request, "core/system.html", context)
+
+
+class SystemBackupNoteView(CapabilityRequiredMixin, View):
+    """Save the hand-typed note of the last backup check."""
+
+    required_rights = ("system.view",)
+
+    def post(self, request):
+        practice = PracticeSettings.load()
+        note = (request.POST.get("backup_note") or "").strip()[:2000]
+        practice.backup_note = note
+        practice.backup_note_on = timezone.localdate()
+        practice.backup_note_by = request.user.name
+        practice.save(
+            update_fields=["backup_note", "backup_note_on", "backup_note_by", "updated_at"]
+        )
+        events.record(
+            request.user,
+            "setting.changed",
+            f"{request.user} noted a backup check.",
+            target=practice,
+        )
+        messages.success(request, "Backup note saved.")
+        return redirect("core:system")

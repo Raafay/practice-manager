@@ -534,13 +534,39 @@ def run_import(actor, run: ImportRun) -> ImportRun:
     return run
 
 
-def _failure_rows(run: ImportRun, failed: list[Row]) -> list[dict]:
+# Headings that look like a tax reference or a code, matched on norm() text. A column
+# with such a heading is hidden even when it is not matched to a field.
+SENSITIVE_HEADING_WORDS = (
+    "utr",
+    "taxpayer",
+    "tax reference",
+    "tax ref",
+    "national insurance",
+    "ni number",
+    "ni no",
+    "nino",
+    "auth code",
+    "authentication code",
+    "authorisation code",
+    "personal code",
+)
+
+
+def sensitive_columns(run: ImportRun) -> set[int]:
+    """Columns never shown or written out: matched to a sensitive field, or headed like one."""
     known = fields_for(run.kind)
-    hidden = {
-        i
-        for i, h in enumerate(run.headers)
-        if run.mapping.get(h) in known and known[run.mapping[h]].sensitive
-    }
+    hidden = set()
+    for i, heading in enumerate(run.headers):
+        field = run.mapping.get(heading)
+        mapped = field in known and known[field].sensitive
+        padded = f" {norm(heading)} "
+        if mapped or any(f" {word} " in padded for word in SENSITIVE_HEADING_WORDS):
+            hidden.add(i)
+    return hidden
+
+
+def _failure_rows(run: ImportRun, failed: list[Row]) -> list[dict]:
+    hidden = sensitive_columns(run)
     return [
         {
             "row": r.number,

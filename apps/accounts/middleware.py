@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.views import redirect_to_login
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -98,3 +99,26 @@ class RequireTwoFactorMiddleware:
         if user.mfa_done:
             return None
         return _redirect(request, reverse("mfa_activate_totp"))
+
+
+class PortalBoundaryMiddleware:
+    """Portal users never reach allauth's pages (passwords, two-factor, staff sign-in).
+
+    They have their own sign-in at /portal/login/ and no password. Signing out is
+    the one allauth page they may use.
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        return self.get_response(request)
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        user = getattr(request, "user", None)
+        if user is None or not user.is_authenticated or not user.is_portal:
+            return None
+        module = getattr(view_func, "__module__", "") or ""
+        if module.startswith("allauth.") and request.resolver_match.url_name != "account_logout":
+            raise PermissionDenied
+        return None

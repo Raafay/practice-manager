@@ -1,0 +1,84 @@
+{% extends "layouts/app.html" %}
+{% block title %}System{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="System" subtitle="Is everything working? Check this page once a week (docs/RUNBOOK.md)." %}
+</div>
+<div class="grid gap-4 lg:grid-cols-2">
+
+  <details class="panel" open data-panel="system-version"><summary>Version {% icon "chevron-right" "panel-chevron size-4 text-slate-400 transition-transform" %}</summary>
+    <div class="panel-body"><dl class="grid grid-cols-3 gap-x-4 gap-y-2 text-sm">
+      <dt class="muted">Release</dt><dd class="col-span-2 font-mono">{{ version.app }}</dd>
+      <dt class="muted">Settings</dt><dd class="col-span-2">{% if version.settings == "prod" %}Production{% else %}{{ version.settings|capfirst }} (not production){% endif %}</dd>
+      <dt class="muted">Python and Django</dt><dd class="col-span-2">{{ version.python }}, Django {{ version.django }}</dd>
+    </dl></div></details>
+
+  <details class="panel" open data-panel="system-backup"><summary>Backups {% icon "chevron-right" "panel-chevron size-4 text-slate-400 transition-transform" %}</summary>
+    <div class="panel-body space-y-3 text-sm">
+      <p class="muted">The database host makes the backups (docs/BACKUPS.md). Note here when you last checked them or did a restore test.</p>
+      {% if practice.backup_note_on %}
+      <p><strong>Last note, {{ practice.backup_note_on|date:"d/m/Y" }}{% if practice.backup_note_by %} by {{ practice.backup_note_by }}{% endif %}:</strong></p>
+      <p class="whitespace-pre-line">{{ practice.backup_note }}</p>
+      {% else %}
+      <p>{% include "components/_badge.html" with text="No backup check noted yet" tone="amber" icon_name="exclamation-triangle" %}</p>
+      {% endif %}
+      <form method="post" action="{% url 'core:system_backup' %}" class="space-y-2">{% csrf_token %}
+        <label class="label" for="backup_note">New note</label>
+        <textarea class="textarea" id="backup_note" name="backup_note" rows="2" placeholder="For example: Restore test done, client Copperleaf found. Backups kept 14 days."></textarea>
+        <button type="submit" class="btn btn-secondary btn-sm">Save note</button>
+      </form>
+    </div></details>
+
+  <details class="panel" open data-panel="system-jobs"><summary>Background jobs {% icon "chevron-right" "panel-chevron size-4 text-slate-400 transition-transform" %}</summary>
+    <div class="panel-body space-y-3 text-sm">
+      <p>{% if jobs.worker_ok %}{% include "components/_badge.html" with text="Worker running" tone="green" icon_name="check-circle" %} <span class="muted">Last seen {{ jobs.worker_seen|date:"d/m/Y H:i" }}.</span>
+        {% else %}{% include "components/_badge.html" with text="Worker not running" tone="red" icon_name="exclamation-triangle" %} <span class="muted">{% if jobs.worker_seen %}Last seen {{ jobs.worker_seen|date:"d/m/Y H:i" }}.{% else %}Never seen.{% endif %} Nothing runs on its own until it is back.</span>{% endif %}</p>
+      <p>{{ jobs.failed_week }} failed run{{ jobs.failed_week|pluralize }} in the last 7 days.</p>
+      <div class="table-wrap"><table class="table">
+        <thead><tr><th scope="col">Job</th><th scope="col">Last run</th><th scope="col">Result</th></tr></thead>
+        <tbody>{% for row in jobs.rows %}<tr>
+          <td>{{ row.job.label }}</td>
+          <td>{% if row.last %}{{ row.last.started_at|date:"d/m/Y H:i" }}{% else %}<span class="muted">Not yet</span>{% endif %}</td>
+          <td>{% if not row.last %}–{% elif row.last.state == "done" %}{% include "components/_badge.html" with text="Done" tone="green" %}{% elif row.last.state == "failed" %}{% include "components/_badge.html" with text="Failed" tone="red" icon_name="exclamation-triangle" %}{% else %}{% include "components/_badge.html" with text=row.last.get_state_display %}{% endif %}</td>
+        </tr>{% endfor %}</tbody></table></div>
+      <a href="{% url 'jobs:list' %}">All jobs and their run log</a>
+    </div></details>
+
+  <details class="panel" open data-panel="system-email"><summary>Email {% icon "chevron-right" "panel-chevron size-4 text-slate-400 transition-transform" %}</summary>
+    <div class="panel-body space-y-3 text-sm">
+      <dl class="grid grid-cols-3 gap-x-4 gap-y-2">
+        <dt class="muted">Sent through</dt><dd class="col-span-2">{{ email.provider }}</dd>
+        <dt class="muted">From</dt><dd class="col-span-2">{{ email.from_address }}</dd>
+        <dt class="muted">Sent, last 7 days</dt><dd class="col-span-2">{{ email.sent_week }}</dd>
+        <dt class="muted">Waiting for approval</dt><dd class="col-span-2">{{ email.waiting }}</dd>
+        <dt class="muted">Failed</dt><dd class="col-span-2">{% if email.failed %}{% include "components/_badge.html" with text=email.failed tone="red" %} <a href="{% url 'comms:queue' %}?state=failed">See them</a>{% else %}None{% endif %}</dd>
+        <dt class="muted">Bounced or spam, 30 days</dt><dd class="col-span-2">{% if email.bounced %}{% include "components/_badge.html" with text=email.bounced tone="red" %} <a href="{% url 'comms:queue' %}?delivery=problem">See them</a>{% else %}None{% endif %}</dd>
+      </dl>
+      {% if can_pause %}
+      <form method="post" action="{% url 'comms:pause' %}">{% csrf_token %}
+        <input type="hidden" name="paused" value="{% if email.paused %}0{% else %}1{% endif %}">
+        <input type="hidden" name="next" value="{% url 'core:system' %}">
+        <button type="submit" role="switch" class="switch-button" aria-checked="{% if email.paused %}true{% else %}false{% endif %}">
+          <span class="switch-track" aria-hidden="true"></span>
+          <span>Pause all automatic sending</span>
+          <span class="text-xs font-medium {% if email.paused %}text-amber-800{% else %}text-slate-500{% endif %}">{% if email.paused %}On: nothing leaves{% else %}Off{% endif %}</span>
+        </button>
+      </form>
+      {% endif %}
+    </div></details>
+
+  <details class="panel" open data-panel="system-integrations"><summary>Companies House and Xero {% icon "chevron-right" "panel-chevron size-4 text-slate-400 transition-transform" %}</summary>
+    <div class="panel-body space-y-3 text-sm">
+      <p><strong>Companies House:</strong>
+        {% if integrations.ch_key %}{% include "components/_badge.html" with text="Key set" tone="green" %}{% else %}{% include "components/_badge.html" with text="No key" tone="amber" %}{% endif %}
+        {% if integrations.ch_last %}<span class="muted">Last sync {{ integrations.ch_last.started_at|date:"d/m/Y H:i" }}: {{ integrations.ch_last.get_state_display|lower }}.</span>{% else %}<span class="muted">No sync has run yet.</span>{% endif %}</p>
+      {% if integrations.xero %}
+      <p><strong>Xero:</strong>
+        {% if integrations.xero.state == "ok" %}{% include "components/_badge.html" with text="Connected" tone="green" %}{% if integrations.xero.last_good %} <span class="muted">Last good sync {{ integrations.xero.last_good|date:"d/m/Y H:i" }}.</span>{% endif %}
+        {% elif integrations.xero.state == "broken" %}{% include "components/_badge.html" with text="Needs attention" tone="red" icon_name="exclamation-triangle" %}
+        {% else %}{% include "components/_badge.html" with text="Not connected" tone="amber" %}{% endif %}</p>
+      {% endif %}
+      <a href="{% url 'companieshouse:integrations' %}">Integrations</a>
+    </div></details>
+</div>
+{% endblock %}

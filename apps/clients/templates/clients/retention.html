@@ -1,0 +1,72 @@
+{% extends "layouts/app.html" %}
+{% block title %}Retention report{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Retention report" subtitle="What has passed its keep-until date. Nothing here is deleted by the app: you decide, one record at a time." %}
+</div>
+<p class="muted mb-4 text-sm">Client records are kept for the years set in Security settings after a client leaves; AML records for their own period. Worked out on {{ report.today|date:"d/m/Y" }}. A report like this is also made on the 2nd of each month and you are told if it lists anything.</p>
+
+<section class="mb-6" aria-labelledby="h-clients">
+  <h2 id="h-clients" class="mb-2">Clients past every keep-until date</h2>
+  {% if report.clients %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th scope="col">Client</th><th scope="col">Status</th><th scope="col">Left on</th><th scope="col">Records kept until</th><th scope="col">AML kept until</th><th scope="col"><span class="sr-only">Action</span></th></tr></thead>
+    <tbody>{% for c in report.clients %}<tr>
+      <td><a href="{% url 'clients:detail' c.pk %}" class="font-medium">{{ c.name }}</a></td>
+      <td>{{ c.get_status_display }}</td>
+      <td>{{ c.relationship_ended_on|date:"d/m/Y"|default:"–" }}</td>
+      <td>{{ c.retain_until|date:"d/m/Y"|default:"–" }}</td>
+      <td>{{ c.aml_retain_until|date:"d/m/Y"|default:"–" }}</td>
+      <td><a class="btn btn-ghost btn-sm" href="{% url 'clients:detail' c.pk %}">Open; delete from the client page</a></td>
+    </tr>{% endfor %}</tbody></table></div>
+  {% else %}
+  {% include "components/_empty.html" with title="None" message="No former or lost client has passed both dates. Nothing to decide." icon_name="check-circle" %}
+  {% endif %}
+</section>
+
+<section class="mb-6" aria-labelledby="h-aml">
+  <h2 id="h-aml" class="mb-2">AML records past their date (client records still kept)</h2>
+  {% if report.aml_only %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th scope="col">Client</th><th scope="col">AML kept until</th><th scope="col">Records kept until</th></tr></thead>
+    <tbody>{% for c in report.aml_only %}<tr>
+      <td><a href="{% url 'aml:tab' c.pk %}" class="font-medium">{{ c.name }}</a></td>
+      <td>{{ c.aml_retain_until|date:"d/m/Y" }}</td>
+      <td>{{ c.retain_until|date:"d/m/Y"|default:"–" }}</td>
+    </tr>{% endfor %}</tbody></table></div>
+  <p class="help mt-2">Identity documents can be deleted from the client's Documents tab and then removed for good. The client itself waits until its records date passes.</p>
+  {% else %}
+  {% include "components/_empty.html" with title="None" message="No AML records have passed their date while the client's records are still kept." icon_name="check-circle" %}
+  {% endif %}
+</section>
+
+<section class="mb-6" aria-labelledby="h-people">
+  <h2 id="h-people" class="mb-2">People no client keeps any more</h2>
+  {% if report.people %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th scope="col">Person</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+    <tbody>{% for p in report.people %}<tr>
+      <td><a href="{% url 'clients:contact_detail' p.pk %}" class="font-medium">{{ p.display_name }}</a></td>
+      <td class="whitespace-nowrap text-right"><a class="btn btn-ghost btn-sm" href="{% url 'clients:contact_export' p.pk %}">Export everything</a> <a class="btn btn-ghost btn-sm" href="{% url 'clients:contact_purge' p.pk %}">Remove for good</a></td>
+    </tr>{% endfor %}</tbody></table></div>
+  {% else %}
+  {% include "components/_empty.html" with title="None" message="Everyone on file is linked to a client whose records are still kept." icon_name="check-circle" %}
+  {% endif %}
+</section>
+
+<section aria-labelledby="h-docs">
+  <h2 id="h-docs" class="mb-2">Documents deleted more than 30 days ago</h2>
+  {% if report.hidden_documents %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th scope="col">Document</th><th scope="col">Client</th><th scope="col">Deleted on</th></tr></thead>
+    <tbody>{% for d in report.hidden_documents %}<tr>
+      <td>{{ d.title }}</td>
+      <td><a href="{% url 'clients:documents' d.client_id %}">{{ d.client.name }}</a></td>
+      <td>{{ d.deleted_at|date:"d/m/Y" }}</td>
+    </tr>{% endfor %}</tbody></table></div>
+  <p class="help mt-2">Deleted documents are hidden but their files are kept. Remove them for good from the client's Documents tab.</p>
+  {% else %}
+  {% include "components/_empty.html" with title="None" message="No deleted document is waiting to be removed for good." icon_name="check-circle" %}
+  {% endif %}
+</section>
+{% endblock %}

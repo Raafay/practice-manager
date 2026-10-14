@@ -14,6 +14,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.contrib.auth import login
 from django.core.mail import EmailMultiAlternatives
+from django.db.models import F
 from django.utils import timezone
 
 from apps import events
@@ -112,8 +113,13 @@ def check_code(request, email: str, code: str) -> User | None:
     )
     if entry is None or entry.expires_at <= timezone.now() or entry.attempts >= MAX_TRIES:
         return None
-    entry.attempts += 1
-    entry.save(update_fields=["attempts", "updated_at"])
+    # Count the try in the database in one step, so requests sent at the same moment
+    # cannot all slip under the limit.
+    counted = PortalLoginCode.objects.filter(
+        pk=entry.pk, used_at__isnull=True, attempts__lt=MAX_TRIES
+    ).update(attempts=F("attempts") + 1, updated_at=timezone.now())
+    if not counted:
+        return None
     if not hmac.compare_digest(entry.code_hash, hash_code(user.pk, code)):
         events.record(
             user,
@@ -123,8 +129,11 @@ def check_code(request, email: str, code: str) -> User | None:
             request=request,
         )
         return None
-    entry.used_at = timezone.now()
-    entry.save(update_fields=["used_at", "updated_at"])
+    # Used once: only the request that marks it used goes on to sign in.
+    if not PortalLoginCode.objects.filter(pk=entry.pk, used_at__isnull=True).update(
+        used_at=timezone.now(), updated_at=timezone.now()
+    ):
+        return None
     request.session.cycle_key()
     login(request, user, backend=BACKEND)
     return user

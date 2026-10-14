@@ -200,7 +200,21 @@ def has_unfilled_fields(message: QueuedMessage) -> list[str]:
     """Merge fields that were never filled in, or placeholders, still in the message."""
     found = merge.unknown_fields(message.subject, message.body_html, message.body_text)
     marked = "merge-unknown" in message.body_html or "not available yet]" in message.body_text
-    return found + (["a link that is not available yet"] if marked else [])
+    hidden = "[fee hidden]" in message.body_html or "[fee hidden]" in message.body_text
+    return (
+        found
+        + (["a link that is not available yet"] if marked else [])
+        + (["a fee hidden from the person who wrote it"] if hidden else [])
+    )
+
+
+def shows_fees(message: QueuedMessage) -> bool:
+    """True if the message came from a template that puts fees or invoices in it."""
+    template = message.template
+    return template is not None and (
+        template.group == MessageTemplate.Group.FEES
+        or merge.mentions_money(template.subject, template.body)
+    )
 
 
 # ---------------------------------------------------------------- approving
@@ -299,10 +313,36 @@ def update_draft(message: QueuedMessage, user, *, to, cc, bcc, subject, body_htm
     return message
 
 
+def update_text(message: QueuedMessage, user, *, to: str, body_text: str) -> QueuedMessage:
+    """Edit a text message, with the same rules as an email draft."""
+    if not message.is_editable:
+        raise ValidationError("This message can no longer be edited.")
+    message.to = to
+    message.body_text = body_text
+    if message.state == QueuedMessage.State.FAILED:
+        message.state = QueuedMessage.State.NEEDS_APPROVAL
+        message.error = ""
+    message.save()
+    events.record(
+        user,
+        "message.edited",
+        f"{who(user)} edited a text message for {message.client.name}.",
+        client=message.client,
+        target=message,
+    )
+    return message
+
+
 def retry(message: QueuedMessage, user) -> QueuedMessage:
-    """A failed message goes back to approved so the job picks it up again."""
+    """A failed message goes back to approved so the job picks it up again.
+
+    The approval checks run again: the client may have left since it failed.
+    """
     if message.state != QueuedMessage.State.FAILED:
         raise ValidationError("Only a failed message can be retried.")
+    problems = approval_problems(message)
+    if problems:
+        raise ValidationError(problems)
     message.state = QueuedMessage.State.APPROVED
     message.approved_by = message.approved_by or user
     message.send_after = timezone.now()
@@ -508,13 +548,19 @@ def send_now(message: QueuedMessage, user) -> QueuedMessage:
     return send_one(message)
 
 
+def recent_delivery_problems(days: int = 30) -> int:
+    """Messages that bounced or were marked as spam in the last `days` days."""
+    since = timezone.now() - timedelta(days=days)
+    return QueuedMessage.objects.filter(
+        delivery_state__in=["bounced", "complained"], updated_at__gte=since
+    ).count()
+
+
 def record_delivery(provider_message_id: str, delivery: str) -> int:
-    """A delivery report from the provider (wired up in Stage 13)."""
-    if delivery not in QueuedMessage.Delivery.values or not provider_message_id:
-        return 0
-    return QueuedMessage.objects.filter(provider_message_id=provider_message_id).update(
-        delivery_state=delivery
-    )
+    """A delivery report from the provider. See apps/comms/delivery.py."""
+    from .delivery import record
+
+    return record(provider_message_id, delivery)
 
 
 # ---------------------------------------------------------------- logging by hand

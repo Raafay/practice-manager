@@ -1,66 +1,80 @@
 # Practice Manager (working title)
 
-A private web app for one accountancy practice, built to replace BrightManager. This file is for the person running the build. Claude Code reads `CLAUDE.md` instead.
+A private web app for one UK accountancy practice. It replaces BrightManager and adds what the practice found missing. This file is for the people who run and look after the app. Claude Code reads `CLAUDE.md` instead.
 
-The app is built in thirteen stages. Each stage is one Claude Code session that ends in one pull request. The plan is in `docs/PLAN.md`.
+**No real client data goes in until every line of [`docs/GO-LIVE.md`](docs/GO-LIVE.md) is ticked.** Until then the app holds made-up demo data only.
 
-## What is in this repository
+## What the app does
 
-- `CLAUDE.md`: the standing instructions Claude Code reads at the start of every session.
-- `docs/PLAN.md`: the list of stages and the prompt to paste.
-- `docs/stages/`: one brief per stage.
-- `docs/specs/`: the detail for each part of the product. A stage reads only the ones it needs.
-- `docs/DECISIONS.md`: what has been decided, and the defaults to confirm with the practice owner.
-- `docs/STATUS.md`: where the build has got to. Claude Code keeps it up to date.
-- `docs/reference/`: notes on how BrightManager looks in use.
-- `scripts/`: a script that prepares a cloud session, and one that takes screenshots.
+- **Clients and contacts**, with company details and filing dates pulled from Companies House and kept in step each night. Tax references are encrypted and shown masked, and each reveal is logged.
+- **Services and deadlines.** Each client service has a monthly fee and makes its own recurring deadlines (accounts, confirmation statements, VAT, payroll, self assessment and more), worked out on UK working days.
+- **One pool of tasks** for compliance and advisory work, shown as a table, a board or a calendar, with templates, steps, projects, repeating tasks and a workload view.
+- **Prospects and proposals:** a sales pipeline, proposals the client accepts on screen, engagement letters signed on screen, an onboarding checklist, AML identity checks and risk assessments, HMRC authorisations and professional clearance.
+- **Client emails held in a queue for approval.** Nothing reaches a client until a person approves it, unless the owner sets a template to send by itself. Reminder schedules, letters as PDF, and delivery and bounce reports.
+- **A client portal** (sign-in by emailed code) for documents, requests and things to do, plus a request form for client staff.
+- **Time, fees and Xero:** a timesheet and timer, fee checks against Xero invoices, and targets and an income forecast that only the owner sees.
+- **Import and reports:** CSV import from BrightManager with column matching and undo, and reports with CSV export.
+- **For the owner:** the audit log, Settings > System (is everything working?), the retention report, subject access exports, and removing a person for good once the retention period has passed.
 
-## Running a stage
+## Guides
 
-1. Open Claude Code and start a cloud session on this repository, on the main branch.
-2. Leave the model on Sonnet. It is the cheaper one and it is good enough for building.
-3. Choose Plan mode, and paste the prompt from `docs/PLAN.md` with the stage number filled in.
-4. Read the plan it comes back with. It should match the stage brief. Approve it.
-5. Leave it to work. A stage can take an hour or more. You can close the window and come back.
-6. When it finishes, open the pull request. Read the summary, look at the screenshots under `docs/screens/`, and follow the "How to check" steps.
-7. If it looks right, merge the pull request. Then start the next stage in a new session.
+| Guide | For | What it covers |
+|---|---|---|
+| [`docs/STAFF-GUIDE.md`](docs/STAFF-GUIDE.md) | Everyone at the practice | Signing in, finding a client, the task views, logging requests, approving messages, onboarding |
+| [`docs/DEPLOY.md`](docs/DEPLOY.md) | Whoever puts it online | Database, bucket, app, every setting, first owner, domain, email DNS, Companies House, Xero, releases and rollback |
+| [`docs/GO-LIVE.md`](docs/GO-LIVE.md) | The owner | The checklist before real data goes in |
+| [`docs/RUNBOOK.md`](docs/RUNBOOK.md) | The owner | When something goes wrong: site down, failing jobs, email, lockouts, leavers, data breach, restores, key rotation |
+| [`docs/BACKUPS.md`](docs/BACKUPS.md) | The owner | What is backed up, and the restore test with its record |
+| [`docs/SUBPROCESSORS.md`](docs/SUBPROCESSORS.md) | The owner, for the privacy notice | Every outside company that holds or sees client data |
+| [`docs/SECURITY-REVIEW.md`](docs/SECURITY-REVIEW.md) | The owner | The security review, what was fixed, and what was accepted |
+| [`docs/XERO_SETUP.md`](docs/XERO_SETUP.md) | Whoever connects Xero | Registering the Xero app |
 
-Things that keep the cost down:
+## How it is built
 
-- One stage per session. A long session resends its whole history with every step, so a fresh session for each stage is much cheaper.
-- Do not chat in a build session. If you want to ask something general, ask it somewhere else.
-- If a stage goes wrong, do not argue with it for long. Stop it, start a new session, and use the "Continue" or "Fix" prompt from `docs/PLAN.md` with a clear description of the problem.
+Python 3.12, Django 5.2 LTS and PostgreSQL 16. Pages are rendered on the server, with HTMX and Alpine.js for small interactions and Tailwind for the look. Nothing loads from outside the site. Background jobs run in a `worker` process. It is shipped as one Docker image with two processes, `web` and `worker`. Details are in `CLAUDE.md`.
 
-## Looking at the app on your Mac
+What is in this repository:
 
-The easy way: in the Claude desktop app, open this folder as a local session and ask it to pull the latest main branch, set the app up, load the demo data and open it in the preview.
+- `apps/`: the app, one folder per area.
+- `config/`: settings for development, tests, production (`prod.py`) and the image build.
+- `Dockerfile`, `Procfile`, `gunicorn.conf.py`, `scripts/release.sh`: what the host runs.
+- `docs/`: the guides above, plus `PLAN.md`, `stages/`, `specs/`, `DECISIONS.md`, `CORRECTIONS.md` and `STATUS.md` from the build.
 
-By hand, once Stage 1 is merged:
+## Looking at the app on a laptop
 
     git pull
-    make setup
-    make seed
-    make dev
+    make setup     # install, create the database tables, build the CSS
+    make seed      # load made-up demo data (safe to run twice)
+    make dev       # run the site
 
-Then open `http://localhost:8000`. `make seed` prints the sign-in details for the made-up staff. The first time, you need uv installed (`curl -LsSf https://astral.sh/uv/install.sh | sh`). For a quick look you do not need PostgreSQL: copy `.env.example` to `.env` and set `DATABASE_URL=sqlite:///local.sqlite3`.
+Then open `http://localhost:8000`. `make seed` prints the sign-in details for the made-up staff. The first time, you need uv installed (`curl -LsSf https://astral.sh/uv/install.sh | sh`) and PostgreSQL 16 running. For a quick look without PostgreSQL, copy `.env.example` to `.env` and set `DATABASE_URL=sqlite:///local.sqlite3`.
 
-## Accounts with other services, and when each is needed
+Or with Docker: `docker compose up`. It uses the development settings, not production ones.
 
-| Service | What it is for | Needed by | Who sets it up |
-|---|---|---|---|
-| GitHub | Holds the code. Cloud sessions work from it. | Now | You |
-| Companies House developer account | A free key that lets the app read company details and filing dates. | To check Stage 3 against real data | You, in about five minutes |
-| A hosting company | Runs the site, its database and its file storage. A monthly bill. | Stage 13 | You |
-| The practice's domain | So the site lives at an address such as `app.` followed by the practice's domain, and so emails can be proved to come from the practice. | Stage 13 | Whoever controls the domain's DNS settings |
-| An email-sending service | Sends reminders and sign-in codes reliably. | Stage 13 | You |
-| Xero developer app | Lets the app read invoices and payments. The practice owner clicks "Connect" once. | After Stage 13, to use Stage 11 for real | You create the app, the owner connects |
-| Later, if wanted | A text message provider, a paid identity-check service, HMRC developer access. | After the first version | |
+Checks before any release:
 
-Cloud sessions cannot reach Companies House or Xero, so those parts are built and tested against sample data. To let a cloud session make one live Companies House check, edit the cloud environment: set network access to Custom, add `api.company-information.service.gov.uk`, keep the default list ticked, and add `COMPANIES_HOUSE_API_KEY=your key` to the environment variables. Or run the check on your Mac instead.
+    make lint      # ruff
+    make test      # the full test suite, including the walk of every address
 
-## Rules for the person running the build
+## Accounts with other services
 
-- No real client data goes in until every line of the go-live checklist from Stage 13 is ticked. Until then the app holds made-up data only.
-- Never paste real client names, emails, tax references or documents into a Claude Code session or into this repository.
+| Service | What it is for | Who sets it up |
+|---|---|---|
+| GitHub | Holds the code | You |
+| A hosting company | Runs the site, its database and its file storage (UK or EEA) | You. See `docs/DEPLOY.md` |
+| The practice's domain | The site's address, and proving emails come from the practice | Whoever controls the domain's DNS |
+| Amazon SES (or Postmark or Brevo) | Sends client emails and sign-in codes | You. See `docs/DEPLOY.md` step 8 |
+| Companies House developer account | A free key to read company details and filing dates | You, in about five minutes |
+| Xero developer app | Lets the app read invoices and payments | You create the app; the owner connects it |
+| Later, if wanted | A text message provider, a paid identity-check service, HMRC developer access | |
+
+## Rules
+
+- No real client data until the go-live checklist is ticked.
+- Never paste real client names, emails, tax references or documents into a Claude Code session, an issue, or this repository.
 - The practice owner reads and agrees the deadline rules (`docs/specs/03-services-and-deadlines.md`) and the AML risk questions (`docs/specs/06-onboarding-and-aml.md`) before go-live. The practice stays responsible for both.
 - Keep BrightManager running alongside for at least one full month after go-live.
+
+## Building further
+
+The app was built in thirteen stages, one Claude Code session and one pull request each. The plan is in `docs/PLAN.md` and the progress in `docs/STATUS.md`. For later work, start a fresh session, point it at `CLAUDE.md` and describe the change. Keep one change per session and per pull request.

@@ -1,9 +1,11 @@
 from allauth.account.adapter import get_adapter
 from allauth.account.forms import LoginForm
+from allauth.mfa.base.forms import AuthenticateForm as MfaAuthenticateForm
 from django import forms
 from django.contrib.auth import password_validation
 
 from apps import events
+from apps.core import ratelimit
 from apps.core.forms import StyledFormMixin
 
 from .models import Role, Team, User
@@ -153,3 +155,41 @@ class ProfileForm(StyledFormMixin, forms.ModelForm):
         if initials and (len(initials) != 2 or not initials.isalpha()):
             raise forms.ValidationError("Use two letters.")
         return initials
+
+
+class LimitedMfaAuthenticateForm(MfaAuthenticateForm):
+    """The two-factor step of signing in, with a limit per person on wrong codes.
+
+    allauth's own limit here is per address only (we turned off its per-account part,
+    because django-axes does the password lockout). Without this, someone holding a
+    stolen password could guess codes from many addresses.
+    """
+
+    WINDOW_LIMIT, WINDOW_SECONDS = 5, 15 * 60
+    DAY_LIMIT = 20
+
+    def _keys(self):
+        return (
+            (f"mfa-wrong:{self.user.pk}", self.WINDOW_LIMIT, self.WINDOW_SECONDS),
+            (f"mfa-wrong-day:{self.user.pk}", self.DAY_LIMIT, 24 * 60 * 60),
+        )
+
+    def clean_code(self):
+        if any(ratelimit.is_limited(key, limit) for key, limit, _ in self._keys()):
+            raise forms.ValidationError(
+                "Too many wrong codes. Wait 15 minutes and try again, or ask the owner "
+                "to reset your two-factor."
+            )
+        try:
+            return super().clean_code()
+        except forms.ValidationError:
+            for key, limit, period in self._keys():
+                ratelimit.hit(key, limit, period)
+            events.record(
+                None,
+                "auth.mfa_failed",
+                "A wrong two-factor code was entered.",
+                actor_label=self.user.email,
+                target=self.user,
+            )
+            raise

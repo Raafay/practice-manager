@@ -9,7 +9,7 @@ from django.views import View
 from apps.clients.models import Contact
 from apps.clients.views import ClientTabView
 from apps.clients.views_base import get_client
-from apps.core.permissions import CapabilityRequiredMixin, StaffRequiredMixin
+from apps.core.permissions import CapabilityRequiredMixin
 
 from . import letters
 from .forms_letters import LetterForm
@@ -34,12 +34,15 @@ class EngagementTabView(ClientTabView):
         }
 
 
-class LetterMixin(StaffRequiredMixin):
+class LetterMixin(CapabilityRequiredMixin):
+    # An engagement letter lists the fees, so it needs the right to see fees.
+    required_rights = ("fees.view",)
+
     def letter(self, pk, letter_pk) -> EngagementLetter:
         return get_object_or_404(EngagementLetter, pk=letter_pk, client_id=pk)
 
 
-class PrepareView(StaffRequiredMixin, View):
+class PrepareView(LetterMixin, View):
     def post(self, request, pk):
         client = get_client(pk)
         try:

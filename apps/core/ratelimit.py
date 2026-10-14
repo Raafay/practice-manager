@@ -5,7 +5,9 @@ Keys are hashed, so a token never sits in the cache in readable form.
 """
 
 import hashlib
+import ipaddress
 
+from django.conf import settings
 from django.core.cache import cache
 
 
@@ -35,5 +37,34 @@ def reset(key: str) -> None:
     cache.delete(_cache_key(key))
 
 
+def _valid_ip(value: str) -> str:
+    try:
+        return str(ipaddress.ip_address(value.strip()))
+    except ValueError:
+        return ""
+
+
 def client_ip(request) -> str:
-    return request.META.get("REMOTE_ADDR", "")
+    """The visitor's address, for rate limits, lockout and the activity log.
+
+    Behind the host's proxy REMOTE_ADDR is the proxy itself. With
+    TRUSTED_CLIENT_IP_HEADER set (a header the host's proxy always overwrites), that
+    header is used. With TRUSTED_PROXY_COUNT = N, the Nth address from the right of
+    X-Forwarded-For is used: the entries to its left were written by the visitor and
+    can be made up. With neither set, REMOTE_ADDR is used.
+    """
+    remote = request.META.get("REMOTE_ADDR", "")
+    header = getattr(settings, "TRUSTED_CLIENT_IP_HEADER", "")
+    if header:
+        key = "HTTP_" + header.upper().replace("-", "_")
+        return _valid_ip(request.META.get(key, "")) or remote
+    count = getattr(settings, "TRUSTED_PROXY_COUNT", 0)
+    if count > 0:
+        forwarded = [
+            part.strip()
+            for part in request.META.get("HTTP_X_FORWARDED_FOR", "").split(",")
+            if part.strip()
+        ]
+        if len(forwarded) >= count:
+            return _valid_ip(forwarded[-count]) or remote
+    return remote

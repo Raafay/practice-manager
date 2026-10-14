@@ -82,8 +82,11 @@ def ordering_for(sort: str) -> list:
     return [F(n).asc(nulls_last=True) for n in names] + [F("name").asc()]
 
 
-def valid_sort(sort: str) -> str:
+def valid_sort(sort: str, user) -> str:
+    """The sort if it names a sortable column the user may see, else ""."""
     key = sort.lstrip("-")
+    if key in RESTRICTED and not user.can(RESTRICTED[key]):
+        return ""  # sorting by a hidden column would still reveal the order
     return sort if key in COLUMNS and COLUMNS[key][1] else ""
 
 

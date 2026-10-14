@@ -13,7 +13,7 @@ pytestmark = pytest.mark.django_db
 
 OUR_NAMESPACES = {"core", "accounts", "events"}
 # Addresses open to the public, each with its own tests.
-PUBLIC = {"accounts:accept_invitation"}
+PUBLIC = {"accounts:accept_invitation", "core:healthz"}
 DUMMY_KWARGS = {"pk": 999999, "token": "not-a-real-token", "kind": "drawer"}
 
 
