@@ -219,10 +219,23 @@ class Task(TimeStampedModel):
     start_date = models.DateField(null=True, blank=True)
     period_label = models.CharField(max_length=100, blank=True)
     estimate_minutes = models.PositiveIntegerField(null=True, blank=True)
-    # Stage 8 turns these three into links to projects, sections and repeating tasks.
-    project_id = models.PositiveBigIntegerField(null=True, blank=True, db_index=True)
-    section_id = models.PositiveBigIntegerField(null=True, blank=True)
-    repeating_task_id = models.PositiveBigIntegerField(null=True, blank=True)
+    project = models.ForeignKey(
+        "tasks.Project", on_delete=models.SET_NULL, null=True, blank=True, related_name="tasks"
+    )
+    section = models.ForeignKey(
+        "tasks.ProjectSection",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="tasks",
+    )
+    repeating_task = models.ForeignKey(
+        "tasks.RepeatingTask",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="tasks",
+    )
     position = models.FloatField(default=0)
     source = models.CharField(max_length=20, choices=Source.choices, default=Source.MANUAL)
     created_by = models.ForeignKey(
@@ -242,7 +255,12 @@ class Task(TimeStampedModel):
                 fields=["deadline", "template"],
                 condition=Q(deadline__isnull=False, template__isnull=False),
                 name="one_task_per_deadline_template",
-            )
+            ),
+            models.UniqueConstraint(
+                fields=["repeating_task", "start_date"],
+                condition=Q(repeating_task__isnull=False),
+                name="one_task_per_repeating_period",
+            ),
         ]
         indexes = [models.Index(fields=["owner", "status"], name="task_owner_status")]
 
@@ -347,3 +365,157 @@ class TaskDocument(TimeStampedModel):
     class Meta:
         ordering = ["created_at"]
         constraints = [models.UniqueConstraint(fields=["task", "document"], name="one_link_each")]
+
+
+# ------------------------------------------------------------------ projects
+
+
+class Project(TimeStampedModel):
+    class State(models.TextChoices):
+        PLANNED = "planned", "Planned"
+        ACTIVE = "active", "Active"
+        ON_HOLD = "on_hold", "On hold"
+        DONE = "done", "Done"
+
+    client = models.ForeignKey(
+        "clients.Client", on_delete=models.CASCADE, null=True, blank=True, related_name="projects"
+    )
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="owned_projects",
+    )
+    state = models.CharField(max_length=10, choices=State.choices, default=State.PLANNED)
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    budget_hours = models.DecimalField(max_digits=6, decimal_places=1, null=True, blank=True)
+    template = models.ForeignKey(
+        "tasks.ProjectTemplate",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="projects",
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+
+    class Meta:
+        ordering = ["name", "id"]
+
+    def __str__(self) -> str:
+        return self.name
+
+    def clean(self):
+        if self.start_date and self.end_date and self.end_date < self.start_date:
+            raise ValidationError("The end date is before the start date.")
+
+
+class ProjectSection(TimeStampedModel):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="sections")
+    name = models.CharField(max_length=120)
+    position = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["position", "id"]
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class ProjectTemplate(TimeStampedModel):
+    name = models.CharField(max_length=200, unique=True)
+    description = models.CharField(max_length=300, blank=True)
+    position = models.PositiveIntegerField(default=0)
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["position", "name"]
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class ProjectTemplateSection(TimeStampedModel):
+    template = models.ForeignKey(ProjectTemplate, on_delete=models.CASCADE, related_name="sections")
+    name = models.CharField(max_length=120)
+    position = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["position", "id"]
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class ProjectTemplateTask(TimeStampedModel):
+    template = models.ForeignKey(ProjectTemplate, on_delete=models.CASCADE, related_name="tasks")
+    section = models.ForeignKey(
+        ProjectTemplateSection, on_delete=models.CASCADE, related_name="tasks"
+    )
+    title = models.CharField(max_length=250)
+    category = models.ForeignKey(
+        TaskCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    estimate_minutes = models.PositiveIntegerField(null=True, blank=True)
+    day_offset = models.PositiveSmallIntegerField(
+        default=0, help_text="Days after the project starts."
+    )
+    position = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["position", "id"]
+
+    def __str__(self) -> str:
+        return self.title
+
+
+# ------------------------------------------------------------------ repeating tasks
+
+
+class RepeatingTask(TimeStampedModel):
+    class Frequency(models.TextChoices):
+        WEEKLY = "weekly", "Weekly"
+        FORTNIGHTLY = "fortnightly", "Fortnightly"
+        MONTHLY = "monthly", "Monthly"
+        QUARTERLY = "quarterly", "Quarterly"
+        ANNUAL = "annual", "Annual"
+
+    client = models.ForeignKey(
+        "clients.Client",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="repeating_tasks",
+    )
+    title = models.CharField(max_length=250)
+    category = models.ForeignKey(
+        TaskCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="repeating_tasks",
+    )
+    frequency = models.CharField(max_length=12, choices=Frequency.choices)
+    first_date = models.DateField(help_text="The start of the first period.")
+    days_until_due = models.PositiveSmallIntegerField(
+        default=7, help_text="The target date is this many days after a period starts."
+    )
+    ends_on = models.DateField(null=True, blank=True)
+    active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+
+    class Meta:
+        ordering = ["title", "id"]
+
+    def __str__(self) -> str:
+        return self.title

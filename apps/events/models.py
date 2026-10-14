@@ -73,6 +73,8 @@ class Notification(TimeStampedModel):
     )
     message = models.CharField(max_length=300)
     link = models.CharField(max_length=300, blank=True)
+    kind = models.CharField(max_length=20, blank=True, db_index=True)
+    key = models.CharField(max_length=120, blank=True, db_index=True)
     read_at = models.DateTimeField(null=True, blank=True)
 
     objects = NotificationQuerySet.as_manager()

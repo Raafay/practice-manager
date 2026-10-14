@@ -108,8 +108,16 @@ def changes(before: dict, after: dict) -> dict:
     return diff
 
 
-def notify(user, message: str, link: str = "") -> Notification:
-    """Put a message under one user's bell. Links must be paths on this site."""
+def notify(user, message: str, link: str = "", *, kind: str = "", key: str = "") -> Notification:
+    """Put a message under one user's bell. Links must be paths on this site.
+
+    `kind` says what sort of notice it is. A non-empty `key` makes the notice once only:
+    a second call with the same user and key does nothing and returns None.
+    """
     if link and (not link.startswith("/") or link.startswith(("//", "/\\"))):
         raise ValueError("A notification link must be a path on this site, starting with /.")
-    return Notification.objects.create(user=user, message=message[:300], link=link)
+    if key and Notification.objects.filter(user=user, key=key).exists():
+        return None
+    return Notification.objects.create(
+        user=user, message=message[:300], link=link, kind=kind, key=key[:120]
+    )

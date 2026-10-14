@@ -123,12 +123,30 @@ class RoleRightsForm(forms.Form):
 class ProfileForm(StyledFormMixin, forms.ModelForm):
     class Meta:
         model = User
-        fields = ["name", "initials", "colour", "job_title", "weekly_hours", "email_signature"]
+        fields = [
+            "name",
+            "initials",
+            "colour",
+            "job_title",
+            "weekly_hours",
+            "email_signature",
+            "email_overdue",
+            "email_today",
+            "email_week",
+        ]
         widgets = {
             "colour": forms.TextInput(attrs={"type": "color"}),
             "email_signature": forms.Textarea(attrs={"rows": 4}),
         }
-        help_texts = {"weekly_hours": "Used to plan workload."}
+        help_texts = {
+            "weekly_hours": "Used to plan workload.",
+            "email_overdue": "In the daily email at 08:00 on working days. Notices in the app stay on.",
+        }
+        labels = {
+            "email_overdue": "Daily email: overdue tasks",
+            "email_today": "Daily email: tasks due today",
+            "email_week": "Daily email: tasks due this week",
+        }
 
     def clean_initials(self):
         initials = self.cleaned_data["initials"].strip().upper()
