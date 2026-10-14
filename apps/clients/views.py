@@ -343,6 +343,7 @@ def tab_nav(client: Client) -> list[tuple[str, str, str]]:
     if client.status in ("prospect", "onboarding") or client.onboarding_items.exists():
         tabs.append(("onboarding", "Onboarding", "onboarding:tab"))
     tabs.append(("engagement", "Engagement", "onboarding:engagement"))
+    tabs.append(("risk", "Risk", "aml:tab"))
     return [(label, reverse(name, args=[client.pk]), key) for key, label, name in tabs]
 
 

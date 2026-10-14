@@ -1,0 +1,98 @@
+{% extends "layouts/app.html" %}
+{% block title %}Risk assessment{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Risk assessment" subtitle=client.name %}
+  <a href="{% url 'aml:tab' client.pk %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Risk tab</a>
+</div>
+<p class="mb-3">Version {{ assessment.version }} · {{ assessment.get_state_display }}
+  {% if assessment.level %}{% include "components/_badge.html" with text=assessment.get_level_display|add:" risk" tone=assessment.level_tone %}{% endif %}
+  {% if assessment.review_reason %}<span class="muted"> · {{ assessment.review_reason }}</span>{% endif %}</p>
+<div class="mb-4 rounded-md border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-700" role="note">The practice owner should read these questions and the score bands before they are relied on. The app records what was done; the practice decides its own policy.</div>
+{% if assessment.state == "sent_back" and assessment.send_back_reason %}
+<div class="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="alert">Sent back: {{ assessment.send_back_reason }}</div>
+{% endif %}
+{% if problems %}<div class="form-errors mb-4" role="alert">{% for p in problems %}<p>{{ p }}</p>{% endfor %}</div>{% endif %}
+
+{% if assessment.is_editable %}
+<form method="post" class="space-y-4" novalidate>
+  {% csrf_token %}
+  {% for section, rows in sections %}
+  <fieldset class="card card-body">
+    <legend class="px-1 text-sm font-semibold uppercase tracking-wide text-slate-600">{{ section }}</legend>
+    <div class="space-y-5">
+    {% for q, entry in rows %}
+      <div>
+        <p class="font-medium text-slate-900" id="q{{ q.pk }}">{{ q.text }}</p>
+        {% if q.help_text %}<p class="help">{{ q.help_text }}</p>{% endif %}
+        <div class="mt-1 flex flex-wrap gap-4" role="radiogroup" aria-labelledby="q{{ q.pk }}">
+          {% for o in q.options %}
+          <label class="flex items-center gap-2 text-sm"><input type="radio" class="radio" name="q_{{ q.pk }}" value="{{ o.value }}" {% if entry.answer == o.value %}checked{% endif %}> {{ o.label }}{% if o.score %} <span class="muted">({{ o.score }})</span>{% endif %}{% if o.enhanced %} <span class="muted">· enhanced checks</span>{% endif %}</label>
+          {% endfor %}
+        </div>
+        <div class="mt-2 grid gap-2 sm:grid-cols-3">
+          <div class="sm:col-span-{% if q.records_check %}1{% else %}3{% endif %}"><label class="label" for="n_{{ q.pk }}">Note <span class="font-normal text-slate-400">(optional)</span></label><input class="input" id="n_{{ q.pk }}" name="n_{{ q.pk }}" value="{{ entry.note }}" maxlength="500"></div>
+          {% if q.records_check %}
+          <div><label class="label" for="d_{{ q.pk }}">Date checked</label><input class="input" type="date" id="d_{{ q.pk }}" name="d_{{ q.pk }}" value="{{ entry.checked_on }}"></div>
+          <div><label class="label" for="h_{{ q.pk }}">How it was checked</label><input class="input" id="h_{{ q.pk }}" name="h_{{ q.pk }}" value="{{ entry.checked_how }}" maxlength="300"></div>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+    </div>
+  </fieldset>
+  {% endfor %}
+
+  <section class="card card-body space-y-4" aria-labelledby="outcome">
+    <h2 id="outcome" class="text-base font-semibold">Outcome</h2>
+    <p>Score so far: <strong>{{ assessment.score }}</strong>. Suggested level: <strong>{{ assessment.suggested_level|default:"not yet scored"|title }}</strong>. The score updates when you save.</p>
+    {% if assessment.enhanced_needed %}<p class="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-900" role="alert">An answer means enhanced checks. The suggested level is high, and the notes below are required.</p>{% endif %}
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div><label class="label" for="level">Level</label>
+        <select class="select" id="level" name="level">
+          <option value="">Use the suggested level</option>
+          {% for value, label in levels %}<option value="{{ value }}" {% if assessment.level == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+        </select></div>
+      <div><label class="label" for="level_reason">Reason, if lower than suggested</label><input class="input" id="level_reason" name="level_reason" value="{{ assessment.level_reason }}" maxlength="300"></div>
+    </div>
+    <div><label class="label" for="enhanced_notes">Enhanced checks</label>
+      <textarea class="textarea" id="enhanced_notes" name="enhanced_notes" rows="4">{{ assessment.enhanced_notes }}</textarea>
+      <p class="help">What extra evidence was obtained, the source of funds and wealth, and that the owner approved.</p></div>
+    <div><label class="label" for="summary">Summary <span class="font-normal text-slate-400">(optional)</span></label>
+      <input type="hidden" id="summary" name="summary" value="{{ assessment.summary }}">
+      <trix-editor input="summary" class="textarea min-h-32 rich-text" aria-label="Summary"></trix-editor></div>
+  </section>
+  <div class="flex flex-wrap gap-2">
+    <button type="submit" class="btn btn-secondary">Save draft</button>
+    <button type="submit" name="submit" value="1" class="btn btn-primary">Submit for approval</button>
+  </div>
+</form>
+{% else %}
+<section class="card card-body" aria-labelledby="answers-h">
+  <h2 id="answers-h" class="text-base font-semibold">Answers</h2>
+  <div class="table-wrap mt-2"><table class="table">
+    <thead><tr><th scope="col">Question</th><th scope="col">Answer</th><th scope="col">Score</th><th scope="col">Notes</th></tr></thead>
+    <tbody>{% for e in answers_view %}
+      <tr><td>{{ e.text }}<span class="muted block">{{ e.section }}</span></td>
+      <td>{{ e.label }}{% if e.enhanced %} <span class="muted">· enhanced checks</span>{% endif %}</td><td>{{ e.score }}</td>
+      <td>{{ e.note }}{% if e.checked_on %}<span class="muted block">Checked {{ e.checked_on }}: {{ e.checked_how }}</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+  <dl class="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+    <div><dt class="muted">Score</dt><dd>{{ assessment.score }} (suggested {{ assessment.suggested_level }})</dd></div>
+    <div><dt class="muted">Level</dt><dd>{{ assessment.get_level_display }}{% if assessment.level_reason %}: {{ assessment.level_reason }}{% endif %}</dd></div>
+    {% if assessment.enhanced_notes %}<div class="sm:col-span-2"><dt class="muted">Enhanced checks</dt><dd>{{ assessment.enhanced_notes|linebreaksbr }}</dd></div>{% endif %}
+    {% if assessment.summary %}<div class="sm:col-span-2"><dt class="muted">Summary</dt><dd class="rich-text">{{ assessment.summary|safe }}</dd></div>{% endif %}
+    <div><dt class="muted">Assessed</dt><dd>{{ assessment.assessed_at|date:"d/m/Y" }} {% if assessment.assessed_by %}by {{ assessment.assessed_by.name }}{% endif %}</dd></div>
+    {% if assessment.approved_at %}<div><dt class="muted">Approved</dt><dd>{{ assessment.approved_at|date:"d/m/Y" }} by {{ assessment.approved_by.name }}. Next review {{ assessment.next_review_due|date:"d/m/Y" }}</dd></div>{% endif %}
+  </dl>
+  {% if assessment.state == "submitted" %}
+  <div class="mt-4 flex flex-wrap gap-2">
+    {% if can_approve %}
+    <form method="post" action="{% url 'aml:approve' client.pk assessment.pk %}">{% csrf_token %}<button type="submit" class="btn btn-primary">Approve</button></form>
+    {% endif %}
+    {% if may_approve_right %}<button type="button" class="btn btn-secondary" hx-get="{% url 'aml:send_back' client.pk assessment.pk %}" hx-target="#modal-body">Send back</button>{% endif %}
+    {% if approve_why %}<p class="text-sm text-amber-900" role="status">{{ approve_why }}</p>{% elif not may_approve_right %}<p class="muted text-sm">Waiting for someone with the right to approve.</p>{% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+{% endblock %}

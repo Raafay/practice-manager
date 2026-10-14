@@ -48,6 +48,14 @@
     <span class="flex items-center gap-2 font-semibold">{% icon "document-text" %} Engagement letter wording</span>
     <span class="muted mt-1 block">Covering letter, standard terms and privacy notice.</span>
   </a>
+  <a href="{% url 'aml:questions' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "shield-check" %} Risk questions</span>
+    <span class="muted mt-1 block">The anti-money-laundering questions, scores and bands. Read before relying on them.</span>
+  </a>
+  <a href="{% url 'aml:records' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
+    <span class="flex items-center gap-2 font-semibold">{% icon "document-text" %} AML practice records</span>
+    <span class="muted mt-1 block">Supervisory body, nominated officer, staff training and policy documents.</span>
+  </a>
   <a href="{% url 'clients:custom_fields' %}" class="card card-body block text-slate-800 no-underline hover:border-accent hover:no-underline">
     <span class="flex items-center gap-2 font-semibold">{% icon "adjustments-horizontal" %} Custom fields</span>
     <span class="muted mt-1 block">Extra details held on every client.</span>

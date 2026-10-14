@@ -1,0 +1,14 @@
+{% extends "layouts/app.html" %}
+{% block title %}AML score bands{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Score bands and review intervals" subtitle="Where low, medium and high begin, and how often each level is reviewed." %}
+  <a href="{% url 'aml:questions' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Risk questions</a>
+</div>
+<form method="post" class="card card-body max-w-xl space-y-4" novalidate>
+  {% csrf_token %}
+  <p class="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">The practice owner should read the risk questions and these bands before they are relied on.</p>
+  {% include "components/_form_fields.html" %}
+  <div><button type="submit" class="btn btn-primary">Save</button></div>
+</form>
+{% endblock %}
