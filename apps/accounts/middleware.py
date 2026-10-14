@@ -56,6 +56,8 @@ class SessionLimitsMiddleware:
                 messages.info(
                     request, "You were signed out because your session reached its time limit."
                 )
+                if user.is_portal:
+                    return _redirect(request, reverse("portal:login"))
                 if getattr(request, "htmx", False):
                     return _redirect(request, reverse("account_login"))
                 return redirect_to_login(request.get_full_path())

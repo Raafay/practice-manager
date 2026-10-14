@@ -17,4 +17,7 @@ def layout(request):
             context["comms_waiting"] = QueuedMessage.objects.filter(
                 state=QueuedMessage.State.NEEDS_APPROVAL
             ).count()
+            from apps.portal.models import Request
+
+            context["requests_new"] = Request.objects.filter(state=Request.State.NEW).count()
     return context

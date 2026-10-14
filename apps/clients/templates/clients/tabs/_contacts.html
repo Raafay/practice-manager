@@ -17,6 +17,11 @@
         <td>{% if link.portal_access %}On{% else %}<span class="muted">Off</span>{% endif %}</td>
         <td class="whitespace-nowrap">{{ link.appointed_on|date:"d/m/Y" }}{% if link.resigned_on %} <span class="muted">to {{ link.resigned_on|date:"d/m/Y" }}</span>{% endif %}</td>
         <td class="whitespace-nowrap text-right">
+          {% if link.portal_access %}
+          <form method="post" action="{% url 'portal:withdraw' client.pk link.pk %}" hx-post="{% url 'portal:withdraw' client.pk link.pk %}" hx-swap="none" hx-confirm="Withdraw {{ link.contact.full_name }}'s access to the portal for {{ client.name }}?" class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Withdraw portal access</button></form>
+          {% elif link.contact.email %}
+          <form method="post" action="{% url 'portal:invite' client.pk link.pk %}" hx-post="{% url 'portal:invite' client.pk link.pk %}" hx-swap="none" class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Invite to portal</button></form>
+          {% endif %}
           <button type="button" class="btn btn-ghost btn-sm" hx-get="{% url 'clients:contact_edit' client.pk link.pk %}" hx-target="#drawer-body">Edit</button>
           <form method="post" action="{% url 'clients:contact_unlink' client.pk link.pk %}" hx-post="{% url 'clients:contact_unlink' client.pk link.pk %}" hx-swap="none" hx-confirm="Unlink {{ link.contact.full_name }} from {{ client.name }}? The person stays on file." class="inline">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Unlink</button></form>
         </td>

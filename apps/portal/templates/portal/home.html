@@ -1,0 +1,50 @@
+{% extends "portal/base.html" %}
+{% block title %}Home{% endblock %}
+{% block content %}
+<h1 class="text-xl">Hello{% if portal_contact %}, {{ portal_contact.preferred_name|default:portal_contact.first_name }}{% endif %}</h1>
+<p class="muted mt-1">Here is what is happening for {{ portal_client.name }}.</p>
+
+<section class="mt-5" aria-labelledby="todo-h">
+  <h2 id="todo-h" class="text-base">Things to do</h2>
+  {% if things_to_do %}
+  <ul class="mt-2 space-y-2">
+    {% for item in things_to_do %}
+    <li class="card card-body flex flex-wrap items-center justify-between gap-3">
+      <div class="min-w-0">
+        <p class="font-medium text-slate-900">{{ item.title }}</p>
+        {% if item.description %}<p class="muted text-sm">{{ item.description }}</p>{% endif %}
+        {% if item.due_date %}<p class="text-sm text-slate-600">Please do this by {{ item.due_date|date:"d/m/Y" }}.</p>{% endif %}
+      </div>
+      <a class="btn btn-primary" href="{% url 'portal:item' item.public_id %}">{{ item.button_label }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="mt-2">{% include "components/_empty.html" with title="Nothing to do right now" message="When we need something from you, it will appear here." icon_name="check-circle" %}</div>
+  {% endif %}
+</section>
+
+<section class="mt-6" aria-labelledby="docs-h">
+  <div class="flex items-center justify-between"><h2 id="docs-h" class="text-base">Recent documents</h2><a href="{% url 'portal:documents' %}" class="text-sm">All documents</a></div>
+  {% if recent_documents %}
+  <ul class="card divide-y divide-slate-100">
+    {% for d in recent_documents %}
+    <li class="flex items-center justify-between gap-3 px-4 py-2.5"><span class="min-w-0 truncate">{{ d.title }}</span><span class="muted whitespace-nowrap text-sm">{{ d.created_at|date:"d/m/Y" }}</span><a href="{% url 'portal:document' d.public_id %}" class="btn btn-secondary btn-sm">Download</a></li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="mt-2">{% include "components/_empty.html" with title="No documents yet" message="Documents we share with you will appear here." icon_name="document-text" %}</div>
+  {% endif %}
+</section>
+
+<section class="mt-6" aria-labelledby="dl-h">
+  <h2 id="dl-h" class="text-base">Coming up</h2>
+  {% if deadlines %}
+  <ul class="card divide-y divide-slate-100">
+    {% for d in deadlines %}<li class="flex items-center justify-between gap-3 px-4 py-2.5"><span>{{ d.label }}</span><span class="tabular-nums text-slate-700">{{ d.due_date|date:"d/m/Y" }}</span></li>{% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted mt-1">No dates coming up.</p>
+  {% endif %}
+</section>
+{% endblock %}

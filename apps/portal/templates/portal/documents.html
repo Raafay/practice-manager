@@ -1,0 +1,32 @@
+{% extends "portal/base.html" %}
+{% block title %}Documents{% endblock %}
+{% block content %}
+<h1 class="text-xl">Documents</h1>
+
+<section class="mt-4" aria-labelledby="up-h">
+  <h2 id="up-h" class="text-base">Send us documents</h2>
+  {% include "portal/_upload_form.html" with action=upload_action|default:"" %}
+</section>
+
+<section class="mt-6" aria-labelledby="shared-h">
+  <h2 id="shared-h" class="text-base">Shared with you</h2>
+  {% if shared %}
+  <ul class="card divide-y divide-slate-100">
+    {% for d in shared %}<li class="flex items-center justify-between gap-3 px-4 py-2.5"><span class="min-w-0 truncate">{{ d.title }}</span><span class="muted whitespace-nowrap text-sm">{{ d.created_at|date:"d/m/Y" }}</span><a href="{% url 'portal:document' d.public_id %}" class="btn btn-secondary btn-sm">Download</a></li>{% endfor %}
+  </ul>
+  {% else %}
+  <div class="mt-2">{% include "components/_empty.html" with title="Nothing shared yet" message="Documents we share with you will appear here." icon_name="document-text" %}</div>
+  {% endif %}
+</section>
+
+<section class="mt-6" aria-labelledby="mine-h">
+  <h2 id="mine-h" class="text-base">You have sent</h2>
+  {% if uploaded %}
+  <ul class="card divide-y divide-slate-100">
+    {% for d in uploaded %}<li class="flex items-center justify-between gap-3 px-4 py-2.5"><span class="min-w-0 truncate">{{ d.title }} <span class="badge badge-neutral">{{ d.get_category_display }}</span></span><span class="muted whitespace-nowrap text-sm">{{ d.created_at|date:"d/m/Y" }}</span></li>{% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted mt-1">Nothing yet. Use the form above to send us something.</p>
+  {% endif %}
+</section>
+{% endblock %}

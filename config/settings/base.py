@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "apps.onboarding",
     "apps.aml",
     "apps.pipeline",
+    "apps.portal",
 ]
 
 MIDDLEWARE = [

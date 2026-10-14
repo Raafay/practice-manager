@@ -1,0 +1,15 @@
+{% extends "portal/base.html" %}
+{% block title %}New request{% endblock %}
+{% block content %}
+<h1 class="text-xl">New request</h1>
+<p class="muted mt-1">Tell us what you need. Someone will reply by email.</p>
+<form method="post" action="{% url 'portal:request_new' %}" enctype="multipart/form-data" class="card card-body mt-4 space-y-4" novalidate>
+  {% csrf_token %}
+  {% include "components/_form_fields.html" %}
+  <div>
+    <label class="label" for="req-files">Files <span class="font-normal text-slate-400">(optional)</span></label>
+    <input id="req-files" type="file" name="files" multiple class="input">
+  </div>
+  <div><button type="submit" class="btn btn-primary w-full sm:w-auto">Send request</button></div>
+</form>
+{% endblock %}

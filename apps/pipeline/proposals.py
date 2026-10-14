@@ -592,6 +592,22 @@ def ask_question(link: ActionLink, *, text: str) -> Note:
         actor_label=asker,
         note_id=note.pk,
     )
+    # The question also lands in the Requests inbox, where it can become a task.
+    from apps.portal import requests as request_services
+    from apps.portal.models import Request
+
+    request_services.create_request(
+        channel=Request.Channel.FORM,
+        client=client,
+        contact=link.contact,
+        sender_name=asker,
+        sender_email=link.contact.email,
+        subject=f"Question about proposal version {proposal.version}",
+        body=text[:2000],
+        proposal_id=proposal.pk,
+        actor_label=asker,
+        notify=False,
+    )
     notify_team(client, f"{asker} asked a question about the proposal for {client.name}.")
     return note
 

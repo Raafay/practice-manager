@@ -318,4 +318,9 @@
   .muted {
     @apply text-sm text-slate-500;
   }
+
+  /* The request form's bot trap: off screen, never display:none (some bots skip those). */
+  .hp-wrap {
+    @apply pointer-events-none absolute -left-[9999px] h-px w-px overflow-hidden;
+  }
 }

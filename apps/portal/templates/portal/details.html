@@ -1,0 +1,26 @@
+{% extends "portal/base.html" %}
+{% block title %}Your details{% endblock %}
+{% block content %}
+<h1 class="text-xl">Your details</h1>
+<p class="muted mt-1">This is what {{ practice.practice_name }} holds for {{ portal_client.name }}. If anything is wrong, tell us and we will update it.</p>
+<div class="card mt-4">
+  <dl class="divide-y divide-slate-100 text-sm">
+    <div class="grid gap-1 px-4 py-2.5 sm:grid-cols-3"><dt class="font-medium text-slate-600">Name</dt><dd class="sm:col-span-2">{{ portal_client.name }}</dd></div>
+    {% if portal_client.trading_name %}<div class="grid gap-1 px-4 py-2.5 sm:grid-cols-3"><dt class="font-medium text-slate-600">Trading name</dt><dd class="sm:col-span-2">{{ portal_client.trading_name }}</dd></div>{% endif %}
+    <div class="grid gap-1 px-4 py-2.5 sm:grid-cols-3"><dt class="font-medium text-slate-600">Type</dt><dd class="sm:col-span-2">{{ portal_client.get_client_type_display }}</dd></div>
+    {% if portal_client.company_number %}<div class="grid gap-1 px-4 py-2.5 sm:grid-cols-3"><dt class="font-medium text-slate-600">Company number</dt><dd class="sm:col-span-2">{{ portal_client.company_number }}</dd></div>{% endif %}
+    {% if portal_client.registered_office %}<div class="grid gap-1 px-4 py-2.5 sm:grid-cols-3"><dt class="font-medium text-slate-600">Registered office</dt><dd class="whitespace-pre-line sm:col-span-2">{{ portal_client.registered_office }}</dd></div>{% endif %}
+    {% if portal_client.correspondence_address %}<div class="grid gap-1 px-4 py-2.5 sm:grid-cols-3"><dt class="font-medium text-slate-600">Correspondence address</dt><dd class="whitespace-pre-line sm:col-span-2">{{ portal_client.correspondence_address }}</dd></div>{% endif %}
+    {% if portal_client.nature_of_business %}<div class="grid gap-1 px-4 py-2.5 sm:grid-cols-3"><dt class="font-medium text-slate-600">What the business does</dt><dd class="sm:col-span-2">{{ portal_client.nature_of_business }}</dd></div>{% endif %}
+    {% if portal_client.year_end %}<div class="grid gap-1 px-4 py-2.5 sm:grid-cols-3"><dt class="font-medium text-slate-600">Year end</dt><dd class="sm:col-span-2">{{ portal_client.year_end }}</dd></div>{% endif %}
+    {% if portal_client.email %}<div class="grid gap-1 px-4 py-2.5 sm:grid-cols-3"><dt class="font-medium text-slate-600">Email</dt><dd class="sm:col-span-2">{{ portal_client.email }}</dd></div>{% endif %}
+  </dl>
+</div>
+<h2 class="mt-6 text-base">People</h2>
+{% if people %}
+<ul class="card mt-2 divide-y divide-slate-100 text-sm">
+  {% for p in people %}<li class="px-4 py-2.5">{{ p.name }}{% if p.is_you %} <span class="badge badge-neutral">You</span>{% endif %}{% if p.roles %} <span class="muted">· {{ p.roles|join:", " }}</span>{% endif %}</li>{% endfor %}
+</ul>
+{% else %}<p class="muted mt-1">No people on file.</p>{% endif %}
+<p class="mt-5"><a class="btn btn-secondary" href="{% url 'portal:request_new' %}?change=1">Tell us about a change</a></p>
+{% endblock %}

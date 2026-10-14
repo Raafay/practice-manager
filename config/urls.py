@@ -26,6 +26,7 @@ urlpatterns = [
     path("", include("apps.onboarding.urls")),
     path("", include("apps.aml.urls")),
     path("", include("apps.pipeline.urls")),
+    path("", include("apps.portal.urls")),
 ]
 
 handler403 = "apps.core.views.permission_denied"

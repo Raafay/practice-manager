@@ -1,5 +1,5 @@
 {% extends "layouts/app.html" %}
-{% load aml_tags %}
+{% load aml_tags portal_tags %}
 {% block title %}{{ client.name }}{% endblock %}
 {% block content %}
 <div class="page-header">
@@ -9,6 +9,7 @@
       {% include "components/_badge.html" with text=client.get_status_display tone=client.status_tone %}
       {% if client.is_archived %}{% include "components/_badge.html" with text="Archived" tone="red" icon_name="archive-box" %}{% endif %}
       {% aml_badge client %}
+      {% portal_state_badge client %}
     </div>
     <p class="muted mt-0.5">
       {{ client.get_client_type_display }} · {{ client.reference }}
