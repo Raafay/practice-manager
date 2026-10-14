@@ -141,3 +141,23 @@ def test_fetch_progress_polls_while_running(client, run):
     assert run.fetch_state == "waiting"
     body = client.get(reverse("imports:progress", args=[run.pk])).content.decode()
     assert 'hx-trigger="every 3s"' in body and "Waiting for the background worker" in body
+
+
+def test_demo_data_has_a_past_import_and_is_safe_to_run_twice(client):
+    import io
+
+    from django.core.management import call_command
+
+    call_command("seed_demo", stdout=io.StringIO())
+    call_command("seed_demo", stdout=io.StringIO())
+    run = ImportRun.objects.get(file_name="demo-old-system-clients.csv")
+    assert run.counts == {"created": 3, "updated": 0, "failed": 1}
+    assert SavedMatching.objects.filter(name="Old system clients").count() == 1
+    from apps.accounts.models import User
+
+    sign_in(client, User.objects.get(email="morgan.hale@example.com"))
+    assert client.get(reverse("imports:run", args=[run.pk])).status_code == 200
+    assert client.get(reverse("imports:index")).status_code == 200
+    assert client.get(reverse("imports:helper")).status_code == 200
+    for name in ("tasks", "services", "time", "requests", "pipeline", "communications"):
+        assert client.get(reverse(f"reports:{name}")).status_code == 200, name
