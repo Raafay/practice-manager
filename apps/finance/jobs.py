@@ -2,9 +2,9 @@
 
 from datetime import time
 
-from apps.jobs.registry import Daily, register
+from apps.jobs.registry import Daily, Every, register
 
-from . import sync
+from . import summary, sync
 
 
 @register(
@@ -21,3 +21,14 @@ def xero_sync(run):
     if log.state == "failed":
         raise RuntimeError(log.message)
     return {**log.counts, "calls": log.calls}
+
+
+@register(
+    "owner_summary",
+    "Owner summary email",
+    Every(60),
+    description="Emails the owner summary to the owners on the day and from the hour set in "
+    "Finance settings (Fridays at 15:00 by default). Sends once a day at most.",
+)
+def owner_summary(run):
+    return summary.send_owner_summary()

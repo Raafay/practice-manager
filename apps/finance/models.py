@@ -160,6 +160,11 @@ class XeroInvoice(TimeStampedModel):
     def counts(self) -> bool:
         return self.status in (self.Status.AUTHORISED, self.Status.PAID)
 
+    @property
+    def overdue_text(self) -> str:
+        days = getattr(self, "overdue_days", 0)
+        return f"Overdue {days} day{'s' if days != 1 else ''}"
+
     def days_overdue(self, today: date) -> int:
         if self.due_date is None or self.due_date >= today:
             return 0

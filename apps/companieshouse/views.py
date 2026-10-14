@@ -152,4 +152,7 @@ class IntegrationsView(CapabilityRequiredMixin, View):
             "last_done": last_done,
             "can_run": request.user.can("system.view"),
         }
+        from apps.finance.panels import integrations_context
+
+        context.update(integrations_context(request.user))
         return render(request, "companieshouse/integrations.html", context)

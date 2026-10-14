@@ -1,0 +1,24 @@
+{% with d=data.deadlines w=data.work r=data.requests s=data.sales c=data.compliance m=data.money %}
+<div class="grid gap-4 md:grid-cols-2">
+  <section class="card card-body" aria-labelledby="s-deadlines"><h2 id="s-deadlines" class="mb-2 text-base">Deadlines</h2>
+    <p class="text-sm"><strong>{{ d.overdue }}</strong> overdue{% if d.overdue_by_service %}: {% for name, n in d.overdue_by_service %}{{ name }} {{ n }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}.</p>
+    <p class="text-sm"><strong>{{ d.soon }}</strong> due in the next 14 days{% if d.soon_by_service %}: {% for name, n in d.soon_by_service %}{{ name }} {{ n }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}.</p></section>
+  <section class="card card-body" aria-labelledby="s-work"><h2 id="s-work" class="mb-2 text-base">Work</h2>
+    <p class="text-sm"><strong>{{ w.completed }}</strong> tasks completed this week{% if w.completed_by %}: {% for name, n in w.completed_by %}{{ name }} {{ n }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}.</p>
+    <p class="text-sm"><strong>{{ w.overdue }}</strong> tasks overdue{% if w.overdue_by %}: {% for name, n in w.overdue_by %}{{ name }} {{ n }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}.</p></section>
+  <section class="card card-body" aria-labelledby="s-requests"><h2 id="s-requests" class="mb-2 text-base">Requests</h2>
+    <p class="text-sm"><strong>{{ r.received }}</strong> received this week. <strong>{{ r.open }}</strong> still open{% if r.oldest_days is not None %}, the oldest {{ r.oldest_days }} day{{ r.oldest_days|pluralize }} old{% endif %}.</p></section>
+  <section class="card card-body" aria-labelledby="s-sales"><h2 id="s-sales" class="mb-2 text-base">Sales</h2>
+    <p class="text-sm">{{ s.enquiries }} new enquir{{ s.enquiries|pluralize:"y,ies" }}, {{ s.moves }} stage move{{ s.moves|pluralize }}, {{ s.proposals_sent }} proposal{{ s.proposals_sent|pluralize }} sent, {{ s.won }} won, {{ s.lost }} lost, {{ s.quiet }} quiet prospect{{ s.quiet|pluralize }}.</p></section>
+  <section class="card card-body" aria-labelledby="s-compliance"><h2 id="s-compliance" class="mb-2 text-base">Compliance</h2>
+    <p class="text-sm">{{ c.onboarding }} onboarding in progress. {{ c.aml_reviews }} AML review{{ c.aml_reviews|pluralize }} due in 30 days. {{ c.id_expiring }} identity document{{ c.id_expiring|pluralize }} expiring. {{ c.hmrc_expiring }} HMRC authorisation{{ c.hmrc_expiring|pluralize }} expiring.</p></section>
+  <section class="card card-body" aria-labelledby="s-money"><h2 id="s-money" class="mb-2 text-base">Money</h2>
+    <p class="text-sm">Recurring fees now <strong>{{ m.recurring|money }}</strong> a month ({% if m.week_change >= 0 %}up {{ m.week_change|money }}{% else %}down {{ m.week_down|money }}{% endif %} this week).</p>
+    {% if m.has_xero %}<p class="text-sm">Invoiced this month {{ m.invoiced|money }} against {{ m.contracted|money }} contracted.</p>{% endif %}
+    <p class="text-sm">Overdue fees {{ m.overdue|money }} from {{ m.overdue_count }} client{{ m.overdue_count|pluralize }}.</p>
+    {% if m.lines %}<ul class="mt-2 list-disc space-y-1 pl-5 text-sm">{% for line in m.lines %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}</section>
+</div>
+<section class="card card-body mt-4" aria-labelledby="s-people"><h2 id="s-people" class="mb-2 text-base">People</h2>
+  <div class="table-wrap"><table class="table"><thead><tr><th scope="col">Person</th><th scope="col" class="text-right">Hours this week</th><th scope="col" class="text-right">Capacity</th><th scope="col" class="text-right">Used</th></tr></thead>
+  <tbody>{% for p in data.people %}<tr><th scope="row" class="font-medium">{{ p.name }}</th><td class="text-right">{{ p.hours }}</td><td class="text-right">{{ p.capacity|floatformat:"-1" }}</td><td class="text-right">{% if p.percent is not None %}{{ p.percent }}%{% else %}–{% endif %}</td></tr>{% endfor %}</tbody></table></div></section>
+{% endwith %}

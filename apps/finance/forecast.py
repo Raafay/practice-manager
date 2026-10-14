@@ -185,6 +185,10 @@ class MonthRow:
         """Target minus forecast. Positive means short. None when no target is set."""
         return None if self.target is None else self.target - self.forecast
 
+    @property
+    def ahead(self) -> Decimal | None:
+        return None if self.gap is None else -self.gap
+
 
 def build_months(
     snap: Snapshot,

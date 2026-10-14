@@ -867,6 +867,9 @@ class OverviewView(StaffRequiredMixin, View):
         from apps.portal.panels import overview_context as portal_context
 
         context.update(portal_context(request.user))
+        from apps.finance.panels import overview_context as finance_context
+
+        context.update(finance_context(request.user))
         return render(request, "tasks/overview.html", context)
 
 

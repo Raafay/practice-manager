@@ -1,0 +1,44 @@
+{% extends "layouts/app.html" %}
+{% block title %}Finance: Xero contacts{% endblock %}
+{% block content %}
+{% if user|can:"finance.owner" %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Finance" subtitle="Match each Xero customer to a client. Nothing is linked until you confirm it." %}
+</div>
+{% include "finance/_subnav.html" %}
+{% if to_match %}
+<section class="mb-8" aria-labelledby="m-todo">
+  <h2 id="m-todo" class="mb-2 text-base">To match <span class="badge badge-amber">{{ to_match|length }}</span></h2>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th scope="col">Xero contact</th><th scope="col">Client</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+    <tbody>{% for c in to_match %}
+      <tr>
+        <th scope="row" class="font-medium">{{ c.name }}{% if c.email %}<span class="muted block text-xs">{{ c.email }}</span>{% endif %}</th>
+        <td>
+          <form method="post" action="{% url 'finance:match_confirm' c.pk %}" class="flex flex-wrap items-center gap-2">{% csrf_token %}
+            <label class="sr-only" for="cl-{{ c.pk }}">Client for {{ c.name }}</label>
+            <select id="cl-{{ c.pk }}" name="client" class="select max-w-xs">
+              <option value="">Choose a client</option>
+              {% if c.suggested_client %}<option value="{{ c.suggested_client.pk }}" selected>{{ c.suggested_client.name }} (suggested)</option>{% endif %}
+              {% for cl in clients %}{% if cl.pk != c.suggested_client_id %}<option value="{{ cl.pk }}">{{ cl.name }}</option>{% endif %}{% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm">Confirm match</button>
+          </form>
+        </td>
+        <td class="text-right"><form method="post" action="{% url 'finance:match_ignore' c.pk %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Ignore</button></form></td>
+      </tr>{% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% else %}
+  {% if not matched %}{% include "components/_empty.html" with title="No Xero contacts yet" message="They arrive with the first Xero sync. Connect Xero in Settings, Integrations." icon_name="link" %}{% else %}<p class="muted mb-6">Every Xero contact is matched.</p>{% endif %}
+{% endif %}
+{% if matched %}
+<section aria-labelledby="m-done"><h2 id="m-done" class="mb-2 text-base">Matched <span class="badge badge-green">{{ matched|length }}</span></h2>
+  <div class="table-wrap"><table class="table"><thead><tr><th scope="col">Xero contact</th><th scope="col">Client</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+  <tbody>{% for c in matched %}<tr><th scope="row" class="font-medium">{{ c.name }}</th><td><a href="{% url 'finance:client_fees' c.client.pk %}">{{ c.client.name }}</a></td>
+    <td class="text-right"><form method="post" action="{% url 'finance:match_unmatch' c.pk %}" data-confirm="Remove this link?">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm">Unlink</button></form></td></tr>{% endfor %}</tbody></table></div></section>
+{% endif %}
+{% if ignored %}<p class="muted mt-4 text-sm">{{ ignored }} contact{{ ignored|pluralize }} ignored.</p>{% endif %}
+{% endif %}
+{% endblock %}

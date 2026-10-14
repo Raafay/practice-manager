@@ -1,0 +1,63 @@
+{% extends "layouts/app.html" %}
+{% block title %}Finance: Invoices{% endblock %}
+{% block content %}
+{% if user|can:"finance.owner" %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Finance" subtitle="What Xero says has and has not been invoiced and paid." %}
+</div>
+{% include "finance/_subnav.html" %}
+{% if not has_data %}
+  {% include "components/_empty.html" with title="No invoices from Xero yet" message="Connect Xero in Settings, Integrations. These lists fill after the first sync." icon_name="banknotes" action_url="/settings/integrations/" action_label="Open Integrations" %}
+{% else %}
+<section class="mb-8" aria-labelledby="inv-over">
+  <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+    <h2 id="inv-over" class="text-base">Overdue <span class="badge badge-{% if groups %}red{% else %}neutral{% endif %}">{{ groups|length }}</span> <span class="muted text-sm font-normal">{{ overdue_total|money }} in all</span></h2>
+    {% if groups %}
+    <form method="post" action="{% url 'finance:chase' %}">{% csrf_token %}
+      <button type="submit" class="btn btn-secondary">{% icon "envelope" "size-4" %} Draft chase emails</button>
+    </form>{% endif %}
+  </div>
+  {% if groups %}
+  <p class="help mb-2">Drafts wait on the Queued page for someone with the right to approve fee messages. Nothing is sent from here.</p>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th scope="col">Client</th><th scope="col">Invoices</th><th scope="col" class="text-right">Amount due</th><th scope="col" class="text-right">Oldest overdue</th></tr></thead>
+    <tbody>{% for g in groups %}
+      <tr>
+        <th scope="row" class="font-medium">{% if g.client %}<a href="{% url 'finance:client_fees' g.client.pk %}">{{ g.name }}</a>{% else %}{{ g.name }} <span class="badge badge-amber">Not matched</span>{% endif %}</th>
+        <td class="text-sm">{% for i in g.invoices %}{{ i.number }} ({{ i.amount_due|money }}, due {{ i.due_date|date:"d/m/Y" }}){% if not forloop.last %}<br>{% endif %}{% endfor %}</td>
+        <td class="text-right">{{ g.total_due|money }}</td>
+        <td class="text-right">{{ g.oldest_days }} day{{ g.oldest_days|pluralize }}</td>
+      </tr>{% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<p class="muted">Nothing is overdue.</p>{% endif %}
+</section>
+
+<section class="mb-8" aria-labelledby="inv-none">
+  <h2 id="inv-none" class="mb-2 text-base">Not invoiced this month <span class="badge badge-{% if not_invoiced %}amber{% else %}neutral{% endif %}">{{ not_invoiced|length }}</span></h2>
+  <p class="muted mb-2 text-sm">Live clients with a monthly fee and no invoice dated in {{ this_month|date:"F Y" }}. Listed after day {{ after_day }} of the month{% if today.day <= after_day %}, so nothing shows yet{% endif %}.</p>
+  {% if not_invoiced %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th scope="col">Client</th><th scope="col" class="text-right">Agreed monthly fee</th></tr></thead>
+    <tbody>{% for row in not_invoiced %}<tr><th scope="row" class="font-medium"><a href="{% url 'finance:client_fees' row.client.pk %}">{{ row.client.name }}</a></th><td class="text-right">{{ row.monthly|money }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% elif today.day > after_day %}<p class="muted">Every live client with a fee has an invoice this month.</p>{% endif %}
+  <p class="help mt-1">A client whose Xero contact is not matched yet also appears here. Match it under Xero contacts.</p>
+</section>
+
+<section aria-labelledby="inv-check">
+  <h2 id="inv-check" class="mb-2 text-base">Check the fee <span class="badge badge-{% if check_fee %}amber{% else %}neutral{% endif %}">{{ check_fee|length }}</span></h2>
+  <p class="muted mb-2 text-sm">This month's invoiced net total differs from the agreed monthly fee by more than £1.</p>
+  {% if check_fee %}
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th scope="col">Client</th><th scope="col">Invoices</th><th scope="col" class="text-right">Agreed</th><th scope="col" class="text-right">Invoiced (net)</th><th scope="col" class="text-right">Difference</th></tr></thead>
+    <tbody>{% for row in check_fee %}<tr>
+      <th scope="row" class="font-medium"><a href="{% url 'finance:client_fees' row.client.pk %}">{{ row.client.name }}</a></th>
+      <td>{% for i in row.invoices %}{{ i.number }}{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+      <td class="text-right">{{ row.agreed|money }}</td><td class="text-right">{{ row.invoiced|money }}</td><td class="text-right">{{ row.difference|money }}</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="muted">Every invoice this month matches its agreed fee.</p>{% endif %}
+</section>
+{% endif %}
+{% endif %}
+{% endblock %}

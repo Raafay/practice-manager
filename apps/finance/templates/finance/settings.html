@@ -1,0 +1,16 @@
+{% extends "layouts/app.html" %}
+{% block title %}Finance: Settings{% endblock %}
+{% block content %}
+{% if user|can:"finance.owner" %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Finance" subtitle="Settings for the Finance pages and the weekly owner summary." %}
+</div>
+{% include "finance/_subnav.html" %}
+<form method="post" class="card card-body max-w-xl space-y-4" novalidate>
+  {% csrf_token %}
+  {% include "components/_form_fields.html" %}
+  <p class="help">The summary is emailed to the owners once on that day, from that hour, by the background worker.</p>
+  <div><button type="submit" class="btn btn-primary">Save settings</button></div>
+</form>
+{% endif %}
+{% endblock %}

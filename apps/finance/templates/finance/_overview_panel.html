@@ -1,0 +1,17 @@
+{# Owner-only headline numbers on the Overview. Needs finance_panel. #}
+{% with p=finance_panel %}
+<section class="card card-body mb-6" aria-labelledby="ov-finance">
+  <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+    <h2 id="ov-finance" class="text-base">Money <span class="muted text-xs font-normal">(owner only)</span></h2>
+    <a href="{% url 'finance:forecast' %}" class="text-sm">Forecast</a>
+  </div>
+  <dl class="grid gap-3 text-sm sm:grid-cols-4">
+    <div><dt class="muted">Recurring fees now</dt><dd class="text-lg font-semibold">{{ p.recurring|money }}</dd></div>
+    <div><dt class="muted">Forecast for {{ p.next_month|date:"F" }}</dt><dd class="text-lg font-semibold">{{ p.forecast|money }}{% if p.target is not None %} <span class="muted text-xs font-normal">of {{ p.target|money }}</span>{% endif %}</dd></div>
+    <div><dt class="muted">Overdue fees</dt><dd class="text-lg font-semibold {% if p.overdue_count %}text-red-700{% endif %}">{{ p.overdue|money }} <span class="muted text-xs font-normal">{{ p.overdue_count }} client{{ p.overdue_count|pluralize }}</span></dd></div>
+    <div><dt class="muted">Not invoiced this month</dt><dd class="text-lg font-semibold">{{ p.not_invoiced }}</dd></div>
+  </dl>
+  {% if p.lines %}<ul class="mt-3 list-disc space-y-1 pl-5 text-sm">{% for line in p.lines %}<li>{{ line }}</li>{% endfor %}</ul>{% endif %}
+  {% if p.xero_state == "broken" %}<p class="mt-2 text-sm text-red-800">The Xero connection has a problem, so invoice figures may be out of date.</p>{% endif %}
+</section>
+{% endwith %}

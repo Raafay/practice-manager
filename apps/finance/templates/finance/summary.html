@@ -1,0 +1,11 @@
+{% extends "layouts/app.html" %}
+{% block title %}Finance: Summary{% endblock %}
+{% block content %}
+{% if user|can:"finance.owner" %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Finance" subtitle="The owner summary for the week from Monday. The same text is emailed to the owners." %}
+</div>
+{% include "finance/_subnav.html" %}
+{% include "finance/_summary_body.html" %}
+{% endif %}
+{% endblock %}
