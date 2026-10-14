@@ -1,4 +1,5 @@
-"""Demo data for imports: a saved matching and one past clients import with a failed row.
+"""Demo data for imports: a saved matching, a past clients import with a failed row, and a
+contacts import giving each imported client its main contact.
 
 Everything here is made up. Safe to run twice.
 """
@@ -15,6 +16,13 @@ ROWS = [
     "D902,Pebble Example Design,Sole trader,05/04,pebble@example.com,2019-06-01,Imported",
     "D903,Quarry Example Partners,Partnership,30/04,,15/05/2020,Imported",
     "D904,Rook Example Ltd,Company of some kind,31/12,,01/01/2021,Imported",
+]
+CONTACTS_FILE = "demo-old-system-contacts.csv"
+CONTACTS = [
+    "Client Code,First Name,Surname,Email,Role,Main Contact",
+    "D901,Olive,Orchardson,olive.orchardson@example.com,Director,Yes",
+    "D902,Piper,Pebbleton,piper.pebbleton@example.com,Other,Yes",
+    "D903,Quinn,Quarrier,quinn.quarrier@example.com,Partner,Yes",
 ]
 
 
@@ -38,4 +46,9 @@ def seed() -> dict:
         },
     )
     services.run_import(actor, run)
-    return {"import_runs": 1}
+    people = services.start_run(
+        actor, "contacts", CONTACTS_FILE, ("\n".join(CONTACTS) + "\n").encode()
+    )
+    services.set_mapping(actor, people, people.mapping, overwrite=False)
+    services.run_import(actor, people)
+    return {"import_runs": 2}

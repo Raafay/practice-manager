@@ -38,6 +38,8 @@ class Command(BaseCommand):
             people = accounts_demo.seed()
             staff = {u.email: u for u in User.objects.filter(email__in=[p[1] for p in people])}
             counts = clients_demo.seed(staff)
+            # Straight after the clients, so later seeds treat imported clients the same each run.
+            counts.update(imports_demo.seed())
             counts.update(companieshouse_demo.seed())
             counts.update(services_demo.seed())
             counts.update(tasks_demo.seed())
@@ -47,7 +49,6 @@ class Command(BaseCommand):
             counts.update(pipeline_demo.seed())
             counts.update(portal_demo.seed())
             counts.update(finance_demo.seed())
-            counts.update(imports_demo.seed())
 
         self.stdout.write(self.style.SUCCESS("Demo data loaded. Everything here is made up."))
         self.stdout.write(
