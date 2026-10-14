@@ -1,0 +1,44 @@
+{% extends "layouts/app.html" %}
+{% block title %}Clear old deadlines{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Clear old deadlines" subtitle="Open deadlines that are overdue or due in the next 30 days. Tick the ones already dealt with in the old system." %}
+  <a href="{% url 'imports:index' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Import</a>
+</div>
+{% if groups %}
+<form method="post" class="space-y-6" aria-label="Mark deadlines as already done">
+  {% csrf_token %}
+  <p class="muted text-sm">{{ total }} deadline{{ total|pluralize }}. Only what you tick is marked done, with the note “Already dealt with before the move to this system.” Each one is logged.</p>
+  {% for title, items in groups %}
+  <section aria-labelledby="group-{{ forloop.counter }}">
+    <h2 id="group-{{ forloop.counter }}" class="mb-2 text-base font-semibold">{{ title }} <span class="muted font-normal">({{ items|length }})</span></h2>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr>
+          <th scope="col" class="w-8"><input type="checkbox" class="checkbox" data-check-all aria-label="Tick every {{ title }} deadline"></th>
+          <th scope="col">Client</th><th scope="col">Deadline</th><th scope="col">Due</th><th scope="col">State</th>
+        </tr></thead>
+        <tbody>
+          {% for d in items %}
+          <tr>
+            <td><input type="checkbox" class="checkbox" name="ids" value="{{ d.pk }}" id="d{{ d.pk }}" aria-label="Already done: {{ d.client.name }}, {{ d.label }}"></td>
+            <td><a href="{% url 'clients:detail' d.client.pk %}">{{ d.client.name }}</a></td>
+            <td><label for="d{{ d.pk }}">{{ d.label }}</label></td>
+            <td class="whitespace-nowrap tabular-nums">{{ d.due_date|date:"d/m/Y" }}</td>
+            <td>{% if d.due_date < today %}{% include "components/_badge.html" with text="Overdue" tone="red" %}{% else %}{% include "components/_badge.html" with text="Due soon" tone="amber" %}{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+  {% endfor %}
+  <div class="card card-body sticky bottom-2 flex flex-wrap items-center gap-4">
+    <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox" name="complete_tasks" checked> Also complete their open tasks</label>
+    <button type="submit" class="btn btn-primary">{% icon "check" "size-4" %} Mark as already done</button>
+  </div>
+</form>
+{% else %}
+  {% include "components/_empty.html" with title="Nothing to clear" message="No open deadline is overdue or due in the next 30 days. Import services first; their deadlines show here." icon_name="check-circle" action_url=index_url action_label="Back to Import" %}
+{% endif %}
+{% endblock %}

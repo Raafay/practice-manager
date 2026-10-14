@@ -1,16 +1,16 @@
-import csv
 from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q
-from django.http import Http404, HttpResponse, QueryDict
+from django.http import Http404, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 
 from apps import events
+from apps.core.csvexport import csv_response
 from apps.core.pagination import paginate
 from apps.core.permissions import CapabilityRequiredMixin, StaffRequiredMixin
 from apps.events.models import ActivityEvent
@@ -186,14 +186,11 @@ class ClientExportView(CapabilityRequiredMixin, View):
         queryset = filtered_clients(form).order_by(
             *cols.ordering_for(cols.valid_sort(params.get("sort", "")))
         )
-        response = HttpResponse(content_type="text/csv; charset=utf-8")
-        response["Content-Disposition"] = 'attachment; filename="clients.csv"'
-        response["Cache-Control"] = "no-store"
-        writer = csv.writer(response)
+        response, writer = csv_response("clients.csv")
         writer.writerow([cols.COLUMNS[k][0] for k in keys])
         count = 0
         for client in queryset:
-            writer.writerow([_safe_cell(v) for v in cols.csv_row(client, keys)])
+            writer.writerow(cols.csv_row(client, keys))
             count += 1
         events.record(
             request.user,
@@ -204,11 +201,6 @@ class ClientExportView(CapabilityRequiredMixin, View):
             list="clients",
         )
         return response
-
-
-def _safe_cell(value: str) -> str:
-    """Stop a spreadsheet treating text as a formula."""
-    return "'" + value if value[:1] in ("=", "+", "-", "@", "\t", "\r") else value
 
 
 class SavedViewCreateView(StaffRequiredMixin, View):

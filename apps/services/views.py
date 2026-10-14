@@ -1,19 +1,19 @@
-import csv
 from datetime import timedelta
 from decimal import Decimal, InvalidOperation
 from urllib.parse import urlencode
 
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Count, Q
-from django.http import Http404, HttpResponse
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views import View
 
 from apps import events
-from apps.clients.views import ClientTabView, _safe_cell
+from apps.clients.views import ClientTabView
 from apps.clients.views_base import done, get_client, render_form
+from apps.core.csvexport import csv_response
 from apps.core.pagination import paginate
 from apps.core.permissions import CapabilityRequiredMixin, StaffRequiredMixin
 
@@ -463,10 +463,7 @@ class DeadlineReportExportView(CapabilityRequiredMixin, View):
     def get(self, request):
         form = DeadlineFilterForm(request.GET)
         today = timezone.localdate()
-        response = HttpResponse(content_type="text/csv; charset=utf-8")
-        response["Content-Disposition"] = 'attachment; filename="deadlines.csv"'
-        response["Cache-Control"] = "no-store"
-        writer = csv.writer(response)
+        response, writer = csv_response("deadlines.csv")
         writer.writerow(
             [
                 "Client",
@@ -484,17 +481,14 @@ class DeadlineReportExportView(CapabilityRequiredMixin, View):
             label, _tone = d.state_label_tone
             writer.writerow(
                 [
-                    _safe_cell(v)
-                    for v in (
-                        d.client.name,
-                        d.client.reference,
-                        d.label,
-                        d.rule_title,
-                        d.due_date.strftime("%d/%m/%Y"),
-                        label,
-                        d.source_note,
-                        d.client.manager.name if d.client.manager else "",
-                    )
+                    d.client.name,
+                    d.client.reference,
+                    d.label,
+                    d.rule_title,
+                    d.due_date,
+                    label,
+                    d.source_note,
+                    d.client.manager.name if d.client.manager else "",
                 ]
             )
             count += 1

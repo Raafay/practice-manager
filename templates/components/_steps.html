@@ -1,0 +1,10 @@
+{# Wizard steps. steps is a list of labels; current is the 1-based number of the step shown. #}
+<ol class="mb-6 flex flex-wrap items-center gap-2 text-sm" aria-label="Steps">
+  {% for label in steps %}
+  <li class="flex items-center gap-2" {% if forloop.counter == current %}aria-current="step"{% endif %}>
+    <span class="flex size-6 items-center justify-center rounded-full text-xs font-semibold {% if forloop.counter < current %}bg-green-600 text-white{% elif forloop.counter == current %}bg-accent text-white{% else %}bg-slate-200 text-slate-600{% endif %}">{% if forloop.counter < current %}✓<span class="sr-only"> done:</span>{% else %}{{ forloop.counter }}{% endif %}</span>
+    <span class="{% if forloop.counter == current %}font-semibold text-slate-900{% else %}text-slate-600{% endif %}">{{ label }}</span>
+    {% if not forloop.last %}<span class="text-slate-300" aria-hidden="true">›</span>{% endif %}
+  </li>
+  {% endfor %}
+</ol>

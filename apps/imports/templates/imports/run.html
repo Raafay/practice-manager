@@ -1,0 +1,103 @@
+{% extends "layouts/app.html" %}
+{% block title %}{{ run.file_name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title=run.file_name subtitle=run.get_kind_display %}
+  <a href="{% url 'imports:index' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} All imports</a>
+</div>
+
+<p class="mb-4 flex flex-wrap items-center gap-2 text-sm">
+  {% include "components/_badge.html" with text=run.get_state_display tone=run.state_tone %}
+  <span class="muted">Imported by {{ run.created_by|default:"—" }} on {{ run.imported_at|date:"d/m/Y H:i" }}{% if run.matching %} using “{{ run.matching.name }}”{% endif %}{% if run.overwrite %}, overwriting{% endif %}.</span>
+  {% if run.undone_at %}<span class="muted">Undone by {{ run.undone_by|default:"—" }} on {{ run.undone_at|date:"d/m/Y H:i" }}.</span>{% endif %}
+</p>
+
+<div class="mb-6 grid gap-4 sm:grid-cols-3">
+  <div class="card card-body"><p class="muted text-sm">Created</p><p class="text-2xl font-semibold tabular-nums">{{ run.counts.created|default:0 }}</p></div>
+  <div class="card card-body"><p class="muted text-sm">Updated</p><p class="text-2xl font-semibold tabular-nums">{{ run.counts.updated|default:0 }}</p></div>
+  <div class="card card-body"><p class="muted text-sm">Not imported</p><p class="text-2xl font-semibold tabular-nums">{{ failure_count }}</p></div>
+</div>
+
+<div class="grid gap-6 lg:grid-cols-3">
+  <div class="space-y-6 lg:col-span-2">
+    {% if failures %}
+    <section aria-labelledby="failed-title">
+      <div class="mb-2 flex items-center justify-between gap-2">
+        <h2 id="failed-title" class="text-base font-semibold">Rows not imported</h2>
+        <a href="{% url 'imports:failures' run.pk %}" class="btn btn-secondary btn-sm">{% icon "arrow-down-tray" "size-4" %} Download as CSV</a>
+      </div>
+      <p class="muted mb-2 text-sm">Fix these in the file, keep only these rows, and import it again. Tax references are left out of the download.</p>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th scope="col" class="w-16">Row</th><th scope="col">Why</th></tr></thead>
+          <tbody>{% for f in failures %}<tr><td class="tabular-nums">{{ f.row }}</td><td>{{ f.problem }}</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+      {% if failure_count > failures|length %}<p class="muted mt-1 text-sm">And {{ failure_count|add:"-50" }} more in the download.</p>{% endif %}
+    </section>
+    {% endif %}
+
+    {% if run.undo_report %}
+    <section aria-labelledby="kept-title">
+      <h2 id="kept-title" class="mb-2 text-base font-semibold">Kept when the import was undone</h2>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th scope="col">Record</th><th scope="col">Why it was kept</th></tr></thead>
+          <tbody>{% for k in run.undo_report %}<tr><td>{{ k.label }}</td><td>{{ k.reason }}</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+    </section>
+    {% endif %}
+
+    <section aria-labelledby="records-title">
+      <h2 id="records-title" class="mb-2 text-base font-semibold">Records this import created</h2>
+      {% if records %}
+      <ul class="card divide-y divide-slate-100 text-sm">
+        {% for r in records %}<li class="px-4 py-1.5">{{ r.label }} <span class="muted">· {{ r.get_model_display }}</span></li>{% endfor %}
+      </ul>
+      {% if record_count > records|length %}<p class="muted mt-1 text-sm">And {{ record_count|add:"-50" }} more.</p>{% endif %}
+      {% else %}
+      <p class="muted text-sm">{% if run.state == "undone" %}None left: the import was undone.{% else %}None. Every good row updated a record that was already here.{% endif %}</p>
+      {% endif %}
+    </section>
+  </div>
+
+  <div class="space-y-4">
+    {% if run.kind == "clients" and run.state == "done" %}
+    <section class="card card-body" aria-labelledby="ch-title">
+      <h2 id="ch-title" class="flex items-center gap-2 text-base font-semibold">{% icon "building-office" "size-5" %} Companies House</h2>
+      <p class="muted mt-1 text-sm">Fill in company details, filing dates, officers and owners for every imported client with a company number. It runs in the background; you can leave this page.</p>
+      <div class="mt-3">{% include "imports/_fetch_progress.html" %}</div>
+      {% if can_fetch and not run.fetch_active %}
+      <form method="post" action="{% url 'imports:fetch' run.pk %}" class="mt-3">{% csrf_token %}<button type="submit" class="btn btn-primary btn-sm">{% icon "arrow-path" "size-4" %} {% if run.fetch_state == "done" %}Fetch again{% else %}Fetch from Companies House{% endif %}</button></form>
+      {% elif not can_fetch %}
+      <p class="muted mt-2 text-sm">None of the clients this import created has a company number.</p>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    {% if run.kind == "services" and run.state == "done" %}
+    <section class="card card-body" aria-labelledby="clear-title">
+      <h2 id="clear-title" class="flex items-center gap-2 text-base font-semibold">{% icon "check-circle" "size-5" %} Old deadlines</h2>
+      <p class="muted mt-1 text-sm">Deadlines have been created for these services. {{ helper_count }} open deadline{{ helper_count|pluralize }} {{ helper_count|pluralize:"is,are" }} overdue or due in the next 30 days. Mark the ones already dealt with in the old system.</p>
+      <a href="{% url 'imports:helper' %}" class="btn btn-secondary btn-sm mt-3">Clear old deadlines</a>
+    </section>
+    {% endif %}
+
+    {% if run.state == "done" %}
+    <section class="card card-body" aria-labelledby="undo-title">
+      <h2 id="undo-title" class="flex items-center gap-2 text-base font-semibold">{% icon "arrow-uturn-left" "size-5" %} Undo this import</h2>
+      <p class="muted mt-1 text-sm">Deletes what this import created, unless somebody has changed it since. Updates to records that were already here stay. You will see what could not be undone.</p>
+      <details class="mt-3">
+        <summary class="btn btn-secondary btn-sm cursor-pointer">Undo this import…</summary>
+        <form method="post" action="{% url 'imports:undo' run.pk %}" class="mt-3 space-y-2">
+          {% csrf_token %}
+          <p class="text-sm">This cannot be reversed. {{ record_count }} record{{ record_count|pluralize }} may be deleted.</p>
+          <button type="submit" class="btn btn-danger btn-sm">Yes, undo it</button>
+        </form>
+      </details>
+    </section>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

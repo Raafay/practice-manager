@@ -1,20 +1,13 @@
-import csv
-
-from django.http import HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.views import View
 
 from apps import events
+from apps.core.csvexport import csv_response
 from apps.core.pagination import paginate
 from apps.core.permissions import CapabilityRequiredMixin, StaffRequiredMixin
 
 from .register import RegisterFilterForm, build_rows
-
-
-def _safe(value) -> str:
-    text = "" if value is None else str(value)
-    return "'" + text if text[:1] in ("=", "+", "-", "@", "\t", "\r") else text
 
 
 class RegisterView(StaffRequiredMixin, View):
@@ -44,10 +37,7 @@ class RegisterExportView(CapabilityRequiredMixin, View):
     def get(self, request):
         form = RegisterFilterForm(request.GET)
         rows = build_rows(form)
-        response = HttpResponse(content_type="text/csv; charset=utf-8")
-        response["Content-Disposition"] = 'attachment; filename="aml-register.csv"'
-        response["Cache-Control"] = "no-store"
-        writer = csv.writer(response)
+        response, writer = csv_response("aml-register.csv")
         writer.writerow(
             [
                 "Client",
@@ -64,18 +54,15 @@ class RegisterExportView(CapabilityRequiredMixin, View):
         for r in rows:
             writer.writerow(
                 [
-                    _safe(v)
-                    for v in (
-                        r.client.name,
-                        r.client.reference,
-                        r.client.get_status_display(),
-                        r.level_label,
-                        r.state_label,
-                        r.last_assessed.strftime("%d/%m/%Y") if r.last_assessed else "",
-                        r.next_review.strftime("%d/%m/%Y") if r.next_review else "",
-                        r.verified,
-                        r.total,
-                    )
+                    r.client.name,
+                    r.client.reference,
+                    r.client.get_status_display(),
+                    r.level_label,
+                    r.state_label,
+                    r.last_assessed,
+                    r.next_review,
+                    r.verified,
+                    r.total,
                 ]
             )
         events.record(

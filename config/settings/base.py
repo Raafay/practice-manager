@@ -46,6 +46,8 @@ INSTALLED_APPS = [
     "apps.portal",
     "apps.timekeeping",
     "apps.finance",
+    "apps.imports",
+    "apps.reports",
 ]
 
 MIDDLEWARE = [

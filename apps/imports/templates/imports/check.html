@@ -1,0 +1,71 @@
+{% extends "layouts/app.html" %}
+{% block title %}Check · {{ run.file_name }}{% endblock %}
+{% block content %}
+{% include "imports/_header.html" with title="Check the rows" subtitle=run.file_name %}
+
+<p class="muted mb-4">Nothing has been saved yet. Fix problems in the file and upload it again, or import the good rows now and download the rest afterwards.{% if run.overwrite %} <strong class="text-slate-800">Overwrite is on:</strong> matched records take the file's values.{% endif %}</p>
+
+<div class="mb-6 grid gap-4 sm:grid-cols-3">
+  <div class="card card-body"><p class="muted text-sm">Will be created</p><p class="text-2xl font-semibold tabular-nums">{{ counts.create }}</p></div>
+  <div class="card card-body"><p class="muted text-sm">Will update an existing record</p><p class="text-2xl font-semibold tabular-nums">{{ counts.update }}</p></div>
+  <div class="card card-body {% if counts.problems %}border-amber-300{% endif %}"><p class="muted text-sm">Have problems and will be left out</p><p class="text-2xl font-semibold tabular-nums {% if counts.problems %}text-amber-700{% endif %}">{{ counts.problems }}</p></div>
+</div>
+
+{% if result.failed %}
+<section class="mb-6" aria-labelledby="problems-title">
+  <h2 id="problems-title" class="mb-2 flex items-center gap-2 text-base font-semibold">{% icon "exclamation-triangle" "size-5 text-amber-600" %} Problems, row by row</h2>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th scope="col" class="w-16">Row</th><th scope="col">Record</th><th scope="col">What to fix</th></tr></thead>
+      <tbody>
+        {% for row in result.failed %}
+        <tr>
+          <td class="tabular-nums">{{ row.number }}</td>
+          <td>{{ row.label|default:"—" }}</td>
+          <td><ul class="space-y-0.5">{% for p in row.problems %}<li>{{ p }}</li>{% endfor %}</ul></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% if warned %}
+<section class="mb-6" aria-labelledby="warnings-title">
+  <h2 id="warnings-title" class="mb-2 text-base font-semibold">Worth knowing</h2>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th scope="col" class="w-16">Row</th><th scope="col">Record</th><th scope="col">Note</th></tr></thead>
+      <tbody>
+        {% for row in warned %}<tr><td class="tabular-nums">{{ row.number }}</td><td>{{ row.label }}</td><td>{% for w in row.warnings %}<p>{{ w }}</p>{% endfor %}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% if sample %}
+<section class="mb-6" aria-labelledby="sample-title">
+  <h2 id="sample-title" class="mb-2 text-base font-semibold">What the good rows will do{% if sample|length < counts.create|add:counts.update %} (first {{ sample|length }}){% endif %}</h2>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th scope="col" class="w-16">Row</th><th scope="col">Record</th><th scope="col">Action</th></tr></thead>
+      <tbody>
+        {% for row in sample %}
+        <tr><td class="tabular-nums">{{ row.number }}</td><td>{{ row.label }}</td><td>{% if row.action == "create" %}{% include "components/_badge.html" with text="Create" tone="green" %}{% else %}{% include "components/_badge.html" with text="Update" tone="accent" %}{% endif %}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+<div class="flex flex-wrap gap-2">
+  {% if counts.create or counts.update %}
+  <form method="post">{% csrf_token %}<button type="submit" class="btn btn-primary">{% icon "arrow-up-tray" "size-4" %} Import {{ counts.create|add:counts.update }} row{{ counts.create|add:counts.update|pluralize }}</button></form>
+  {% endif %}
+  <a href="{% url 'imports:match' run.pk %}" class="btn btn-secondary">{% icon "chevron-left" "size-4" %} Back to matching</a>
+  <a href="{% url 'imports:index' %}" class="btn btn-ghost">Cancel</a>
+</div>
+{% endblock %}

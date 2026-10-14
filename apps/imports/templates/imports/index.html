@@ -1,0 +1,68 @@
+{% extends "layouts/app.html" %}
+{% block title %}Import{% endblock %}
+{% block content %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Import" subtitle="Bring clients, contacts, and services with fees across from a CSV file." %}
+  <a href="{% url 'core:settings' %}" class="btn btn-ghost">{% icon "arrow-left" "size-4" %} Settings</a>
+</div>
+
+<div class="grid gap-6 lg:grid-cols-3">
+  <form method="post" enctype="multipart/form-data" class="card card-body space-y-4 lg:col-span-2" novalidate aria-label="Upload a file">
+    {% csrf_token %}
+    <h2 class="text-base font-semibold">Start an import</h2>
+    <p class="muted">You match the file's columns to our fields and see every problem before anything is saved. Nothing reaches a client.</p>
+    {% include "components/_form_fields.html" %}
+    <div><button type="submit" class="btn btn-primary">{% icon "arrow-up-tray" "size-4" %} Upload and match columns</button></div>
+  </form>
+
+  <div class="space-y-4">
+    <section class="card card-body" aria-labelledby="helper-title">
+      <h2 id="helper-title" class="flex items-center gap-2 text-base font-semibold">{% icon "check-circle" "size-5" %} Clear old deadlines</h2>
+      <p class="muted mt-1">After importing services, mark deadlines that were already dealt with in the old system.</p>
+      <p class="mt-2 text-sm">{{ helper_count }} open deadline{{ helper_count|pluralize }} overdue or due in the next 30 days.</p>
+      <a href="{% url 'imports:helper' %}" class="btn btn-secondary btn-sm mt-3">Open the helper</a>
+    </section>
+    <section class="card card-body" aria-labelledby="matchings-title">
+      <h2 id="matchings-title" class="text-base font-semibold">Saved matchings</h2>
+      {% if matchings %}
+      <ul class="mt-2 divide-y divide-slate-100 text-sm">
+        {% for m in matchings %}
+        <li class="flex items-center justify-between gap-2 py-1.5">
+          <span>{{ m.name }} <span class="muted">· {{ m.get_kind_display }} · {{ m.headers|length }} columns</span></span>
+          <form method="post" action="{% url 'imports:matching_delete' m.pk %}">{% csrf_token %}<button type="submit" class="btn btn-ghost btn-sm" aria-label="Delete saved matching {{ m.name }}">{% icon "trash" "size-4" %}</button></form>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="muted mt-1">None yet. Name a matching on the second step to reuse it next time.</p>
+      {% endif %}
+    </section>
+  </div>
+</div>
+
+<h2 class="mb-2 mt-8 text-base font-semibold">Past imports</h2>
+{% if page.object_list %}
+<div class="table-wrap">
+  <table class="table">
+    <thead><tr><th scope="col">File</th><th scope="col">Kind</th><th scope="col">By</th><th scope="col">When</th><th scope="col">State</th><th scope="col" class="text-right">Created</th><th scope="col" class="text-right">Updated</th><th scope="col" class="text-right">Not imported</th></tr></thead>
+    <tbody>
+      {% for run in page.object_list %}
+      <tr>
+        <td><a href="{% url 'imports:run' run.pk %}" class="font-medium">{{ run.file_name }}</a></td>
+        <td>{{ run.get_kind_display }}</td>
+        <td>{{ run.created_by|default:"—" }}</td>
+        <td class="whitespace-nowrap tabular-nums">{{ run.created_at|date:"d/m/Y H:i" }}</td>
+        <td>{% include "components/_badge.html" with text=run.get_state_display tone=run.state_tone %}</td>
+        <td class="text-right tabular-nums">{{ run.counts.created|default:"—" }}</td>
+        <td class="text-right tabular-nums">{{ run.counts.updated|default:"—" }}</td>
+        <td class="text-right tabular-nums">{{ run.counts.failed|default:"—" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "components/_pagination.html" %}
+{% else %}
+  {% include "components/_empty.html" with title="No imports yet" message="Upload a clients file above to start. Then contacts, then services and fees." icon_name="arrow-up-tray" %}
+{% endif %}
+{% endblock %}
