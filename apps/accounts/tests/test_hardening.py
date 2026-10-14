@@ -127,3 +127,77 @@ def test_the_owner_still_can(client):
     )
     colleague.refresh_from_db()
     assert colleague.role.slug == Role.OWNER
+
+
+# Wrong two-factor codes are limited per person, whatever address they come from.
+
+
+def test_wrong_codes_from_many_addresses_lock_the_two_factor_step(client):
+    from apps.accounts.tests.factories import PASSWORD, add_totp, totp_code
+    from apps.events.models import ActivityEvent
+
+    user = staff()
+    secret = add_totp(user)
+    for n in range(5):
+        address = f"192.0.2.{n + 1}"
+        client.post("/login/", {"login": user.email, "password": PASSWORD}, REMOTE_ADDR=address)
+        client.post(reverse("mfa_authenticate"), {"code": "000001"}, REMOTE_ADDR=address)
+    assert ActivityEvent.objects.filter(verb="auth.mfa_failed", target_id=user.pk).count() == 5
+    client.post("/login/", {"login": user.email, "password": PASSWORD}, REMOTE_ADDR="192.0.2.99")
+    response = client.post(
+        reverse("mfa_authenticate"), {"code": totp_code(secret)}, REMOTE_ADDR="192.0.2.99"
+    )
+    assert b"Too many wrong codes" in response.content
+    assert not client.get(reverse("overview")).wsgi_request.user.is_authenticated
+
+
+# The visitor's address behind the host's proxy.
+
+
+def _request(**meta):
+    from django.test import RequestFactory
+
+    return RequestFactory().get("/", **meta)
+
+
+def test_without_a_trusted_proxy_the_forwarded_header_is_ignored(settings):
+    from apps.core.ratelimit import client_ip
+
+    settings.TRUSTED_PROXY_COUNT = 0
+    settings.TRUSTED_CLIENT_IP_HEADER = ""
+    request = _request(REMOTE_ADDR="10.0.0.1", HTTP_X_FORWARDED_FOR="203.0.113.9")
+    assert client_ip(request) == "10.0.0.1"
+
+
+def test_with_one_trusted_proxy_a_made_up_forwarded_entry_is_ignored(settings):
+    from apps.core.ratelimit import client_ip
+
+    settings.TRUSTED_PROXY_COUNT = 1
+    settings.TRUSTED_CLIENT_IP_HEADER = ""
+    # The visitor wrote "198.51.100.7"; the host's proxy appended the real address.
+    request = _request(REMOTE_ADDR="10.0.0.1", HTTP_X_FORWARDED_FOR="198.51.100.7, 203.0.113.9")
+    assert client_ip(request) == "203.0.113.9"
+    assert client_ip(_request(REMOTE_ADDR="10.0.0.1", HTTP_X_FORWARDED_FOR="junk")) == "10.0.0.1"
+
+
+def test_a_trusted_header_is_used_when_set(settings):
+    from apps.core.ratelimit import client_ip
+
+    settings.TRUSTED_CLIENT_IP_HEADER = "Fly-Client-IP"
+    request = _request(REMOTE_ADDR="10.0.0.1", HTTP_FLY_CLIENT_IP="203.0.113.5")
+    assert client_ip(request) == "203.0.113.5"
+
+
+def test_lockout_and_the_activity_log_use_the_visitors_address(client, settings):
+    from apps.events.models import ActivityEvent
+
+    settings.TRUSTED_PROXY_COUNT = 1
+    user = staff()
+    client.post(
+        "/login/",
+        {"login": user.email, "password": "wrong-password-here"},
+        REMOTE_ADDR="10.0.0.1",
+        HTTP_X_FORWARDED_FOR="203.0.113.77",
+    )
+    event = ActivityEvent.objects.filter(verb="auth.sign_in_failed").latest("pk")
+    assert event.ip_address == "203.0.113.77"

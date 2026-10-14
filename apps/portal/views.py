@@ -13,6 +13,7 @@ from django.views.decorators.cache import never_cache
 from apps import events
 from apps.clients import services as client_services
 from apps.clients.models import Document
+from apps.core import ratelimit
 from apps.services.models import Deadline
 
 from . import requests as request_services
@@ -203,7 +204,7 @@ class RequestNewView(PortalView):
                 urgency=form.cleaned_data["urgency"],
                 uploads=request.FILES.getlist("files"),
                 logged_by=None,
-                ip=request.META.get("REMOTE_ADDR"),
+                ip=ratelimit.client_ip(request),
                 actor_label=str(request.portal_contact or request.user),
             )
         except ValidationError as error:

@@ -170,7 +170,7 @@ class ApproveView(ItemMixin):
         item = self.get_item(request, public_id)
         if item.kind != PortalItem.Kind.APPROVE_DOCUMENT:
             raise Http404
-        ip = request.META.get("REMOTE_ADDR", "")
+        ip = ratelimit.client_ip(request)
         if not ratelimit.hit(f"portal-approve:{request.user.pk}", 20, 3600):
             raise Http404
         form = SignForm(request.POST)

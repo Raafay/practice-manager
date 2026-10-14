@@ -7,7 +7,7 @@ import dj_database_url
 
 from apps.core.flags import PracticeFlag
 
-from .env import env, env_bool, env_list
+from .env import env, env_bool, env_int, env_list
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -186,6 +186,7 @@ ACCOUNT_LOGIN_BY_CODE_ENABLED = False
 ACCOUNT_RATE_LIMITS = {"login_failed": "30/m/ip"}
 
 MFA_SUPPORTED_TYPES = ["totp", "recovery_codes"]
+MFA_FORMS = {"authenticate": "apps.accounts.forms.LimitedMfaAuthenticateForm"}
 MFA_TOTP_ISSUER = "Practice Manager"
 MFA_RECOVERY_CODES_SHOW_ONCE = True
 MFA_TRUST_ENABLED = PracticeFlag("mfa_trust_enabled", default=True)
@@ -199,6 +200,14 @@ AXES_USERNAME_CALLABLE = "apps.accounts.lockout.get_username"
 AXES_LOCKOUT_TEMPLATE = "account/lockout.html"
 AXES_RESET_ON_SUCCESS = True
 AXES_VERBOSE = False
+
+# The visitor's address behind the host's proxy (apps/core/ratelimit.py client_ip).
+# Set one of these in production to match the host; see docs/DEPLOY.md.
+TRUSTED_PROXY_COUNT = env_int("TRUSTED_PROXY_COUNT", 0)
+TRUSTED_CLIENT_IP_HEADER = env("TRUSTED_CLIENT_IP_HEADER", "")
+AXES_CLIENT_IP_CALLABLE = "apps.core.ratelimit.client_ip"
+ALLAUTH_TRUSTED_PROXY_COUNT = TRUSTED_PROXY_COUNT
+ALLAUTH_TRUSTED_CLIENT_IP_HEADER = TRUSTED_CLIENT_IP_HEADER or None
 
 FIELD_ENCRYPTION_KEYS = env_list("FIELD_ENCRYPTION_KEYS")
 
