@@ -210,7 +210,7 @@ class ItemFormView(ItemMixin):
         return item
 
     def _context(self, form, errors=None, values=None, note=""):
-        sections = pforms.sections_for(form)
+        sections = pforms.sections_for(form, self.request.portal_contact)
         answers = values if values is not None else form.answers
         return {
             "item": form.item,

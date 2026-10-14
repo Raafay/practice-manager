@@ -37,10 +37,11 @@ def form_for(item: PortalItem) -> PortalForm:
     return form
 
 
-def sections_for(form: PortalForm):
+def sections_for(form: PortalForm, viewer=None):
+    """viewer: the client contact filling it in, so other people's details are not shown to them."""
     if form.kind == PortalForm.Kind.CONFIRMATION:
         return formspecs.confirmation_sections(form.client)
-    return formspecs.details_sections(form.client)
+    return formspecs.details_sections(form.client, viewer)
 
 
 # ---------------------------------------------------------------- reading answers

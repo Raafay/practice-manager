@@ -178,7 +178,7 @@ def create_request(
                     link,
                     kind="request",
                 )
-    transaction.on_commit(lambda: acknowledge(request_obj))
+    acknowledge(request_obj)
     return request_obj
 
 

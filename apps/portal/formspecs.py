@@ -25,6 +25,8 @@ class Field:
     target: tuple | None = None
     secret: bool = False
     help: str = ""
+    # We hold a value but do not show it (another person's details, to a portal user).
+    held: bool = False
 
 
 @dataclass
@@ -118,7 +120,8 @@ def _date_text(value: date | None) -> str:
     return value.isoformat() if value else ""
 
 
-def details_sections(client: Client) -> list[Section]:
+def details_sections(client: Client, viewer: Contact | None = None) -> list[Section]:
+    """viewer: the portal user filling the form. Others' personal details are never shown to them."""
     business = Section(
         "business",
         "The business",
@@ -149,19 +152,23 @@ def details_sections(client: Client) -> list[Section]:
     people_fields = []
     for link in _must_identify(client):
         contact = link.contact
+        own = viewer is None or viewer.pk == contact.pk
+        dob, home = _date_text(contact.date_of_birth), contact.home_address
         people_fields += [
             Field(
                 person_key(contact, "dob"),
                 f"{contact.full_name}: date of birth",
                 "date",
-                current=_date_text(contact.date_of_birth),
+                current=dob if own else "",
+                held=bool(dob) and not own,
                 target=("contact", contact.pk, "date_of_birth"),
             ),
             Field(
                 person_key(contact, "home_address"),
                 f"{contact.full_name}: home address",
                 "textarea",
-                current=contact.home_address,
+                current=home if own else "",
+                held=bool(home) and not own,
                 target=("contact", contact.pk, "home_address"),
             ),
         ]
@@ -196,13 +203,16 @@ def details_sections(client: Client) -> list[Section]:
         )
     for link in _must_identify(client):
         contact = link.contact
+        own = viewer is None or viewer.pk == contact.pk
+        utr, ni = contact.personal_utr, contact.ni_number
         tax += [
             Field(
                 person_key(contact, "utr"),
                 f"{contact.full_name}: personal UTR",
                 "secret",
                 secret=True,
-                current=mask(contact.personal_utr) if contact.personal_utr else "",
+                current=mask(utr) if utr and own else "",
+                held=bool(utr) and not own,
                 target=("contact", contact.pk, "personal_utr"),
             ),
             Field(
@@ -210,7 +220,8 @@ def details_sections(client: Client) -> list[Section]:
                 f"{contact.full_name}: National Insurance number",
                 "secret",
                 secret=True,
-                current=mask(contact.ni_number) if contact.ni_number else "",
+                current=mask(ni) if ni and own else "",
+                held=bool(ni) and not own,
                 target=("contact", contact.pk, "ni_number"),
             ),
         ]

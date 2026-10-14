@@ -47,9 +47,10 @@
         {% with saved=answers|get_item:f.key %}
         {% if f.input == "textarea" %}<textarea id="f-{{ f.key }}" name="{{ f.key }}" rows="3" class="textarea">{% if saved %}{{ saved }}{% else %}{{ f.current }}{% endif %}</textarea>
         {% elif f.input == "date" %}<input id="f-{{ f.key }}" type="date" name="{{ f.key }}" value="{% if saved %}{{ saved }}{% else %}{{ f.current }}{% endif %}" class="input">
-        {% elif f.input == "secret" %}<input id="f-{{ f.key }}" type="text" name="{{ f.key }}" value="" autocomplete="off" placeholder="{% if saved %}Saved. Type to replace it.{% elif f.current %}We hold {{ f.current }}. Type to replace it.{% endif %}" class="input">
+        {% elif f.input == "secret" %}<input id="f-{{ f.key }}" type="text" name="{{ f.key }}" value="" autocomplete="off" placeholder="{% if saved %}Saved. Type to replace it.{% elif f.current %}We hold {{ f.current }}. Type to replace it.{% elif f.held %}We already hold this. Fill in only to change it.{% endif %}" class="input">
         {% else %}<input id="f-{{ f.key }}" type="text" name="{{ f.key }}" value="{% if saved %}{{ saved }}{% else %}{{ f.current }}{% endif %}" class="input">{% endif %}
         {% endwith %}
+        {% if f.held and f.input != "secret" %}<p class="help">We already hold this. Fill in only to change it.</p>{% endif %}
         {% if errors|get_item:f.key %}<p class="field-error">{{ errors|get_item:f.key }}</p>{% endif %}
       </div>
       {% endfor %}

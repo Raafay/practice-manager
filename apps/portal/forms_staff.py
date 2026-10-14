@@ -115,9 +115,10 @@ class LinkTaskForm(StyledFormMixin, forms.Form):
         queryset = Task.objects.open()
         if client is not None:
             queryset = queryset.filter(client=client)
-        self.fields["task"].queryset = queryset.select_related("client").order_by("-created_at")[
-            :100
-        ]
+        newest = list(queryset.order_by("-created_at").values_list("pk", flat=True)[:100])
+        self.fields["task"].queryset = (
+            Task.objects.filter(pk__in=newest).select_related("client").order_by("-created_at")
+        )
         self.fields["task"].label_from_instance = lambda t: (
             f"{t.title} ({t.client.name if t.client else 'general'})"
         )
