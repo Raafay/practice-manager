@@ -118,6 +118,7 @@ Add one line each time a stage makes a choice that the specs and `docs/DECISIONS
 - 13: Proposals and engagement letters need `fees.view` (they show fees). Open pipeline value and column totals now need `finance.owner` (CORRECTIONS 15), replacing the Stage 9 choice.
 - 13: A person may be removed only when every client that holds anything about them is former or lost and past both dates. The removal event keeps no name. Retention "people" are those no live or in-date client keeps.
 - 13: Delivery reports keep delivered, bounced and complained only; opens and clicks are not tracked.
+- After 13: With DEBUG on and WeasyPrint's system libraries missing (a Mac without Pango), PDFs are a one-page stand-in so `seed_demo` and the site still run; a live site still stops with the error (`apps/core/pdf.py`).
 
 ## Known gaps
 

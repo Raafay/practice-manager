@@ -11,6 +11,7 @@ from apps import events
 from apps.clients import services as client_services
 from apps.clients.models import Document
 from apps.core.models import PracticeSettings
+from apps.core.pdf import PLACEHOLDER_PDF, weasyprint_html
 
 from . import merge, services
 from .models import Channel, MessageTemplate
@@ -49,8 +50,9 @@ def letterhead_html(practice: PracticeSettings) -> str:
 
 
 def render_pdf(html_body: str, practice: PracticeSettings, *, on_date=None) -> bytes:
-    from weasyprint import HTML
-
+    HTML = weasyprint_html()  # noqa: N806
+    if HTML is None:
+        return PLACEHOLDER_PDF
     document = (
         "<html><head><meta charset='utf-8'><style>"
         + LETTER_CSS % {"accent": practice.accent_colour}

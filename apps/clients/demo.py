@@ -154,7 +154,11 @@ SAMPLE_NOTES = [
 def sample_pdf() -> bytes:
     import logging
 
-    from weasyprint import HTML
+    from apps.core.pdf import PLACEHOLDER_PDF, weasyprint_html
+
+    HTML = weasyprint_html()  # noqa: N806
+    if HTML is None:
+        return PLACEHOLDER_PDF
 
     for noisy in ("weasyprint", "fontTools"):
         logging.getLogger(noisy).setLevel(logging.ERROR)
