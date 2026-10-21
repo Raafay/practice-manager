@@ -65,6 +65,13 @@ Older stages are shortened to two lines each. Details are in git history and eac
 - Guides: DEPLOY (generic container host), RUNBOOK, BACKUPS, SUBPROCESSORS, STAFF-GUIDE, GO-LIVE. README rewritten. Screens in `docs/screens/stage-13/`. 1584 tests.
 - New dependencies: `sentry-sdk` (optional error reports), `boto3` and `django-storages[s3]` (the bucket and SES never worked without them).
 
+## Beta on one laptop (added 21/10/2026)
+
+- `config/settings/beta.py`: as strict as prod (no debug, no two-factor bypass, no demo data, secure cookies, HSTS) but files on the laptop disk and email to the terminal only. Reads `.env.beta`; refuses to start if anything is missing or unsafe (`apps/core/tests/test_beta_settings.py`).
+- `make beta-init DOMAIN=...` writes `.env.beta` with fresh keys once; `make beta` runs migrate, checks, gunicorn on 127.0.0.1:8000 and the worker; `make beta-backup` dumps the database and files. Guide: `docs/BETA.md` (Cloudflare Tunnel and Access in front).
+- Tried here end to end with a scratch database: `/login/` and styles 200, wrong host 400, owner created, `seed_demo` refused, backup written.
+- Assumption: the beta deliberately sends no email, so staff invitations are copied from the terminal and the portal is not used until go-live with an email provider.
+
 ## Assumptions
 
 Add one line each time a stage makes a choice that the specs and `docs/DECISIONS.md` did not cover. Give the stage number.

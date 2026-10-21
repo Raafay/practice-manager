@@ -1,5 +1,5 @@
 # Common commands. See CLAUDE.md.
-.PHONY: setup dev test lint format seed css migrate worker
+.PHONY: setup dev test lint format seed css migrate worker beta beta-init beta-backup
 
 setup:
 	uv sync
@@ -31,3 +31,13 @@ migrate:
 
 worker:
 	uv run python manage.py worker
+
+# The beta on one laptop behind a Cloudflare Tunnel. See docs/BETA.md.
+beta-init:
+	uv run python scripts/beta_init.py $(DOMAIN)
+
+beta:
+	sh scripts/beta.sh
+
+beta-backup:
+	sh scripts/beta_backup.sh
