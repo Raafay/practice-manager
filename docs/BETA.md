@@ -19,7 +19,7 @@ What the beta mode (`config/settings/beta.py`) does:
 1. Turn on FileVault: System Settings → Privacy & Security → FileVault.
 2. Stop it sleeping while plugged in: System Settings → Battery → Options → "Prevent automatic sleeping on power adapter when the display is off".
 3. Turn on Time Machine with an external drive.
-4. Check that the development setup works: `make setup`, then `make test` passes.
+4. Check that the development setup works: `make setup`, then `make test` passes. On a Mac, PDFs need `brew install pango` first; the app finds Homebrew's libraries by itself. If `make test` fails with a missing `libhvf.dylib`, Homebrew's freetype was built for a newer macOS: `brew reinstall --build-from-source freetype` fixes it.
 
 ## 2. Create the beta database and settings (once)
 

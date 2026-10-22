@@ -40,6 +40,9 @@ def load_beta(monkeypatch, **overrides):
         for name in list(sys.modules)
         if name.startswith("config.settings.")
     }
+    # A real `.env.beta` on this computer must not leak into the test.
+    env_module = importlib.import_module("config.settings.env")
+    monkeypatch.setattr(env_module, "read_env_file", lambda path: None)
     try:
         return importlib.import_module("config.settings.beta")
     finally:
