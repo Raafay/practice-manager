@@ -34,3 +34,19 @@ def test_weasyprint_is_used_when_it_loads(settings):
 
     settings.DEBUG = True
     assert pdf.weasyprint_html() is HTML
+
+
+def test_a_mac_is_pointed_at_homebrews_pango(monkeypatch):
+    monkeypatch.setattr(pdf.os.path, "isdir", lambda path: path == pdf.HOMEBREW_LIB)
+    environ = {"DYLD_FALLBACK_LIBRARY_PATH": "/somewhere/lib"}
+    pdf.point_at_homebrew(platform="darwin", environ=environ)
+    assert environ["DYLD_FALLBACK_LIBRARY_PATH"] == "/somewhere/lib:/opt/homebrew/lib"
+    pdf.point_at_homebrew(platform="darwin", environ=environ)
+    assert environ["DYLD_FALLBACK_LIBRARY_PATH"] == "/somewhere/lib:/opt/homebrew/lib"
+
+
+def test_other_systems_are_left_alone(monkeypatch):
+    monkeypatch.setattr(pdf.os.path, "isdir", lambda path: True)
+    environ = {}
+    pdf.point_at_homebrew(platform="linux", environ=environ)
+    assert environ == {}

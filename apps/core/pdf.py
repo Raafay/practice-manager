@@ -1,10 +1,15 @@
 """Loading WeasyPrint, with a plain stand-in PDF for development computers without Pango."""
 
 import logging
+import os
+import sys
 
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
+
+# Where Homebrew keeps Pango and GLib on an Apple-silicon Mac.
+HOMEBREW_LIB = "/opt/homebrew/lib"
 
 # One A4 page saying "PDF preview not available". Used only with DEBUG on, so a
 # Mac without Homebrew's Pango can still load the demo and click around.
@@ -19,11 +24,29 @@ PLACEHOLDER_PDF = (
 )
 
 
+def point_at_homebrew(platform=sys.platform, environ=os.environ):
+    """On a Mac, let WeasyPrint find Homebrew's Pango without anyone setting a variable by hand.
+
+    WeasyPrint falls back to ctypes to look its libraries up, and ctypes reads
+    DYLD_FALLBACK_LIBRARY_PATH from the process environment at that moment. macOS
+    strips that variable from anything started through `make` or `sh`, so setting it
+    in a terminal or a Makefile does not reach the app; setting it here does.
+    """
+    if platform != "darwin" or not os.path.isdir(HOMEBREW_LIB):
+        return
+    current = environ.get("DYLD_FALLBACK_LIBRARY_PATH", "")
+    if HOMEBREW_LIB in current.split(":"):
+        return
+    parts = [part for part in (current, HOMEBREW_LIB) if part]
+    environ["DYLD_FALLBACK_LIBRARY_PATH"] = ":".join(parts)
+
+
 def weasyprint_html():
     """Return WeasyPrint's HTML class, or None in development when its system libraries are missing.
 
     Outside development a missing library is an error, so a live site never sends a stand-in PDF.
     """
+    point_at_homebrew()
     try:
         from weasyprint import HTML
     except OSError:
