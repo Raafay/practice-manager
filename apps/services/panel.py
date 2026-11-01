@@ -43,6 +43,7 @@ def _row(service, cs, can_fees) -> dict:
     return {
         "service": service,
         "cs": cs,
+        "needs_setup": services.needs_setup(service),
         "has_settings": bool(services.settings_kind(service)) or service.renewal,
         "monthly": monthly_equivalent(cs.fee_amount, cs.fee_frequency) if cs and can_fees else None,
     }

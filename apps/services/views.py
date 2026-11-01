@@ -196,6 +196,29 @@ class SwitchOnView(StaffRequiredMixin, View):
         return self._render(request, client, service, form, 422)
 
 
+class QuickSwitchOnView(SwitchOnView):
+    """Switch a service on at once: today's start, monthly, fee filled in later."""
+
+    def get(self, request, pk, service_pk):
+        raise Http404
+
+    def post(self, request, pk, service_pk):
+        client = get_client(pk)
+        service = self._service(client, service_pk)
+        if services.needs_setup(service):
+            response = super().get(request, pk, service_pk)
+            response["HX-Retarget"] = "#modal-body"
+            response["HX-Reswap"] = "innerHTML"
+            return response
+        try:
+            services.switch_on(request.user, client, service)
+        except ValidationError as error:
+            return render_panel(request, client, 422, fee_error=" ".join(error.messages))
+        if request.htmx:
+            return render_panel(request, client)
+        return redirect("clients:detail", client.pk)
+
+
 class ServiceSettingsView(StaffRequiredMixin, View):
     def _render(self, request, cs, form, status=200):
         return render_form(

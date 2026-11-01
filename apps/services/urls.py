@@ -23,6 +23,11 @@ urlpatterns = [
         name="switch_on",
     ),
     path(
+        "clients/<int:pk>/services/<int:service_pk>/quick-on/",
+        views.QuickSwitchOnView.as_view(),
+        name="quick_on",
+    ),
+    path(
         "clients/<int:pk>/client-services/<int:cs_pk>/settings/",
         views.ServiceSettingsView.as_view(),
         name="settings",

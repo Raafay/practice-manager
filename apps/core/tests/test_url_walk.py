@@ -206,6 +206,7 @@ services:move                       settings.manage
 services:toggle                     settings.manage
 services:panel                      staff
 services:switch_on                  staff
+services:quick_on                   staff
 services:settings                   staff
 services:switch_off                 staff
 services:fee                        get=staff post=fees.view
