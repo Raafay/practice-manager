@@ -8,5 +8,5 @@ The live connection can only be made once the site is deployed, or on a laptop w
 4. Create the app, then Configuration, Generate a secret. Copy the client id and the secret.
 5. Put them in the server's environment as `XERO_CLIENT_ID` and `XERO_CLIENT_SECRET`, then restart the site. Never commit them.
 6. Sign in as the owner, open Settings, Integrations, and press Connect Xero. Choose the practice's organisation and allow access.
-7. The scopes asked for are `offline_access accounting.contacts accounting.invoices.read accounting.payments.read`. Check Xero's current scope list when registering; apps created since 2 March 2026 must use the narrower ones.
+7. The scopes asked for are `offline_access accounting.contacts accounting.invoices.read accounting.payments.read accounting.reports.read`. The reports scope (added 01/11/2026) reads the monthly profit and loss for the Profit page; a connection made before then keeps syncing invoices but needs Disconnect and Connect again to read it. Check Xero's current scope list when registering; apps created since 2 March 2026 must use the narrower ones (for reports, the profit and loss one), so change `SCOPES` in `apps/finance/xero.py` to match.
 8. The first sync starts within a minute (the worker must be running). Then open Finance, Xero contacts and confirm each match.

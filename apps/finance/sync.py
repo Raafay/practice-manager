@@ -21,6 +21,7 @@ from apps.clients.models import Client
 
 from . import xero
 from .models import (
+    MonthlyResult,
     XeroConnection,
     XeroContact,
     XeroCreditNote,
@@ -278,6 +279,67 @@ def notify_owners_broken(error: str) -> None:
         )
 
 
+PL_TOTALS = {
+    "total income": "income",
+    "total trading income": "income",
+    "total cost of sales": "cost_of_sales",
+    "total operating expenses": "overheads",
+    "net profit": "net_profit",
+}
+
+
+def parse_month_heading(value: str) -> date | None:
+    """Xero heads report columns with the month end, such as "30 Sep 26"."""
+    for fmt in ("%d %b %y", "%d %b %Y"):
+        try:
+            return datetime.strptime(value.strip(), fmt).date().replace(day=1)
+        except ValueError:
+            continue
+    return None
+
+
+def parse_profit_and_loss(data: dict) -> dict[date, dict[str, Decimal]]:
+    """{month start: {income, cost_of_sales, overheads, net_profit}} from Xero's report."""
+    report = ((data or {}).get("Reports") or [{}])[0]
+    rows = report.get("Rows") or []
+    months: list[date | None] = []
+    found: dict[date, dict[str, Decimal]] = {}
+
+    def walk(items):
+        nonlocal months
+        for item in items:
+            cells = item.get("Cells") or []
+            if item.get("RowType") == "Header":
+                months = [parse_month_heading(c.get("Value", "")) for c in cells[1:]]
+            elif cells:
+                key = PL_TOTALS.get((cells[0].get("Value") or "").strip().lower())
+                if key:
+                    for month, cell in zip(months, cells[1:], strict=False):
+                        if month is not None:
+                            found.setdefault(month, {})[key] = money(cell.get("Value") or 0)
+            walk(item.get("Rows") or [])
+
+    walk(rows)
+    return found
+
+
+def store_profit_and_loss(data: dict) -> int:
+    count = 0
+    for month, figures in parse_profit_and_loss(data).items():
+        MonthlyResult.objects.update_or_create(
+            month=month,
+            defaults={
+                "income": figures.get("income", Decimal("0")),
+                "cost_of_sales": figures.get("cost_of_sales", Decimal("0")),
+                "overheads": figures.get("overheads", Decimal("0")),
+                "net_profit": figures.get("net_profit", Decimal("0")),
+                "source": MonthlyResult.Source.XERO,
+            },
+        )
+        count += 1
+    return count
+
+
 def run_sync(transport=None, now=None) -> XeroSyncLog | None:
     """One sync. Returns the log row, or None when Xero is not connected."""
     connection = xero.current_connection()
@@ -287,7 +349,7 @@ def run_sync(transport=None, now=None) -> XeroSyncLog | None:
     client = xero.XeroClient(transport)
     log = XeroSyncLog(started_at=now)
     since = connection.modified_since
-    counts = {"contacts": 0, "invoices": 0, "credit_notes": 0}
+    counts = {"contacts": 0, "invoices": 0, "credit_notes": 0, "pl_months": 0}
     try:
         for item in client.contacts(since=since):
             upsert_contact(item)
@@ -296,6 +358,12 @@ def run_sync(transport=None, now=None) -> XeroSyncLog | None:
             counts["invoices"] += 1 if upsert_invoice(item) else 0
         for item in client.credit_notes(since=since):
             counts["credit_notes"] += 1 if upsert_credit_note(item) else 0
+        last_month_end = timezone.localdate().replace(day=1) - timedelta(days=1)
+        try:
+            counts["pl_months"] = store_profit_and_loss(client.profit_and_loss(last_month_end))
+        except (xero.AuthFailed, xero.ServiceError):
+            # A connection made before the reports permission was added: invoices still sync.
+            counts["pl_months"] = -1
         refresh_suggestions()
     except xero.XeroError as failure:
         log.state = XeroSyncLog.State.FAILED

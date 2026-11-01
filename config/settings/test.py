@@ -29,3 +29,9 @@ XERO_TRANSPORT = "fake"
 XERO_CLIENT_ID = "test-client-id"
 XERO_CLIENT_SECRET = "test-client-secret"
 BANK_HOLIDAYS_FROM_DATABASE = False
+
+# Tests never call the Claude API; they pass a fake client.
+ANTHROPIC_API_KEY = ""
+CREDITSAFE_USERNAME = ""
+CREDITSAFE_PASSWORD = ""
+CREDITSAFE_PORTFOLIO_ID = ""

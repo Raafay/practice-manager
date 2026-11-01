@@ -165,7 +165,7 @@ def test_if_modified_since_is_sent(connection, fake):
 def test_sync_reads_everything_and_reads_only(connection, fake):
     log = sync.run_sync()
     assert log.state == "done"
-    assert log.counts == {"contacts": 4, "invoices": 8, "credit_notes": 1}
+    assert log.counts == {"contacts": 4, "invoices": 8, "credit_notes": 1, "pl_months": 3}
     assert XeroInvoice.objects.count() == 8
     assert all(r["method"] == "GET" for r in fake.requests if "api.xro" in r["url"])
     connection.refresh_from_db()
@@ -191,8 +191,9 @@ def test_sync_is_safe_to_run_twice(connection, fake):
 def test_second_sync_asks_only_for_changes(connection, fake):
     sync.run_sync()
     sync.run_sync()
-    second = [r for r in fake.requests if "api.xro" in r["url"]][-3:]
-    assert all("If-Modified-Since" in r["headers"] for r in second)
+    # The profit and loss report is read whole each time; lists ask only for changes.
+    lists = [r for r in fake.requests if "api.xro" in r["url"] and "Reports" not in r["url"]]
+    assert all("If-Modified-Since" in r["headers"] for r in lists[-3:])
 
 
 def test_both_date_forms_are_parsed(connection, fake):

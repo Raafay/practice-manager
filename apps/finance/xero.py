@@ -33,7 +33,10 @@ TOKEN_URL = "https://identity.xero.com/connect/token"
 CONNECTIONS_URL = "https://api.xero.com/connections"
 API_BASE = "https://api.xero.com/api.xro/2.0/"
 # The narrowest set that works for Apps created since 2 March 2026.
-SCOPES = "offline_access accounting.contacts accounting.invoices.read accounting.payments.read"
+SCOPES = (
+    "offline_access accounting.contacts accounting.invoices.read accounting.payments.read "
+    "accounting.reports.read"
+)
 TIMEOUT_SECONDS = 30
 REFRESH_MARGIN = timedelta(minutes=2)
 MAX_RETRIES = 3
@@ -284,6 +287,17 @@ class XeroClient:
 
     def credit_notes(self, since=None):
         return self.pages("CreditNotes", "CreditNotes", where='Type=="ACCRECCREDIT"', since=since)
+
+    def profit_and_loss(self, month_end, periods: int = 11) -> dict:
+        """Xero's monthly profit and loss report: the month ending on month_end and the
+        `periods` months before it. Read-only."""
+        params = {
+            "fromDate": month_end.replace(day=1).isoformat(),
+            "toDate": month_end.isoformat(),
+            "periods": periods,
+            "timeframe": "MONTH",
+        }
+        return self._call("GET", "Reports/ProfitAndLoss", params=params) or {}
 
     def create_contact(self, name: str, email: str = "") -> dict:
         """The one write: make a contact. Returns Xero's contact."""

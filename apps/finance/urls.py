@@ -1,6 +1,6 @@
 from django.urls import path
 
-from . import views
+from . import views, views_planning
 
 app_name = "finance"
 
@@ -10,6 +10,8 @@ urlpatterns = [
     path("finance/invoices/chase/", views.ChaseView.as_view(), name="chase"),
     path("finance/targets/", views.TargetsView.as_view(), name="targets"),
     path("finance/forecast/", views.ForecastView.as_view(), name="forecast"),
+    path("finance/profit/", views_planning.ProfitView.as_view(), name="profit"),
+    path("finance/assistant/", views_planning.AssistantView.as_view(), name="assistant"),
     path("finance/summary/", views.SummaryView.as_view(), name="summary"),
     path("finance/settings/", views.SettingsView.as_view(), name="settings"),
     path("finance/xero/contacts/", views.MatchingView.as_view(), name="matching"),

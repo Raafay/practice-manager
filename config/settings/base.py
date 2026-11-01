@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "apps.portal",
     "apps.timekeeping",
     "apps.finance",
+    "apps.creditsafe",
     "apps.imports",
     "apps.reports",
 ]
@@ -241,6 +242,13 @@ COMPANIES_HOUSE_TRANSPORT = env("COMPANIES_HOUSE_TRANSPORT", "live")
 # Xero (Stage 11). Register an app at developer.xero.com; the redirect address is
 # {SITE_URL}/integrations/xero/callback. "fake" serves the saved samples (tests and demo data).
 XERO_CLIENT_ID = env("XERO_CLIENT_ID")
+# Creditsafe credit ratings. Without these the Check credit button is disabled.
+CREDITSAFE_USERNAME = env("CREDITSAFE_USERNAME")
+CREDITSAFE_PASSWORD = env("CREDITSAFE_PASSWORD")
+CREDITSAFE_PORTFOLIO_ID = env("CREDITSAFE_PORTFOLIO_ID")
+# The finance assistant (owner only). Without a key the Ask page says it is not set up.
+ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY")
+FINANCE_ASSISTANT_MODEL = env("FINANCE_ASSISTANT_MODEL", "claude-opus-5-5")
 XERO_CLIENT_SECRET = env("XERO_CLIENT_SECRET")
 XERO_TRANSPORT = env("XERO_TRANSPORT", "live")
 # Read refreshed bank holidays from the database as well as the bundled list.
