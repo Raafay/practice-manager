@@ -44,6 +44,7 @@
 </div>
 {% include "onboarding/_overview_panels.html" %}
 {% include "pipeline/_overview_panel.html" %}
+{% if credit_panel %}{% include "creditsafe/_overview_panel.html" %}{% endif %}
 {% include "portal/_overview_panel.html" %}
 {% if finance_panel and user|can:"finance.owner" %}{% include "finance/_overview_panel.html" %}{% endif %}
 {% for section in sections %}

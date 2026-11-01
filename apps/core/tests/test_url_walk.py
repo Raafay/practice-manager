@@ -199,6 +199,8 @@ companieshouse:sync                 staff
 companieshouse:fill_in              staff
 companieshouse:integrations         integrations.manage
 
+creditsafe:check                    clients.status
+
 services:list                       settings.manage
 services:add                        settings.manage
 services:edit                       settings.manage
@@ -410,6 +412,8 @@ finance:invoices                    finance.owner
 finance:chase                       finance.owner
 finance:targets                     finance.owner
 finance:forecast                    finance.owner
+finance:profit                      finance.owner
+finance:assistant                   finance.owner
 finance:summary                     finance.owner
 finance:settings                    finance.owner
 finance:matching                    finance.owner

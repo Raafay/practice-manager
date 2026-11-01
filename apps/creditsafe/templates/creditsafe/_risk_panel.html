@@ -1,0 +1,16 @@
+{# On the Risk tab. Needs: client, credit_checks, credit_configured. #}
+<section class="card card-body mt-4" aria-labelledby="credit-h">
+  <div class="flex flex-wrap items-center justify-between gap-2">
+    <h2 id="credit-h" class="text-base font-semibold">Credit rating</h2>
+    {% if client.company_number and user|can:"clients.status" %}
+    <form method="post" action="{% url 'creditsafe:check' client.pk %}">{% csrf_token %}
+      <button type="submit" class="btn btn-secondary btn-sm" {% if not credit_configured %}disabled title="Creditsafe is not set up"{% endif %}>Check credit now</button>
+    </form>
+    {% endif %}
+  </div>
+  {% if credit_checks %}
+  <table class="table mt-2 text-sm"><thead><tr><th scope="col">Date</th><th scope="col">Band</th><th scope="col" class="text-right">Score</th><th scope="col" class="text-right">Credit limit</th><th scope="col">Why</th></tr></thead>
+    <tbody>{% for c in credit_checks %}<tr><td>{{ c.created_at|date:"d/m/Y" }}</td><td>{% include "components/_badge.html" with text=c.rating|default:"?" tone=c.tone %} {{ c.rating_description }}</td><td class="text-right">{{ c.score|default_if_none:"—" }}</td><td class="text-right">{% if c.credit_limit is not None %}£{{ c.credit_limit }}{% else %}—{% endif %}</td><td>{{ c.get_source_display }}{% if c.reason %}: {{ c.reason }}{% endif %}</td></tr>{% endfor %}</tbody></table>
+  {% elif not client.company_number %}<p class="muted mt-1">Credit ratings are for companies. Add a company number to check one.</p>
+  {% else %}<p class="muted mt-1">Not checked yet. “Check credit now” fetches a Creditsafe report (each one is charged) and then watches the company for changes.</p>{% endif %}
+</section>

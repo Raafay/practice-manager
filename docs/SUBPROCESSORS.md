@@ -10,9 +10,11 @@ Every outside company that stores or sees the practice's client data through thi
 | **Companies House** (UK government) | Company details, officers and filing dates | Searches for company numbers. Nothing is sent to it except the company number | UK | Public register; read only |
 | **Xero** | Reading invoices and payments; creating a contact when asked | Client names, Xero contact details, invoice figures. Xero already holds the practice's accounts | Xero's data centres (see Xero's own list) | When connected |
 | **Sentry** (optional; only if `SENTRY_DSN` is set) | Error reports | Error type, file and line, and the address with tokens removed. No request data, user details or error text | Choose the EU region | Off unless set |
+| **Creditsafe** (optional; only if `CREDITSAFE_USERNAME` is set) | Credit ratings for client and prospect companies, and monitoring alerts | The company number of each company checked. Nothing about people | UK | Off unless set |
+| **Anthropic** (optional; only if `ANTHROPIC_API_KEY` is set) | The owner's finance assistant (Finance, Ask) | The owner's question, monthly fee and profit totals, company names of the largest clients. People who are clients in their own name are sent as a reference number. No contact details, tax references or documents | US (check Anthropic's data retention terms) | Off unless set |
 | **GitHub** | Holds the code | Code only. No client data: the repository holds only made-up demo data | US | |
 | **gov.uk** | Bank holiday dates | Nothing is sent | UK | |
 
-Not used in the first version: AI services (DECISIONS 10), text message providers, identity-check services, HMRC's API, WhatsApp, Slack or Teams.
+Not used in the first version: AI services other than the optional finance assistant above (DECISIONS 10, reversed for that one page at the 23/10/2026 meeting), text message providers, identity-check services, HMRC's API, WhatsApp, Slack or Teams.
 
 Staff use their own devices and an authenticator app (such as Microsoft Authenticator or Google Authenticator). The authenticator app holds a secret for signing in but no client data.

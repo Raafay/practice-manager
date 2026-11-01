@@ -870,6 +870,9 @@ class OverviewView(StaffRequiredMixin, View):
         from apps.finance.panels import overview_context as finance_context
 
         context.update(finance_context(request.user))
+        from apps.creditsafe.panels import overview_context as credit_context
+
+        context.update(credit_context(request.user))
         return render(request, "tasks/overview.html", context)
 
 

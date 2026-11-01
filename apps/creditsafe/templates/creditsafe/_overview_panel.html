@@ -1,0 +1,9 @@
+{# Credit ratings that fell, on the Overview. Needs: credit_drops. #}
+<section class="card card-body mb-6" aria-labelledby="ov-credit">
+  <h2 id="ov-credit" class="mb-2 flex items-center gap-2 text-base">Credit ratings that fell <span class="badge {% if credit_drops %}badge-red{% else %}badge-neutral{% endif %}">{{ credit_drops|length }}</span></h2>
+  {% if credit_drops %}
+  <ul class="divide-y divide-slate-100 text-sm">{% for row in credit_drops %}
+    <li class="flex items-center justify-between gap-2 py-1.5"><a href="{% url 'aml:tab' row.client.pk %}" class="truncate">{{ row.client.name }}</a><span class="whitespace-nowrap">{{ row.old.rating|default:row.old.score }} → <strong>{{ row.new.rating|default:row.new.score }}</strong> <span class="muted">{{ row.new.created_at|date:"d/m/Y" }}</span></span></li>
+  {% endfor %}</ul>
+  {% else %}<p class="muted">No client's credit rating has fallen. Ratings are checked from each client's Risk tab and watched for changes.</p>{% endif %}
+</section>

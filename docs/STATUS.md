@@ -72,9 +72,19 @@ Older stages are shortened to two lines each. Details are in git history and eac
 - Tried here end to end with a scratch database: `/login/` and styles 200, wrong host 400, owner created, `seed_demo` refused, backup written.
 - Assumption: the beta deliberately sends no email, so staff invitations are copied from the terminal and the portal is not used until go-live with an email provider.
 
+## After the 23/10/2026 meeting (built 01/11/2026, branch `claude/awesome-thompson-idlpxq`)
+
+- 1 Toggles: only Payroll, VAT Returns and Management Accounts open the set-up box; every other service switches on at once (today, monthly, default fee if one is set in Settings, else blank).
+- Uploads encrypted at rest with the field keys (`apps/core/storage.py`); `manage.py encrypt_files` encrypts older plain files. Run it once on the beta laptop.
+- 6/7 "Requests" renamed "Client requests". New information request (`apps/portal/inforequest.py`): asks one person only for details still empty (UTR, NI, CH codes, email, phone, address, date of birth) by a 28-day no-login link (email held in Queued) or a printed form; replies wait for staff to tick and apply; files land in Client requests; reminders at 7 and 14 days (job `info_reminders`). AML recording was already built in Stage 7.
+- 3 Profit page and "Ask" (owner only): profit targets, monthly P&L (Xero report or typed in), gap to target, clients needed, what-if, forecast against actual, concentration warning at 25%. Ask uses the Claude API with tools over `apps/finance/planning.py`; it never does arithmetic and is read-only; usage metered per question. Needs `ANTHROPIC_API_KEY`. New dependency `anthropic` (the Claude API client).
+- 2 Creditsafe (`apps/creditsafe`): Check credit on the Risk tab (needs `clients.status`, costs one report), rating badge in the client header, history, owner notice and Overview panel when a rating falls, daily alerts job re-checks only companies Creditsafe flags. Needs `CREDITSAFE_USERNAME`, `CREDITSAFE_PASSWORD`, `CREDITSAFE_PORTFOLIO_ID`. Prospects use the same button from their Risk tab.
+- Not done: multi-tenant, Stripe, per-practice branding (left to the end, as agreed), bills and repeating invoices from Xero.
+
 ## Assumptions
 
 Add one line each time a stage makes a choice that the specs and `docs/DECISIONS.md` did not cover. Give the stage number.
+- Meeting: work on the session branch, one pull request for all items. Costs in the profit figures are a 3-month average and treated as fixed, so each new client adds its whole fee to profit. Clients who are people are sent to the Claude API as a reference, not a name. The default fee from Settings still fills in on instant switch-on. A credit check needs `clients.status` (owner and managers) because each report is charged. Information request links use the existing one-use action links; each reminder sends a fresh link to the same request.
 - 1: Work pushed to the session's required branch `claude/keen-planck-yz97j4`, not `stage-01-foundation`; the cloud session could push only there. Two-factor "done" means the user has an authenticator app; allauth finishes sign-in only after the code. `dev_login` adds one and does not count as a recent password. Practice details need `settings.manage`. Sign-in and session settings (trust this browser, idle minutes, maximum hours) sit on the same row and need `users.manage`.
 - 1: allauth registers its trust page only if the setting is on at start-up, so `config/urls.py` always registers it and `MFA_TRUST_ENABLED` reads the practice setting at run time. Password re-entry guards the change (the POST), not opening the page. allauth replays the POST after the password. A portal user on a staff page gets 403. `user.can()` raises on an unknown right name, so a typo never passes silently.
 - 1: An invitation creates the account only when accepted. Deactivated users are refused on their next request; no hand-over prompt yet (CORRECTIONS 2). `seed_demo` runs only with DEBUG or `ALLOW_DEMO_DATA=true`. Demo password `demo-password-2026`, dev two-factor code `000000`. Notifications live in the `events` app. The bell links to a list page; the triggers come in Stage 8.
@@ -131,6 +141,7 @@ Add one line each time a stage makes a choice that the specs and `docs/DECISIONS
 
 Things a stage left unfinished or found broken, with the stage number. Remove a line when it is fixed.
 
+- Meeting: Creditsafe and the Claude API were built against made-up samples and a fake client; neither was reachable from the cloud session. Check Creditsafe's field names (`apps/creditsafe/api.py`) against their documentation with the first real report. Xero needs Disconnect and Connect again for the new reports scope.
 - 13: In the cloud session Docker Hub (429), ghcr.io and the Debian mirror were blocked; the image was built from a mirrored base through the proxy without the WeasyPrint system libraries step. Build once on a normal machine or the host before go-live: `docker build -t practice-manager .`. Live SES, bucket, Companies House and Xero untested from here.
 - 1: Date filter boxes use the browser's own date picker, which shows the browser's date order (dd/mm/yyyy on a UK computer).
 - 2: No quick switches on the Contacts tab; flags are edited in the Edit drawer. Django 6 deprecation warning for URL form fields (assume https) shows in tests.

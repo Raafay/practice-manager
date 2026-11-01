@@ -9,6 +9,7 @@ from apps.clients import demo as clients_demo
 from apps.comms import demo as comms_demo
 from apps.companieshouse import demo as companieshouse_demo
 from apps.core.models import PracticeSettings
+from apps.creditsafe import demo as creditsafe_demo
 from apps.finance import demo as finance_demo
 from apps.imports import demo as imports_demo
 from apps.onboarding import demo as onboarding_demo
@@ -50,6 +51,7 @@ class Command(BaseCommand):
             counts.update(pipeline_demo.seed())
             counts.update(portal_demo.seed())
             counts.update(finance_demo.seed())
+            counts.update(creditsafe_demo.seed())
 
         self.stdout.write(self.style.SUCCESS("Demo data loaded. Everything here is made up."))
         self.stdout.write(

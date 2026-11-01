@@ -1,0 +1,20 @@
+{
+ "report": {
+  "companyId": "GB-0-00000000",
+  "creditScore": {
+   "currentCreditRating": {
+    "commonValue": "B",
+    "commonDescription": "Low Risk",
+    "creditLimit": {
+     "currency": "GBP",
+     "value": "25000"
+    },
+    "providerValue": {
+     "maxValue": "100",
+     "minValue": "1",
+     "value": "72"
+    }
+   }
+  }
+ }
+}

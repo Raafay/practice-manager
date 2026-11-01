@@ -1,0 +1,12 @@
+{
+ "totalCount": 1,
+ "data": [
+  {
+   "company": {
+    "id": "GB-0-00000001"
+   },
+   "eventDate": "2026-10-30T08:00:00Z",
+   "ruleName": "Credit rating decrease"
+  }
+ ]
+}
