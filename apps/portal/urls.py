@@ -1,6 +1,14 @@
 from django.urls import path
 
-from . import views, views_client, views_items, views_public, views_signin, views_staff
+from . import (
+    views,
+    views_client,
+    views_info,
+    views_items,
+    views_public,
+    views_signin,
+    views_staff,
+)
 
 app_name = "portal"
 
@@ -44,6 +52,7 @@ urlpatterns = [
     ),
     path("portal/items/<uuid:public_id>/form/", views_items.ItemFormView.as_view(), name="form"),
     # The request link: no sign-in
+    path("i/<str:token>/", views_info.InfoFormView.as_view(), name="info_form"),
     path("r/<str:token>/", views_public.RequestFormView.as_view(), name="request_form"),
     path("r/<str:token>/thanks/", views_public.RequestThanksView.as_view(), name="request_thanks"),
     # Staff: the inbox
@@ -67,6 +76,32 @@ urlpatterns = [
         "clients/<int:pk>/requests/",
         views_client.ClientRequestsView.as_view(),
         name="client_requests",
+    ),
+    path("clients/<int:pk>/info/new/", views_info.InfoNewView.as_view(), name="info_new"),
+    path(
+        "clients/<int:pk>/info/<int:info_pk>/",
+        views_info.InfoDetailView.as_view(),
+        name="info_detail",
+    ),
+    path(
+        "clients/<int:pk>/info/<int:info_pk>/apply/",
+        views_info.InfoApplyView.as_view(),
+        name="info_apply",
+    ),
+    path(
+        "clients/<int:pk>/info/<int:info_pk>/cancel/",
+        views_info.InfoCancelView.as_view(),
+        name="info_cancel",
+    ),
+    path(
+        "clients/<int:pk>/info/<int:info_pk>/form.pdf",
+        views_info.InfoPdfView.as_view(),
+        name="info_pdf",
+    ),
+    path(
+        "clients/<int:pk>/info/<int:info_pk>/enter/",
+        views_info.InfoEnterView.as_view(),
+        name="info_enter",
     ),
     path(
         "clients/<int:pk>/requests/replace-link/",

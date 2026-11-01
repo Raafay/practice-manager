@@ -20,7 +20,7 @@ PORTAL_ONLY = {
     "form", "logout",
 }  # fmt: skip
 SIGN_IN_PAGES = {"login", "login_code"}
-PUBLIC = {"request_form", "request_thanks"}
+PUBLIC = {"request_form", "request_thanks", "info_form"}
 
 
 @pytest.fixture
@@ -72,7 +72,7 @@ def object_addresses(w):
 
 def test_every_portal_address_is_covered(world):
     """A new portal or public address must be added to the lists in this file."""
-    names = {p.name for p in urlpatterns if str(p.pattern).startswith(("portal/", "r/"))}
+    names = {p.name for p in urlpatterns if str(p.pattern).startswith(("portal/", "r/", "i/"))}
     covered = PORTAL_ONLY | SIGN_IN_PAGES | PUBLIC
     assert names == covered, f"Not covered: {names - covered}; stale: {covered - names}"
     object_names = {n for n, _ in object_addresses(world)}
@@ -229,7 +229,10 @@ STAFF_NAMES_POST = [
     "inbox_spam", "inbox_reopen", "replace_link", "invite", "withdraw", "item_cancel",
     "task_ask_upload", "review_act",
 ]  # fmt: skip
-STAFF_NAMES_OTHER = {"inbox_file"}
+# Information request pages are checked in test_inforequest.py.
+STAFF_NAMES_OTHER = {
+    "inbox_file", "info_new", "info_detail", "info_apply", "info_cancel", "info_pdf", "info_enter",
+}  # fmt: skip
 
 
 def staff_args(name, w):
@@ -249,7 +252,7 @@ def staff_args(name, w):
 
 
 def test_every_staff_address_is_covered(world):
-    names = {p.name for p in urlpatterns if not str(p.pattern).startswith(("portal/", "r/"))}
+    names = {p.name for p in urlpatterns if not str(p.pattern).startswith(("portal/", "r/", "i/"))}
     assert names == set(STAFF_NAMES_GET) | set(STAFF_NAMES_POST) | STAFF_NAMES_OTHER
 
 

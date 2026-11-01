@@ -1,0 +1,12 @@
+{% extends "layouts/app.html" %}
+{% block title %}Type in a reply{% endblock %}
+{% block content %}
+<p class="mb-2"><a href="{% url 'portal:info_detail' client.pk info.pk %}" class="text-sm">&larr; {{ info.reference }}</a></p>
+<div class="page-header"><div><h1>Type in the reply from {{ info.contact.full_name }}</h1><p class="muted mt-0.5">Copy the details from the paper form. You check and apply them on the next page.</p></div></div>
+<form method="post" class="card card-body space-y-4" novalidate>
+  {% csrf_token %}
+  {% if errors %}<div class="form-errors" role="alert">{% for e in errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+  {% include "portal/_info_fields.html" %}
+  <div><button type="submit" class="btn btn-primary">Save the reply</button></div>
+</form>
+{% endblock %}

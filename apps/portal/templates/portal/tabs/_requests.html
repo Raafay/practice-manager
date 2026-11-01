@@ -19,6 +19,18 @@
     {% else %}<p class="muted">Nothing is waiting for the client on the portal.</p>{% endif %}
   </section>
 </div>
+<div class="mb-2 mt-6 flex flex-wrap items-center justify-between gap-2">
+  <h2 class="text-base">Details asked of this client</h2>
+  <a class="btn btn-secondary btn-sm" href="{% url 'portal:info_new' client.pk %}" hx-get="{% url 'portal:info_new' client.pk %}" hx-target="#modal-body">{% icon "plus" "size-4" %} Ask for missing details</a>
+</div>
+{% if info_requests %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th scope="col">Asked of</th><th scope="col">How</th><th scope="col">State</th><th scope="col">Sent</th></tr></thead>
+  <tbody>{% for i in info_requests %}<tr><td><a href="{% url 'portal:info_detail' client.pk i.pk %}" class="font-medium text-slate-900">{{ i.contact.full_name }}</a><span class="muted block">{{ i.reference }}</span></td><td>{{ i.get_channel_display }}</td><td>{% include "components/_badge.html" with text=i.get_state_display tone=i.state_tone %}</td><td class="whitespace-nowrap">{{ i.sent_at|date:"d/m/Y" }}</td></tr>{% endfor %}</tbody>
+</table></div>
+{% else %}
+<p class="muted">Nothing asked yet. Use “Ask for missing details” to send a secure form for the UTR, NI number, Companies House codes, contact details and identity documents still missing on the record, by email or by post.</p>
+{% endif %}
 <h2 class="mb-2 mt-6 text-base">Requests from this client</h2>
 {% if requests %}
 <div class="table-wrap"><table class="table">

@@ -261,3 +261,67 @@ class RequestFile(PublicIdModel, TimeStampedModel):
 
     def __str__(self) -> str:
         return self.original_name
+
+
+class InfoRequest(PublicIdModel, TimeStampedModel):
+    """Missing details asked of one contact, by a no-login link or by post.
+
+    Answers wait here until staff apply them to the record. Tax references and
+    codes in `answers` are sealed (encrypted) before they are stored.
+    """
+
+    class Channel(models.TextChoices):
+        EMAIL = "email", "Email with a secure link"
+        POST = "post", "Post"
+
+    class State(models.TextChoices):
+        WAITING = "waiting", "Waiting for the client"
+        ANSWERED = "answered", "Replied, to check"
+        DONE = "done", "Applied"
+        CANCELLED = "cancelled", "Cancelled"
+
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name="info_requests")
+    contact = models.ForeignKey(
+        "clients.Contact", on_delete=models.CASCADE, related_name="info_requests"
+    )
+    channel = models.CharField(max_length=6, choices=Channel.choices, default=Channel.EMAIL)
+    state = models.CharField(
+        max_length=10, choices=State.choices, default=State.WAITING, db_index=True
+    )
+    fields = models.JSONField(default=list)
+    answers = models.JSONField(default=dict, blank=True)
+    applied = models.JSONField(default=list, blank=True)
+    sent_at = models.DateTimeField(null=True, blank=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    reminders_sent = models.PositiveSmallIntegerField(default=0)
+    answered_at = models.DateTimeField(null=True, blank=True)
+    request = models.ForeignKey(
+        Request, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    closed_at = models.DateTimeField(null=True, blank=True)
+    closed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"Information request for {self.contact}"
+
+    @property
+    def reference(self) -> str:
+        return f"I{self.pk:05d}" if self.pk else ""
+
+    @property
+    def is_open(self) -> bool:
+        return self.state in (self.State.WAITING, self.State.ANSWERED)
+
+    @property
+    def state_tone(self) -> str:
+        return {"waiting": "amber", "answered": "accent", "done": "green", "cancelled": "neutral"}[
+            self.state
+        ]

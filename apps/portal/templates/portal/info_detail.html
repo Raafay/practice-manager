@@ -1,0 +1,40 @@
+{% extends "layouts/app.html" %}
+{% block title %}Information request {{ info.reference }}{% endblock %}
+{% block content %}
+<p class="mb-2"><a href="{% url 'portal:client_requests' client.pk %}" class="text-sm">&larr; {{ client.name }}: client requests</a></p>
+<div class="page-header">
+  <div>
+    <div class="flex flex-wrap items-center gap-2"><h1>Details asked of {{ info.contact.full_name }}</h1>
+      {% include "components/_badge.html" with text=info.get_state_display tone=info.state_tone %}</div>
+    <p class="muted mt-0.5">{{ info.reference }} · {{ info.get_channel_display|lower }} · sent {{ info.sent_at|date:"d/m/Y" }}{% if info.channel == "email" %} · link works until {{ info.expires_at|date:"d/m/Y" }}{% endif %} · reminders sent: {{ info.reminders_sent }}</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    {% if info.is_open %}
+      {% if info.channel == "post" %}<a class="btn btn-secondary" href="{% url 'portal:info_pdf' client.pk info.pk %}">Print the form</a>{% endif %}
+      {% if info.state == "waiting" %}<a class="btn btn-secondary" href="{% url 'portal:info_enter' client.pk info.pk %}">Type in a reply</a>{% endif %}
+      <form method="post" action="{% url 'portal:info_cancel' client.pk info.pk %}">{% csrf_token %}<button type="submit" class="btn btn-ghost">Cancel request</button></form>
+    {% endif %}
+  </div>
+</div>
+<section class="card card-body" aria-labelledby="ans-h">
+  <h2 id="ans-h" class="text-base">What was asked</h2>
+  {% if info.state == "answered" %}<p class="muted">Tick the details to copy onto the record, then apply. Anything not ticked is discarded. Tax references and codes are shown masked.</p>{% endif %}
+  <form method="post" action="{% url 'portal:info_apply' client.pk info.pk %}">
+    {% csrf_token %}
+    <div class="table-wrap mt-2"><table class="table">
+      <thead><tr><th scope="col">Detail</th><th scope="col">Reply</th><th scope="col">On the record</th></tr></thead>
+      <tbody>{% for row in rows %}<tr>
+        <td>{% if info.state == "answered" and row.has_answer %}<label class="flex items-center gap-2"><input type="checkbox" name="apply" value="{{ row.ask.key }}" checked> {{ row.ask.label }}</label>{% else %}{{ row.ask.label }}{% endif %}</td>
+        <td>{% if row.has_answer %}<span class="whitespace-pre-line">{{ row.answer }}</span>{% else %}<span class="muted">—</span>{% endif %}</td>
+        <td>{% if row.applied %}{% include "components/_badge.html" with text="Applied" tone="green" %}{% elif row.ask in still_missing %}{% include "components/_badge.html" with text="Still missing" tone="amber" %}{% else %}{% include "components/_badge.html" with text="Filled" tone="neutral" %}{% endif %}</td>
+      </tr>{% endfor %}</tbody>
+    </table></div>
+    {% if info.state == "answered" %}<button type="submit" class="btn btn-primary mt-3">Apply ticked details</button>{% endif %}
+  </form>
+  {% if files %}
+  <h2 class="mt-4 text-base">Files sent</h2>
+  <ul class="mt-1 text-sm">{% for f in files %}<li><a href="{% url 'portal:inbox_file' info.request.pk f.public_id %}">{{ f.original_name }}</a> <span class="muted">{{ f.size|filesizeformat }}</span></li>{% endfor %}</ul>
+  <p class="muted mt-1">File them under the client from <a href="{% url 'portal:inbox_detail' info.request.pk %}">the request {{ info.request.reference }}</a>. Identity documents belong on the AML tab.</p>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,10 +1,16 @@
 {% extends "layouts/app.html" %}
-{% block title %}Requests{% endblock %}
+{% block title %}Client requests{% endblock %}
 {% block content %}
 <div class="page-header">
-  {% include "components/_page_header.html" with title="Requests" subtitle="Everything clients ask for, from the request link, the portal, WhatsApp, phone and in person." %}
+  {% include "components/_page_header.html" with title="Client requests" subtitle="Everything asked of clients and everything they send: the request link, information requests, the portal, WhatsApp, phone and in person." %}
   <a class="btn btn-primary" href="{% url 'portal:inbox_log' %}" hx-get="{% url 'portal:inbox_log' %}" hx-target="#drawer-body">{% icon "plus" "size-4" %} Log a request</a>
 </div>
+{% if info_open %}
+<section class="card card-body mb-4" aria-labelledby="info-h">
+  <h2 id="info-h" class="text-base">Details asked of clients</h2>
+  <ul class="divide-y divide-slate-100 text-sm">{% for i in info_open %}<li class="flex flex-wrap items-center justify-between gap-2 py-1.5"><a href="{% url 'portal:info_detail' i.client_id i.pk %}">{{ i.client.name }}: {{ i.contact.full_name }}</a><span class="flex items-center gap-2"><span class="muted">{{ i.get_channel_display }}, sent {{ i.sent_at|date:"d/m/Y" }}</span>{% include "components/_badge.html" with text=i.get_state_display tone=i.state_tone %}</span></li>{% endfor %}</ul>
+</section>
+{% endif %}
 <nav class="tabs mb-4" aria-label="Show requests">
   {% for value, label in filters %}<a class="tab" href="?state={{ value }}" {% if value == state %}aria-current="page"{% endif %}>{{ label }}{% if value == "new" and counts.new %} <span class="badge badge-accent">{{ counts.new }}</span>{% endif %}</a>{% endfor %}
 </nav>

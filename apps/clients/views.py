@@ -337,7 +337,7 @@ def tab_nav(client: Client, user=None) -> list[tuple[str, str, str]]:
     tabs.append(("engagement", "Engagement", "onboarding:engagement"))
     tabs.append(("risk", "Risk", "aml:tab"))
     tabs.append(("hmrc", "HMRC", "onboarding:hmrc"))
-    tabs.append(("requests", "Requests", "portal:client_requests"))
+    tabs.append(("requests", "Client requests", "portal:client_requests"))
     tabs.append(("time", "Time", "timekeeping:client_tab"))
     if user is not None and user.can("fees.view"):
         tabs.append(("fees", "Fees and invoices", "finance:client_fees"))
