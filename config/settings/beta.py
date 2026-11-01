@@ -81,7 +81,7 @@ CACHES = {
 
 # Uploaded files on the laptop's encrypted disk, outside the code folder.
 STORAGES = {
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "default": {"BACKEND": "apps.core.storage.EncryptedFileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
 

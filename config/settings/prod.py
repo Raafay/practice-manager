@@ -81,7 +81,7 @@ CACHES = {
 # rest. No public ACL; files are only ever streamed through permission-checked views.
 STORAGES = {
     "default": {
-        "BACKEND": "storages.backends.s3.S3Storage",
+        "BACKEND": "apps.core.storage.EncryptedS3Storage",
         "OPTIONS": {
             "bucket_name": env("STORAGE_BUCKET"),
             "endpoint_url": env("STORAGE_ENDPOINT") or None,
