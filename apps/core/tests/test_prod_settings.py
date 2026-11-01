@@ -148,7 +148,13 @@ def test_other_email_providers(monkeypatch):
 def test_private_bucket(monkeypatch):
     prod = load_prod(monkeypatch, STORAGE_ENDPOINT="https://s3.example.com")
     storage = prod.STORAGES["default"]
-    assert storage["BACKEND"] == "storages.backends.s3.S3Storage"
+    # Files are encrypted by the app before they reach the bucket, on top of the bucket's own.
+    assert storage["BACKEND"] == "apps.core.storage.EncryptedS3Storage"
+    from storages.backends.s3 import S3Storage
+
+    from apps.core.storage import EncryptedS3Storage
+
+    assert issubclass(EncryptedS3Storage, S3Storage)
     options = storage["OPTIONS"]
     assert options["bucket_name"] == "pm-files"
     assert options["endpoint_url"] == "https://s3.example.com"
