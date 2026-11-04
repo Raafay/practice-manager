@@ -24,6 +24,10 @@ class ProfitView(FinanceView):
             target = _decimal(request.GET.get("target"))
         except ValueError:
             target = None
+        try:
+            margin = _decimal((request.GET.get("margin") or "").replace("%", ""))
+        except ValueError:
+            margin = None
         new_clients = _int(request.GET.get("clients"))
         try:
             fee = _decimal(request.GET.get("fee"))
@@ -37,7 +41,7 @@ class ProfitView(FinanceView):
             request,
             "finance/profit.html",
             {
-                "position": planning.position(target),
+                "position": planning.position(target, target_margin=margin),
                 "scenario": scenario,
                 "rows": planning.forecast_against_actual(),
                 "concentration": planning.concentration(),
@@ -58,11 +62,16 @@ class ProfitView(FinanceView):
                 raise ValueError("Choose a month.")
             if action == "target":
                 amount = _decimal(request.POST.get("profit"))
-                if amount is None:
+                margin = _decimal((request.POST.get("margin") or "").replace("%", ""))
+                if margin is not None and not (0 <= margin < 100):
+                    raise ValueError("A margin target is a percentage from 0 to 99.")
+                if amount is None and margin is None:
                     ProfitTarget.objects.filter(month=month).delete()
                 else:
-                    ProfitTarget.objects.update_or_create(month=month, defaults={"profit": amount})
-                what = f"the profit target for {month:%m/%Y}"
+                    ProfitTarget.objects.update_or_create(
+                        month=month, defaults={"profit": amount, "margin_percent": margin}
+                    )
+                what = f"the profit and margin targets for {month:%m/%Y}"
             elif action == "result":
                 figures = {
                     k: _decimal(request.POST.get(k)) or Decimal("0")

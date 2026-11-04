@@ -67,6 +67,45 @@ def test_position_uses_the_saved_profit_target():
     assert planning.position(today=TODAY)["target_profit"] == "600.00"
 
 
+def test_margin_and_fee_targets():
+    from apps.finance.models import Target
+
+    fees("3000", "3000", "3000", "3000")  # £12,000 a month
+    results(Decimal("9000"))  # 25% margin now
+    Target.objects.create(month=date(2026, 11, 1), amount=Decimal("15000"))
+    ProfitTarget.objects.create(month=date(2026, 11, 1), margin_percent=Decimal("40"))
+    pos = planning.position(today=TODAY)
+    assert pos["target_margin_percent"] == "40.0"
+    assert pos["fees_needed_for_margin"] == "15000.00"  # 9000 / (1 - 0.40)
+    assert pos["clients_needed_for_margin"] == 1  # 3000 short at £3,000 average
+    assert pos["target_fees"] == "15000.00"
+    assert pos["fees_gap_to_target"] == "3000.00"
+    assert pos["clients_needed_for_fee_target"] == 1
+    rows = {r["month"]: r for r in planning.forecast_against_actual(today=TODAY)}
+    assert rows["09/2026"]["actual_margin_percent"] == "35.7"
+    assert rows["11/2026"]["target_margin_percent"] == "40.0"
+
+
+def test_margin_target_is_saved_from_the_page(client):
+    sign_in(client, owner())
+    client.post(
+        reverse("finance:profit"), {"action": "target", "month": "2026-12", "margin": "40%"}
+    )
+    row = ProfitTarget.objects.get()
+    assert (row.profit, row.margin_percent) == (None, Decimal("40"))
+    client.post(
+        reverse("finance:profit"), {"action": "target", "month": "2026-12", "margin": "120"}
+    )
+    assert ProfitTarget.objects.get().margin_percent == Decimal("40")
+
+
+def test_assistant_passes_a_margin_target():
+    out = assistant.run_tool("get_position", {"target_margin_percent": 40})
+    assert out["target_margin_percent"] == "40"
+    with pytest.raises(ValueError):
+        assistant.run_tool("get_position", {"target_margin_percent": 150})
+
+
 def test_no_profit_and_loss_says_so():
     fees("1000")
     pos = planning.position(Decimal("8000"), today=TODAY)

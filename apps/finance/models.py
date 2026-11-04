@@ -214,10 +214,21 @@ class XeroSyncLog(TimeStampedModel):
 
 
 class ProfitTarget(TimeStampedModel):
-    """The net profit the owner wants in one month (first day of the month)."""
+    """The net profit and margin the owner wants in one month (first day of the month).
+
+    The fee (revenue) target for the month is the separate Target row.
+    """
 
     month = models.DateField(unique=True)
-    profit = models.DecimalField(max_digits=10, decimal_places=2)
+    profit = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    margin_percent = models.DecimalField(
+        "net margin target (%)",
+        max_digits=4,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+    )
 
     class Meta:
         ordering = ["month"]

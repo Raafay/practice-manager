@@ -56,10 +56,28 @@ def profit_target(month: date) -> Decimal | None:
     return row.profit if row else None
 
 
-def position(target_profit: Decimal | None = None, today: date | None = None) -> dict:
+def margin_target(month: date) -> Decimal | None:
+    row = ProfitTarget.objects.filter(month=month).first()
+    return row.margin_percent if row else None
+
+
+def fees_for_margin(costs: Decimal, margin_percent: Decimal) -> Decimal | None:
+    """Monthly fees that give this net margin, costs staying fixed: costs / (1 - margin)."""
+    margin = Decimal(margin_percent) / 100
+    if margin >= 1:
+        return None
+    return to_pounds(Decimal(costs) / (1 - margin))
+
+
+def position(
+    target_profit: Decimal | None = None,
+    today: date | None = None,
+    target_margin: Decimal | None = None,
+) -> dict:
     """Where profit stands now and what closing the gap takes.
 
     target_profit: monthly net profit wanted; defaults to this month's saved profit target.
+    target_margin: net margin wanted, in per cent; defaults to this month's saved margin target.
     """
     today = today or timezone.localdate()
     snap = forecast.gather(today)
@@ -68,6 +86,9 @@ def position(target_profit: Decimal | None = None, today: date | None = None) ->
     profit = None if costs is None else revenue - costs
     if target_profit is None:
         target_profit = profit_target(this_month(today))
+    if target_margin is None:
+        target_margin = margin_target(this_month(today))
+    fee_target = forecast.target_map().get(this_month(today))
     average_fee = forecast.average_new_client_fee(today)
     live_clients = sum(1 for v in fees.client_monthly_fees().values() if v)
     out = {
@@ -81,8 +102,29 @@ def position(target_profit: Decimal | None = None, today: date | None = None) ->
         "target_profit": None if target_profit is None else _money(target_profit),
         "gap_to_target": None,
         "clients_needed": None,
+        "target_fees": None if fee_target is None else _money(fee_target),
+        "clients_needed_for_fee_target": None,
+        "fees_gap_to_target": None
+        if fee_target is None
+        else _money(max(Decimal(fee_target) - revenue, ZERO)),
+        "target_margin_percent": None if target_margin is None else str(target_margin),
+        "fees_needed_for_margin": None,
+        "clients_needed_for_margin": None,
         "notes": [],
     }
+    if fee_target is not None and average_fee and Decimal(fee_target) > revenue:
+        out["clients_needed_for_fee_target"] = forecast.ceil_div(
+            Decimal(fee_target) - revenue, average_fee
+        )
+    if target_margin is not None and costs is not None:
+        needed = fees_for_margin(costs, Decimal(target_margin))
+        if needed is not None:
+            out["fees_needed_for_margin"] = _money(needed)
+            short = needed - revenue
+            if short <= 0:
+                out["clients_needed_for_margin"] = 0
+            elif average_fee:
+                out["clients_needed_for_margin"] = forecast.ceil_div(short, average_fee)
     if costs is None:
         out["notes"].append("No profit and loss figures yet: connect Xero or type months in.")
     if target_profit is not None and profit is not None:
@@ -136,7 +178,7 @@ def forecast_against_actual(months_back: int = 6, months_ahead: int = 6, today=N
     today = today or timezone.localdate()
     snap = forecast.gather(today)
     targets = forecast.target_map()
-    profit_targets = {t.month: t.profit for t in ProfitTarget.objects.all()}
+    profit_targets = {t.month: t for t in ProfitTarget.objects.all()}
     actual = {r.month: r for r in MonthlyResult.objects.all()}
     costs = cost_run_rate(today=today)
     start = this_month(today)
@@ -146,17 +188,27 @@ def forecast_against_actual(months_back: int = 6, months_ahead: int = 6, today=N
         row = forecast.month_row(snap, targets, month)
         result = actual.get(month)
         forecast_profit = None if costs is None else row.forecast - costs
+        goal = profit_targets.get(month)
         rows.append(
             {
                 "month": month.strftime("%m/%Y"),
                 "past": month < start,
                 "target_fees": None if row.target is None else _money(row.target),
-                "target_profit": _money(profit_targets[month]) if month in profit_targets else None,
+                "target_profit": _money(goal.profit) if goal and goal.profit is not None else None,
+                "target_margin_percent": str(goal.margin_percent)
+                if goal and goal.margin_percent is not None
+                else None,
                 "forecast_fees": _money(row.forecast),
                 "forecast_profit": None if forecast_profit is None else _money(forecast_profit),
+                "forecast_margin_percent": None
+                if forecast_profit is None or not row.forecast
+                else str(_pct(forecast_profit, row.forecast)),
                 "actual_income": _money(result.income) if result else None,
                 "actual_costs": _money(result.costs) if result else None,
                 "actual_profit": _money(result.net_profit) if result else None,
+                "actual_margin_percent": str(_pct(result.net_profit, result.income))
+                if result and result.income
+                else None,
             }
         )
     return rows

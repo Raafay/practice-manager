@@ -34,7 +34,8 @@ You speak to the practice owner. Amounts are pounds, excluding VAT, per month un
 Never calculate figures yourself. Every number you state must come from a tool result in
 this conversation. If the owner asks something the tools cannot answer, say so plainly and
 say what data would be needed. When the owner states a target ("I want £8k profit a
-month"), pass it to get_position as target_profit; for "what if" questions use
+month", "a 40% margin"), pass it to get_position as target_profit or
+target_margin_percent; for "what if" questions use
 run_scenario, once per scenario.
 
 Answer like a short management note: a one-line headline, then the key figures as a small
@@ -55,10 +56,16 @@ def _obj(properties: dict, required: list[str] | None = None) -> dict:
 TOOLS = [
     {
         "name": "get_position",
-        "description": "Current monthly fees, cost run rate, profit and margin, plus the gap to a "
-        "monthly profit target and how many clients at the average new-client fee close it. "
-        "target_profit defaults to this month's saved profit target.",
-        "input_schema": _obj({"target_profit": {"type": "number", "minimum": 0}}),
+        "description": "Current monthly fees, cost run rate, profit and margin, against this "
+        "month's fee, profit and margin targets: the gap to each and how many clients at the "
+        "average new-client fee close it. target_profit (pounds) and target_margin_percent "
+        "default to this month's saved targets.",
+        "input_schema": _obj(
+            {
+                "target_profit": {"type": "number", "minimum": 0},
+                "target_margin_percent": {"type": "number", "minimum": 0, "maximum": 99},
+            }
+        ),
     },
     {
         "name": "run_scenario",
@@ -118,7 +125,13 @@ def run_tool(name: str, args: dict):
         raise ValueError("Arguments must be an object.")
     if name == "get_position":
         target = args.get("target_profit")
-        return planning.position(None if target is None else _dec(target, "target_profit"))
+        margin = args.get("target_margin_percent")
+        if margin is not None and not (0 <= _dec(margin, "target_margin_percent") < 100):
+            raise ValueError("target_margin_percent must be between 0 and 99.")
+        return planning.position(
+            None if target is None else _dec(target, "target_profit"),
+            target_margin=None if margin is None else _dec(margin, "target_margin_percent"),
+        )
     if name == "run_scenario":
         fee = args.get("fee")
         return planning.scenario(
