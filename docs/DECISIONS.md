@@ -6,7 +6,7 @@ Part 1 is settled. Part 2 lists points only the practice owner can confirm. Each
 
 Product
 
-1. The app is for one practice. One installation has one practice and one database. If it is ever sold, each firm gets its own copy.
+1. The app is for one practice. One installation has one practice and one database. If it is ever sold, each firm gets its own copy. *Changed at the 23/10/2026 meeting: one installation will serve many practices, one PostgreSQL schema each. See `docs/MULTITENANT.md`; built in stages 14 to 18.*
 2. Staff accounts are unlimited. The owner adds and removes people and sets what each role may do.
 3. All staff see all clients and all tasks. Each task shows its owner. Targets, forecast and Xero totals are for the owner only.
 4. A prospect is a client record with the status "prospect". Converting it changes the status. Nothing is copied.
@@ -15,7 +15,7 @@ Product
 7. For anything registered at Companies House, Companies House dates are used as given. The app does not calculate its own version of those dates.
 8. A client cannot be made live until the engagement letter is signed, the client details are in, identity is verified and the risk assessment is approved. The owner can override with a written reason, which is logged.
 9. Fees are a fixed amount per service, usually monthly, stored without VAT. Quarterly, annual and one-off fees are allowed and converted to a monthly figure for totals.
-10. The app writes summaries and feedback from rules. There are no AI features inside the app in the first version, so there is no running AI cost and no client data goes to an AI service.
+10. The app writes summaries and feedback from rules. There are no AI features inside the app in the first version, so there is no running AI cost and no client data goes to an AI service. *Changed at the 23/10/2026 meeting: the owner-only finance assistant (Finance, Ask) uses the Claude API, read-only, with figures from code.*
 
 Messages
 
