@@ -19,6 +19,7 @@ from django.utils import timezone
 from apps import events
 from apps.core.html import clean_html
 from apps.core.models import PracticeSettings
+from apps.core.theme import theme
 
 from . import merge
 from .models import Channel, MessageTemplate, QueuedMessage, split_addresses
@@ -420,6 +421,15 @@ def build_email(message: QueuedMessage) -> EmailMultiAlternatives:
         text = f"{text}\n\n-- \n{person.email_signature}"
         sig_html = "<p>" + "<br>".join(_escape(person.email_signature).splitlines()) + "</p>"
         html = f"{html}{sig_html}" if html else ""
+    footer = theme(practice)["email_footer"]
+    if footer and footer not in text:
+        text = f"{text}\n\n{footer}"
+        foot_html = (
+            '<p style="color:#64748b;font-size:12px">'
+            + "<br>".join(_escape(footer).splitlines())
+            + "</p>"
+        )
+        html = f"{html}{foot_html}" if html else ""
     email = EmailMultiAlternatives(
         subject=message.subject,
         body=text,
