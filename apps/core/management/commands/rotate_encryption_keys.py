@@ -1,14 +1,16 @@
-from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from apps.core.fields import encrypted_fields
+from apps.tenancy.commands import PracticeCommand
 
 
-class Command(BaseCommand):
+class Command(PracticeCommand):
     help = (
         "Re-encrypt every encrypted field with the first key in FIELD_ENCRYPTION_KEYS. "
-        "Run after putting a new key at the front; the old key can then be removed."
+        "Run after putting a new key at the front; the old key can then be removed. "
+        "Runs in every practice (the keys are shared), or one with --practice."
     )
+    every_practice_by_default = True
 
     def handle(self, *args, **options):
         total = 0

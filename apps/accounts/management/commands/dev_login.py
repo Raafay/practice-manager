@@ -3,15 +3,20 @@ from importlib import import_module
 
 from django.conf import settings
 from django.contrib.auth import BACKEND_SESSION_KEY, HASH_SESSION_KEY, SESSION_KEY
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import CommandError
 
 from apps.accounts.demo import ensure_totp
 from apps.accounts.models import User
 from apps.accounts.signals import SESSION_SEEN, SESSION_STARTED
+from apps.tenancy.commands import PracticeCommand
 
 
-class Command(BaseCommand):
-    help = "Development only: create a signed-in session for a user and print its id."
+class Command(PracticeCommand):
+    help = (
+        "Development only: create a signed-in session for a user and print its id. "
+        "Uses the first demo practice unless --practice says otherwise."
+    )
+    default_practice = "demo"
 
     def add_arguments(self, parser):
         parser.add_argument("email")

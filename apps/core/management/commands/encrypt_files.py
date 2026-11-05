@@ -3,12 +3,17 @@
 from django.apps import apps
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from django.core.management.base import BaseCommand
 from django.db import models
 
+from apps.tenancy.commands import PracticeCommand
 
-class Command(BaseCommand):
-    help = "Encrypt any uploaded file that is still stored in plain form."
+
+class Command(PracticeCommand):
+    help = (
+        "Encrypt any uploaded file that is still stored in plain form, in every practice "
+        "(or one, with --practice)."
+    )
+    every_practice_by_default = True
 
     def handle(self, *args, **options):
         storage = default_storage
