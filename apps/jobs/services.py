@@ -137,6 +137,42 @@ def run_due(now: datetime | None = None) -> list[JobRun]:
     return runs
 
 
+def active_practices():
+    """Every practice whose jobs run: active ones only (read-only and closing ones rest)."""
+    from django_tenants.utils import get_public_schema_name, schema_context
+
+    from apps.tenancy.models import Practice
+
+    with schema_context(get_public_schema_name()):
+        return list(
+            Practice.objects.filter(status=Practice.Status.ACTIVE)
+            .exclude(schema_name=get_public_schema_name())
+            .order_by("schema_name")
+        )
+
+
+def run_due_everywhere(now: datetime | None = None) -> list[tuple[str, JobRun]]:
+    """Run everything due, once in each active practice, inside that practice's schema.
+
+    Each run is logged in the practice's own job log, and a job's emails and links
+    use that practice's address. A failure in one practice is logged and never stops
+    the others: a failing job is caught by run_job; anything else is caught here.
+    """
+    from django_tenants.utils import tenant_context
+
+    now = now or timezone.now()
+    done = []
+    for practice in active_practices():
+        try:
+            with tenant_context(practice):
+                done.extend((practice.schema_name, run) for run in run_due(now))
+        except Exception as error:  # noqa: BLE001 - one practice never stops the rest
+            logger.warning(
+                "Jobs for practice %s stopped: %s", practice.schema_name, type(error).__name__
+            )
+    return done
+
+
 def request_run(user, name: str) -> None:
     """ "Run now": the worker starts the job within a minute."""
     job = registry.get(name)
