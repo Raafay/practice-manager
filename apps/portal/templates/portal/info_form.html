@@ -1,0 +1,22 @@
+{% extends "layouts/public.html" %}
+{% load portal_tags %}
+{% block title %}Details we need{% endblock %}
+{% block content %}
+<div class="card card-body">
+  {% logo_src practice as logo %}
+  {% if logo %}<img src="{{ logo }}" alt="" class="mb-3 h-10 w-auto max-w-[10rem] object-contain">{% endif %}
+  <h1 class="text-xl">Details {{ practice.practice_name }} needs for {{ client_name }}</h1>
+  <p class="muted mt-1">For {{ info.contact.full_name }}. Fill in what you can. The details are sent securely and kept private. You can send this form once.</p>
+</div>
+<form method="post" enctype="multipart/form-data" class="card card-body mt-4 space-y-4" novalidate>
+  {% csrf_token %}
+  {% if errors %}<div class="form-errors" role="alert">{% for e in errors %}<p>{{ e }}</p>{% endfor %}</div>{% endif %}
+  {% include "portal/_info_fields.html" %}
+  <div>
+    <label class="label" for="info-files">Identity documents <span class="font-normal text-slate-400">(optional, up to 5 files, 10 MB each)</span></label>
+    <p class="muted">A photo of your passport or driving licence, and a bank statement or utility bill from the last three months showing your address.</p>
+    <input id="info-files" type="file" name="files" multiple class="input mt-1" accept=".pdf,.jpg,.jpeg,.png,.heic">
+  </div>
+  <div><button type="submit" class="btn btn-primary w-full sm:w-auto">Send details</button></div>
+</form>
+{% endblock %}

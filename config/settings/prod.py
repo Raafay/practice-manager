@@ -16,7 +16,6 @@ REQUIRED = (
     "FIELD_ENCRYPTION_KEYS",
     "ALLOWED_HOSTS",
     "CSRF_TRUSTED_ORIGINS",
-    "SITE_URL",
     "DEFAULT_FROM_EMAIL",
     "EMAIL_PROVIDER",
     "STORAGE_BUCKET",
@@ -37,8 +36,14 @@ if env("SECRET_KEY").startswith("django-insecure") or len(env("SECRET_KEY")) < 4
     raise ImproperlyConfigured("SECRET_KEY looks like a development key. Use 50 random characters.")
 if env_bool("ALLOW_DEMO_DATA"):
     raise ImproperlyConfigured("ALLOW_DEMO_DATA must be off in production.")
-if not env("SITE_URL").startswith("https://"):
-    raise ImproperlyConfigured("SITE_URL must start with https://.")
+if env("SITE_URL"):
+    raise ImproperlyConfigured(
+        "SITE_URL is no longer used: links use each practice's own address. Remove it."
+    )
+if env("SITE_SCHEME", "https") != "https" or env("SITE_PORT"):
+    raise ImproperlyConfigured(
+        "Links must use https with no port. Remove SITE_SCHEME and SITE_PORT."
+    )
 
 DEBUG = False
 SECRET_KEY = env("SECRET_KEY")
@@ -47,7 +52,8 @@ SECRET_KEY = env("SECRET_KEY")
 SECRET_KEY_FALLBACKS = env_list("SECRET_KEY_FALLBACKS")
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
-SITE_URL = env("SITE_URL").rstrip("/")
+SITE_SCHEME = "https"
+SITE_PORT = ""
 FIELD_ENCRYPTION_KEYS = env_list("FIELD_ENCRYPTION_KEYS")
 ALLOW_DEMO_DATA = False
 
@@ -74,6 +80,7 @@ CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
         "LOCATION": "cache_table",
+        "KEY_FUNCTION": CACHE_KEY_FUNCTION,  # noqa: F405
     }
 }
 
@@ -81,7 +88,7 @@ CACHES = {
 # rest. No public ACL; files are only ever streamed through permission-checked views.
 STORAGES = {
     "default": {
-        "BACKEND": "storages.backends.s3.S3Storage",
+        "BACKEND": "apps.core.storage.EncryptedS3Storage",
         "OPTIONS": {
             "bucket_name": env("STORAGE_BUCKET"),
             "endpoint_url": env("STORAGE_ENDPOINT") or None,

@@ -45,6 +45,7 @@ def addresses(w):
         ("services:toggle", [s.pk], "post"),
         ("services:panel", [c], "get"),
         ("services:switch_on", [c, s.pk], "get"),
+        ("services:quick_on", [c, s.pk], "post"),
         ("services:settings", [c, cs], "get"),
         ("services:switch_off", [c, cs], "get"),
         ("services:fee", [c, cs], "post"),
@@ -180,6 +181,55 @@ def test_a_bad_fee_shows_an_error_and_changes_nothing(client, world):
     assert "Enter the fee as a number" in response.content.decode()
     world["cs"].refresh_from_db()
     assert world["cs"].fee_amount == Decimal("100.00")
+
+
+def test_only_payroll_vat_and_management_accounts_ask_for_setup():
+    asks = {s.code for s in Service.objects.all() if services.needs_setup(s)}
+    assert asks == {"vat", "payroll", "management_accounts"}
+
+
+def test_the_panel_switches_simple_services_on_at_once_and_opens_a_box_for_the_rest(client):
+    target = company()
+    sign_in(client, owner())
+    html = client.get(reverse("services:panel", args=[target.pk])).content.decode()
+    assert reverse("services:quick_on", args=[target.pk, service("bookkeeping").pk]) in html
+    assert reverse("services:switch_on", args=[target.pk, service("vat").pk]) in html
+    assert reverse("services:quick_on", args=[target.pk, service("vat").pk]) not in html
+
+
+def test_quick_switch_on_uses_today_monthly_and_no_fee(client):
+    target = company()
+    sign_in(client, owner())
+    url = reverse("services:quick_on", args=[target.pk, service("bookkeeping").pk])
+    response = client.post(url, HTTP_HX_REQUEST="true")
+    assert response.status_code == 200
+    assert 'id="services-panel"' in response.content.decode()
+    cs = target.client_services.get(service__code="bookkeeping")
+    assert cs.starts_on == TODAY
+    assert cs.fee_frequency == "monthly"
+    assert cs.fee_amount == service("bookkeeping").default_fee
+    assert ActivityEvent.objects.filter(client=target).exists()
+    # A second press does not add it twice.
+    assert client.post(url, HTTP_HX_REQUEST="true").status_code == 422
+    assert target.client_services.filter(service__code="bookkeeping").count() == 1
+
+
+def test_quick_switch_on_for_a_service_that_needs_setup_opens_the_box(client):
+    target = company()
+    sign_in(client, owner())
+    url = reverse("services:quick_on", args=[target.pk, service("payroll").pk])
+    response = client.post(url, HTTP_HX_REQUEST="true")
+    assert response["HX-Retarget"] == "#modal-body"
+    assert not target.client_services.exists()
+
+
+def test_every_simple_service_switches_on_without_a_box(client):
+    target = company()
+    sign_in(client, owner())
+    for s in services.applicable_services(target):
+        if not services.needs_setup(s):
+            url = reverse("services:quick_on", args=[target.pk, s.pk])
+            assert client.post(url, HTTP_HX_REQUEST="true").status_code == 200, s.code
 
 
 def test_switching_on_a_service_from_the_dialog(client):

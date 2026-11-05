@@ -1,9 +1,10 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import CommandError
 
 from apps.jobs import registry, services
+from apps.tenancy.commands import PracticeCommand
 
 
-class Command(BaseCommand):
+class Command(PracticeCommand):
     help = "Run one background job now."
 
     def add_arguments(self, parser):

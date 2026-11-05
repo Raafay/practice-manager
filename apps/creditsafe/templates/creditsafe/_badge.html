@@ -1,0 +1,1 @@
+{% if check %}<span class="badge badge-{{ check.tone }}" title="Creditsafe, {{ check.created_at|date:'d/m/Y' }}">Credit {{ check.rating|default:"?" }}{% if check.score is not None %} · {{ check.score }}{% endif %}</span>{% endif %}

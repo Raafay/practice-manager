@@ -30,6 +30,8 @@ SECTIONS = [
     ("invoices", "Invoices", "finance:invoices"),
     ("targets", "Targets", "finance:targets"),
     ("forecast", "Forecast", "finance:forecast"),
+    ("profit", "Profit", "finance:profit"),
+    ("assistant", "Ask", "finance:assistant"),
     ("summary", "Summary", "finance:summary"),
     ("matching", "Xero contacts", "finance:matching"),
     ("settings", "Settings", "finance:settings"),

@@ -6,7 +6,9 @@ from .base import *  # noqa: F403
 
 DEBUG = False
 SECRET_KEY = "django-insecure-test-only"
-ALLOWED_HOSTS = ["testserver", "localhost"]
+# Practice A answers on "testserver" (the test client's default address), practice B
+# on "other.testserver" (conftest.py).
+ALLOWED_HOSTS = ["testserver", ".testserver", "localhost"]
 
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
@@ -18,8 +20,13 @@ MEDIA_ROOT = BASE_DIR / "media_test"  # noqa: F405
 
 ALLOW_DEMO_DATA = True
 
-# A model with an encrypted field, for the field's own tests. No migrations: the
-# test database creates its table directly.
+# Links in emails: http://testserver/... in practice A.
+SITE_SCHEME = "http"
+SITE_PORT = ""
+
+# A model with an encrypted field, for the field's own tests. Its one migration
+# runs in each test practice's schema.
+TENANT_APPS = [*TENANT_APPS, "apps.core.tests.encrypted_app"]  # noqa: F405
 INSTALLED_APPS = [*INSTALLED_APPS, "apps.core.tests.encrypted_app"]  # noqa: F405
 
 # Tests never call Companies House or gov.uk: they use the saved samples.
@@ -29,3 +36,9 @@ XERO_TRANSPORT = "fake"
 XERO_CLIENT_ID = "test-client-id"
 XERO_CLIENT_SECRET = "test-client-secret"
 BANK_HOLIDAYS_FROM_DATABASE = False
+
+# Tests never call the Claude API; they pass a fake client.
+ANTHROPIC_API_KEY = ""
+CREDITSAFE_USERNAME = ""
+CREDITSAFE_PASSWORD = ""
+CREDITSAFE_PORTFOLIO_ID = ""

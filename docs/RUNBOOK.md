@@ -30,7 +30,7 @@ Weekly habit, five minutes: open **Settings, System**. Check that the worker is 
    - A network error: usually passes by itself. Wait for the next run.
 3. Run it again by hand: press **Run now** on the jobs page, or in the console:
 
-       python manage.py run_job <job name>
+       python manage.py run_job <job name> --practice <schema>
 
 4. **"Worker not running":** the worker process has stopped. Restart it in the host's dashboard. Run **exactly one** copy.
 
@@ -53,7 +53,7 @@ Weekly habit, five minutes: open **Settings, System**. Check that the worker is 
 - **Lost phone (staff):** they can sign in with one of their recovery codes. If they have none, the owner opens Settings, Users, the person, **Reset two-factor**. They set it up again at their next sign-in.
 - **Lost phone (the owner, no recovery codes):** in the console:
 
-      python manage.py reset_two_factor --email owner@yourpractice.co.uk
+      python manage.py reset_two_factor --practice <schema> --email owner@yourpractice.co.uk
 
   This is recorded in the activity log.
 - **A client cannot get into the portal:** codes last 10 minutes and allow 5 tries. Ask them to request a new code. Check their contact's email and that "Portal access" is ticked for that client.
@@ -113,7 +113,7 @@ The encrypted values in a restored database need the same `FIELD_ENCRYPTION_KEYS
 
 1. Make a new key: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`.
 2. Put it **in front** of the old one: `FIELD_ENCRYPTION_KEYS=NEWKEY,OLDKEY`. Redeploy.
-3. In the console: `python manage.py rotate_encryption_keys`. It re-encrypts every value with the new key.
+3. In the console: `python manage.py rotate_encryption_keys`. It re-encrypts every value with the new key, in every practice.
 4. Remove the old key: `FIELD_ENCRYPTION_KEYS=NEWKEY`. Redeploy.
 5. Store the new key outside the host too, and destroy the old copy **only after** the next backup restore test passes with the new key.
 

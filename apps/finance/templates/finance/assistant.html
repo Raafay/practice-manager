@@ -1,0 +1,40 @@
+{% extends "layouts/app.html" %}
+{% block title %}Finance: Ask{% endblock %}
+{% block content %}
+{% if user|can:"finance.owner" %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Finance" subtitle="Ask about targets, profit and clients in plain English. Every figure comes from the practice's own numbers." %}
+</div>
+{% include "finance/_subnav.html" %}
+{% if not configured %}
+<div class="mb-4 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">The assistant is not set up. Add an Anthropic API key as <code>ANTHROPIC_API_KEY</code> on the server. The Profit page works without it.</div>
+{% endif %}
+<div class="grid gap-4 lg:grid-cols-3">
+  <section class="card card-body lg:col-span-2" aria-labelledby="ask-h">
+    <h2 id="ask-h" class="sr-only">Conversation</h2>
+    {% for t in turns %}
+      <div class="mb-4">
+        <p class="rounded-md bg-slate-100 px-3 py-2 text-sm"><span class="font-medium">You:</span> {{ t.question }}</p>
+        <div class="mt-2 whitespace-pre-line text-sm{% if t.failed %} text-red-700{% endif %}">{{ t.answer }}</div>
+        {% if t.tools_used %}<p class="muted mt-1 text-xs">Worked out with: {% for u in t.tools_used %}{{ u.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+      </div>
+    {% empty %}
+      <p class="muted">Ask a question to start. For example:</p>
+      <ul class="mt-1 list-disc pl-5 text-sm">{% for e in examples %}<li>{{ e }}</li>{% endfor %}</ul>
+    {% endfor %}
+    <form method="post" class="mt-3 space-y-2">{% csrf_token %}
+      {% if conversation %}<input type="hidden" name="c" value="{{ conversation }}">{% endif %}
+      <label class="label" for="q">Your question</label>
+      <textarea id="q" name="question" rows="3" class="textarea" maxlength="2000" {% if not configured %}disabled{% endif %}></textarea>
+      <div class="flex gap-2"><button type="submit" class="btn btn-primary" {% if not configured %}disabled{% endif %}>Ask</button>
+        {% if conversation %}<a class="btn btn-ghost" href="{% url 'finance:assistant' %}">New conversation</a>{% endif %}</div>
+    </form>
+  </section>
+  <aside class="card card-body text-sm" aria-labelledby="use-h">
+    <h2 id="use-h" class="text-base">Use this month</h2>
+    <p>{{ usage.questions }} question{{ usage.questions|pluralize }}, about ${{ usage.dollars }} of API use.</p>
+    <p class="muted mt-2">The assistant reads figures only. It cannot change anything. Company names and fees are sent to Anthropic to answer; people who are clients in their own name are sent as a reference number.</p>
+  </aside>
+</div>
+{% endif %}
+{% endblock %}

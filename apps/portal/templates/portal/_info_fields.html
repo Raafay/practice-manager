@@ -1,0 +1,13 @@
+{% load portal_tags %}
+{% for ask in asks %}
+<div>
+  <label class="label" for="f-{{ ask.key }}">{{ ask.label }}</label>
+  {% if ask.input == "textarea" %}<textarea id="f-{{ ask.key }}" name="{{ ask.key }}" class="textarea" rows="3">{{ values|get_item:ask.key|default:"" }}</textarea>
+  {% elif ask.input == "date" %}<input id="f-{{ ask.key }}" type="date" name="{{ ask.key }}" class="input max-w-xs" value="{{ values|get_item:ask.key|default:'' }}">
+  {% elif ask.input == "email" %}<input id="f-{{ ask.key }}" type="email" name="{{ ask.key }}" class="input" autocomplete="email" value="{{ values|get_item:ask.key|default:'' }}">
+  {% elif ask.secret %}<input id="f-{{ ask.key }}" type="text" name="{{ ask.key }}" class="input max-w-xs" autocomplete="off" spellcheck="false">
+  {% else %}<input id="f-{{ ask.key }}" type="text" name="{{ ask.key }}" class="input" value="{{ values|get_item:ask.key|default:'' }}">{% endif %}
+</div>
+{% empty %}
+<p class="muted">Everything asked for is now on the record.</p>
+{% endfor %}

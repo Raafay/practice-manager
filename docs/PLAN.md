@@ -38,6 +38,13 @@ If a merged stage has a fault, start a session on main and paste:
 | 11 | Time, fees, Xero and forecast | Timers and timesheets, fees, Xero invoices, overdue fees, targets and forecast, owner summary |
 | 12 | Import and reports | Import from a BrightManager export, reports and exports |
 | 13 | Hardening and deployment | Security review, production settings, backups, deployment guide, go-live checklist |
+| 14 | One schema per practice | Several practices on one installation, chosen by address; FPAS moved into its own schema |
+| 15 | Platform admin | Platform pages with no client data, support access by grant, integration logins per practice |
+| 16 | Sign-up and billing | Self sign-up, Stripe subscription per user, read-only when payment stops |
+| 17 | Export, deletion, backups | Full export, deletion with a 30-day hold, per-practice backup and restore |
+| 18 | Custom domains and review | A firm's own address; a security review of crossing between practices |
+
+Stages 14 to 18 make it a product for many firms (see `docs/MULTITENANT.md`). They start only after the ownership agreement with Mati is in writing.
 
 Compliance comes first, as agreed with the practice: stages 1 to 7. Stages 7 and 8 do not depend on each other and can be swapped.
 

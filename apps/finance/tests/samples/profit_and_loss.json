@@ -1,0 +1,210 @@
+{
+ "Reports": [
+  {
+   "ReportID": "ProfitAndLoss",
+   "ReportName": "Profit and Loss",
+   "Rows": [
+    {
+     "RowType": "Header",
+     "Cells": [
+      {
+       "Value": ""
+      },
+      {
+       "Value": "30 Sep 26"
+      },
+      {
+       "Value": "31 Aug 26"
+      },
+      {
+       "Value": "31 Jul 26"
+      }
+     ]
+    },
+    {
+     "RowType": "Section",
+     "Title": "Income",
+     "Rows": [
+      {
+       "RowType": "Row",
+       "Cells": [
+        {
+         "Value": "Sales"
+        },
+        {
+         "Value": "14000.00"
+        },
+        {
+         "Value": "13500.00"
+        },
+        {
+         "Value": "13200.00"
+        }
+       ]
+      },
+      {
+       "RowType": "SummaryRow",
+       "Cells": [
+        {
+         "Value": "Total Income"
+        },
+        {
+         "Value": "14000.00"
+        },
+        {
+         "Value": "13500.00"
+        },
+        {
+         "Value": "13200.00"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "RowType": "Section",
+     "Title": "Less Cost of Sales",
+     "Rows": [
+      {
+       "RowType": "Row",
+       "Cells": [
+        {
+         "Value": "Subcontractors"
+        },
+        {
+         "Value": "1200.00"
+        },
+        {
+         "Value": "1100.00"
+        },
+        {
+         "Value": "1000.00"
+        }
+       ]
+      },
+      {
+       "RowType": "SummaryRow",
+       "Cells": [
+        {
+         "Value": "Total Cost of Sales"
+        },
+        {
+         "Value": "1200.00"
+        },
+        {
+         "Value": "1100.00"
+        },
+        {
+         "Value": "1000.00"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "RowType": "Section",
+     "Title": "",
+     "Rows": [
+      {
+       "RowType": "SummaryRow",
+       "Cells": [
+        {
+         "Value": "Gross Profit"
+        },
+        {
+         "Value": "12800.00"
+        },
+        {
+         "Value": "12400.00"
+        },
+        {
+         "Value": "12200.00"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "RowType": "Section",
+     "Title": "Less Operating Expenses",
+     "Rows": [
+      {
+       "RowType": "Row",
+       "Cells": [
+        {
+         "Value": "Wages"
+        },
+        {
+         "Value": "6500.00"
+        },
+        {
+         "Value": "6500.00"
+        },
+        {
+         "Value": "6400.00"
+        }
+       ]
+      },
+      {
+       "RowType": "Row",
+       "Cells": [
+        {
+         "Value": "Rent"
+        },
+        {
+         "Value": "1300.00"
+        },
+        {
+         "Value": "1300.00"
+        },
+        {
+         "Value": "1300.00"
+        }
+       ]
+      },
+      {
+       "RowType": "SummaryRow",
+       "Cells": [
+        {
+         "Value": "Total Operating Expenses"
+        },
+        {
+         "Value": "7800.00"
+        },
+        {
+         "Value": "7800.00"
+        },
+        {
+         "Value": "7700.00"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "RowType": "Section",
+     "Title": "",
+     "Rows": [
+      {
+       "RowType": "SummaryRow",
+       "Cells": [
+        {
+         "Value": "Net Profit"
+        },
+        {
+         "Value": "5000.00"
+        },
+        {
+         "Value": "4600.00"
+        },
+        {
+         "Value": "4500.00"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

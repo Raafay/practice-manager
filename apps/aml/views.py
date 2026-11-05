@@ -10,6 +10,7 @@ from django.views import View
 from apps.clients.views import ClientTabView
 from apps.clients.views_base import done, get_client, render_form
 from apps.core.permissions import StaffRequiredMixin
+from apps.creditsafe import api as creditsafe_api
 
 from . import services
 from .forms import IdentityCheckForm, PersonAddForm, ReasonForm, SendBackForm
@@ -43,6 +44,8 @@ class RiskTabView(ClientTabView):
             "total_people": total,
             "prompts": services.open_prompts(client),
             "can_see_sensitive": request.user.can("documents.sensitive"),
+            "credit_checks": client.credit_checks.all()[:12],
+            "credit_configured": creditsafe_api.configured(),
         }
 
 

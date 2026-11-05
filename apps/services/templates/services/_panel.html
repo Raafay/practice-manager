@@ -13,8 +13,8 @@
               {% include "components/_switch_button.html" with label=service.name on=True url=off_url %}
               {% if cs.state == "proposed" %}{% include "components/_badge.html" with text="Proposed" tone="accent" %}{% endif %}
             {% else %}
-              {% url 'services:switch_on' client.pk service.pk as on_url %}
-              {% if can_add %}{% include "components/_switch_button.html" with label=service.name on=False url=on_url %}{% else %}{% include "components/_switch_button.html" with label=service.name on=False disabled=True %}{% endif %}
+              {% if row.needs_setup %}{% url 'services:switch_on' client.pk service.pk as on_url %}{% else %}{% url 'services:quick_on' client.pk service.pk as on_url %}{% endif %}
+              {% if can_add and not row.needs_setup %}{% include "components/_switch_button.html" with label=service.name on=False url=on_url post=True target="#services-panel" %}{% elif can_add %}{% include "components/_switch_button.html" with label=service.name on=False url=on_url %}{% else %}{% include "components/_switch_button.html" with label=service.name on=False disabled=True %}{% endif %}
             {% endif %}
           </div>
           {% if cs %}

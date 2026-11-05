@@ -44,6 +44,15 @@ def settings_kind(service: Service) -> str:
     return ""
 
 
+# Only these open a set-up box when switched on; everything else switches on at once.
+SETUP_ON_SWITCH = ("vat", "payroll", "management_accounts")
+
+
+def needs_setup(service: Service) -> bool:
+    """True when switching on should ask for frequency and dates first."""
+    return service.code in SETUP_ON_SWITCH or settings_kind(service) in ("vat", "payroll")
+
+
 def default_settings(service: Service) -> dict:
     if "periodic" not in (service.rules or []):
         return {}

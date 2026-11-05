@@ -324,10 +324,31 @@ def seed() -> dict:
             elif state == "spam":
                 request_services.mark_spam(actor, req)
     del task_services
+    made_info = _seed_info_requests(actor, [c for c in (harbour, wren) if c is not None])
     return {
+        "info_requests": made_info,
         "portal_users": sum(1 for u in users.values() if u),
         "portal_items": PortalItem.objects.count(),
         "requests": Request.objects.count(),
         "new_requests": new_requests,
         "new_items": made_items,
     }
+
+
+def _seed_info_requests(actor, clients) -> int:
+    """One information request by email and one by post, if nothing is asked yet."""
+    from apps.portal import inforequest
+    from apps.portal.models import InfoRequest
+
+    made = 0
+    for client, channel in zip(clients, ("email", "post"), strict=False):
+        if InfoRequest.objects.filter(client=client).exists():
+            continue
+        link = client.client_contacts.select_related("contact").order_by("pk").first()
+        if link is None or not inforequest.missing(client, link.contact):
+            continue
+        if channel == "email" and not link.contact.email:
+            channel = "post"
+        inforequest.create(actor, client, link.contact, channel=channel)
+        made += 1
+    return made

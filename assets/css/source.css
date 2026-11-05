@@ -3,9 +3,11 @@
 @source "../../templates";
 @source "../../apps";
 
-/* The accent colour is overridden from Practice settings on the <html> element. */
+/* The accent and top bar colours are overridden from Practice settings on the <html>
+   element (apps/core/theme.py). */
 @theme {
   --color-accent: #2f5d8a;
+  --color-brand: #0f172a;
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 

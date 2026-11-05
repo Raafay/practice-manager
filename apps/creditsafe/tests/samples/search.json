@@ -1,0 +1,11 @@
+{
+ "totalSize": 1,
+ "companies": [
+  {
+   "id": "GB-0-00000000",
+   "country": "GB",
+   "regNo": "00000000",
+   "name": "SAMPLE TRADING LTD"
+  }
+ ]
+}

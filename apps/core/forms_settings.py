@@ -2,6 +2,7 @@ from django import forms
 
 from .forms import StyledFormMixin
 from .models import PracticeSettings
+from .theme import validate_readable_with_white
 from .uploads import check_image_upload
 
 
@@ -15,6 +16,8 @@ class PracticeDetailsForm(StyledFormMixin, forms.ModelForm):
             "email",
             "logo",
             "accent_colour",
+            "brand_colour",
+            "email_footer",
             "vat_registered",
             "vat_rate",
             "retention_years",
@@ -25,12 +28,31 @@ class PracticeDetailsForm(StyledFormMixin, forms.ModelForm):
         widgets = {
             "address": forms.Textarea(attrs={"rows": 3}),
             "accent_colour": forms.TextInput(attrs={"type": "color"}),
+            "brand_colour": forms.TextInput(attrs={"type": "color"}),
+            "email_footer": forms.Textarea(attrs={"rows": 3}),
             "logo": forms.FileInput(attrs={"accept": ".png,.jpg,.jpeg,.webp"}),
         }
         help_texts = {
             "logo": "PNG, JPEG or WebP, up to 2 MB.",
             "accent_colour": "Used for buttons and links.",
+            "brand_colour": "The bar across the top of every staff page.",
         }
+
+    def clean_accent_colour(self):
+        value = self.cleaned_data["accent_colour"].lower()
+        validate_readable_with_white(value)
+        return value
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["brand_colour"].required = False
+
+    def clean_brand_colour(self):
+        value = (self.cleaned_data.get("brand_colour") or "").lower()
+        if not value:
+            return self.instance.brand_colour or "#0f172a"
+        validate_readable_with_white(value)
+        return value
 
     def clean_logo(self):
         logo = self.cleaned_data.get("logo")

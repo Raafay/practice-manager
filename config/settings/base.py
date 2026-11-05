@@ -14,26 +14,36 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = False
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS")
-# The address clients use, for links in emails. Set it in production (Stage 13).
-SITE_URL = env("SITE_URL", "http://localhost:8000").rstrip("/")
+# Links in emails use the practice's own primary address (apps/core/siteurl.py),
+# with this scheme, and a port only in development.
+SITE_SCHEME = env("SITE_SCHEME", "https")
+SITE_PORT = env("SITE_PORT", "")
 # Which release is running, shown on Settings, System. Set by the deploy (a git tag
 # or commit), for example APP_VERSION=2026.10.1.
 APP_VERSION = env("APP_VERSION", "development")
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 
-INSTALLED_APPS = [
+# One installation serves several practices, each in its own PostgreSQL schema,
+# chosen by the web address (docs/MULTITENANT.md). The public schema holds only the
+# list of practices and their addresses. Everything else is in each practice's schema.
+SHARED_APPS = [
+    "django_tenants",
+    "apps.tenancy",
+    "django.contrib.contenttypes",
+    "django.contrib.staticfiles",
+    "django_tailwind_cli",
+]
+TENANT_APPS = [
     "apps.core.admin_config.ControlAdminConfig",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "django.contrib.staticfiles",
     "allauth",
     "allauth.account",
     "allauth.mfa",
     "axes",
     "django_htmx",
-    "django_tailwind_cli",
     "apps.core",
     "apps.accounts",
     "apps.events",
@@ -49,12 +59,29 @@ INSTALLED_APPS = [
     "apps.portal",
     "apps.timekeeping",
     "apps.finance",
+    "apps.creditsafe",
     "apps.imports",
     "apps.reports",
 ]
+# The admin comes first so its own templates are used, not django-tenants' versions.
+INSTALLED_APPS = [
+    TENANT_APPS[0],
+    *SHARED_APPS,
+    *[app for app in TENANT_APPS[1:] if app not in SHARED_APPS],
+]
+TENANT_MODEL = "tenancy.Practice"
+TENANT_DOMAIN_MODEL = "tenancy.Domain"
+DATABASE_ROUTERS = ["django_tenants.routers.TenantSyncRouter"]
+# Send "SET search_path" only when the practice changes, not before every query. The
+# middleware chooses the practice afresh on each request, and a rollback forgets it.
+TENANT_LIMIT_SET_CALLS = True
 
 MIDDLEWARE = [
+    # /healthz/ answers "database up" only and reads no practice's data, so the
+    # host's health check works on any address.
     "apps.core.middleware.HealthCheckMiddleware",
+    # Chooses the practice from the address; an unknown address gets a plain 404.
+    "apps.tenancy.middleware.PracticeMiddleware",
     "apps.core.middleware.RequestSizeLimitMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -100,6 +127,7 @@ DATABASES = {
     "default": dj_database_url.parse(
         env("DATABASE_URL", "postgres://pm:pm@localhost:5432/pm_dev"),
         conn_max_age=60,
+        engine="django_tenants.postgresql_backend",
     )
 }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
@@ -136,7 +164,7 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 # views that check permission. MEDIA_URL is deliberately not routed.
 MEDIA_ROOT = Path(env("MEDIA_ROOT", str(BASE_DIR / "media")))
 STORAGES = {
-    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "default": {"BACKEND": "apps.core.storage.EncryptedFileSystemStorage"},
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 }
 
@@ -148,7 +176,14 @@ DATA_UPLOAD_MAX_NUMBER_FILES = 10
 TAILWIND_CLI_SRC_CSS = "assets/css/source.css"
 TAILWIND_CLI_DIST_CSS = "css/tailwind.css"
 
-CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+# Every cache key starts with the practice's schema (apps/core/cache.py).
+CACHE_KEY_FUNCTION = "apps.core.cache.make_key"
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "KEY_FUNCTION": CACHE_KEY_FUNCTION,
+    }
+}
 
 # Sessions. Idle and absolute limits are enforced by SessionLimitsMiddleware
 # from the values on Practice settings. The cookie itself never outlives 12 hours.
@@ -239,8 +274,16 @@ COMPANIES_HOUSE_API_KEY = env("COMPANIES_HOUSE_API_KEY")
 # "live" calls the real service. "fake" serves the saved samples (tests and CI).
 COMPANIES_HOUSE_TRANSPORT = env("COMPANIES_HOUSE_TRANSPORT", "live")
 # Xero (Stage 11). Register an app at developer.xero.com; the redirect address is
-# {SITE_URL}/integrations/xero/callback. "fake" serves the saved samples (tests and demo data).
+# https://<practice address>/integrations/xero/callback, one per practice.
+# "fake" serves the saved samples (tests and demo data).
 XERO_CLIENT_ID = env("XERO_CLIENT_ID")
+# Creditsafe credit ratings. Without these the Check credit button is disabled.
+CREDITSAFE_USERNAME = env("CREDITSAFE_USERNAME")
+CREDITSAFE_PASSWORD = env("CREDITSAFE_PASSWORD")
+CREDITSAFE_PORTFOLIO_ID = env("CREDITSAFE_PORTFOLIO_ID")
+# The finance assistant (owner only). Without a key the Ask page says it is not set up.
+ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY")
+FINANCE_ASSISTANT_MODEL = env("FINANCE_ASSISTANT_MODEL", "claude-opus-5-5")
 XERO_CLIENT_SECRET = env("XERO_CLIENT_SECRET")
 XERO_TRANSPORT = env("XERO_TRANSPORT", "live")
 # Read refreshed bank holidays from the database as well as the bundled list.

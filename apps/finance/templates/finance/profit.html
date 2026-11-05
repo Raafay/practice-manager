@@ -1,0 +1,96 @@
+{% extends "layouts/app.html" %}
+{% block title %}Finance: Profit{% endblock %}
+{% block content %}
+{% if user|can:"finance.owner" %}
+<div class="page-header">
+  {% include "components/_page_header.html" with title="Finance" subtitle="Profit against target, what closes the gap, and how the months compare." %}
+</div>
+{% include "finance/_subnav.html" %}
+{% for w in concentration.warnings %}<div class="mb-3 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="alert"><strong>Concentration risk:</strong> {{ w }}</div>{% endfor %}
+{% for n in position.notes %}<div class="mb-3 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm" role="status">{{ n }} Use “Type in a month” below if Xero is not connected.</div>{% endfor %}
+<div class="grid gap-4 lg:grid-cols-3">
+  <section class="card card-body" aria-labelledby="pos-h">
+    <h2 id="pos-h" class="text-base">Where profit stands</h2>
+    <dl class="mt-2 space-y-1 text-sm">
+      <div class="flex justify-between"><dt>Monthly fees now</dt><dd class="font-semibold">£{{ position.monthly_fees_now }}</dd></div>
+      <div class="flex justify-between"><dt>Costs a month ({{ position.cost_run_rate_months }}-month average)</dt><dd>{% if position.monthly_costs_run_rate %}£{{ position.monthly_costs_run_rate }}{% else %}—{% endif %}</dd></div>
+      <div class="flex justify-between"><dt>Profit a month</dt><dd class="font-semibold">{% if position.monthly_profit_now %}£{{ position.monthly_profit_now }} ({{ position.margin_percent_now }}%){% else %}—{% endif %}</dd></div>
+      <div class="flex justify-between"><dt>Profit target</dt><dd>{% if position.target_profit %}£{{ position.target_profit }}{% else %}Not set{% endif %}</dd></div>
+      <div class="flex justify-between"><dt>Gap to target</dt><dd class="font-semibold">{% if position.gap_to_target %}£{{ position.gap_to_target }}{% else %}—{% endif %}</dd></div>
+      <div class="flex justify-between"><dt>Clients needed at £{{ position.average_fee_new_clients|default:"—" }}</dt><dd class="font-semibold">{{ position.clients_needed|default_if_none:"—" }}</dd></div>
+    </dl>
+    <h3 class="mt-3 text-sm font-semibold">Fee and margin targets this month</h3>
+    <dl class="mt-1 space-y-1 text-sm">
+      <div class="flex justify-between"><dt>Fee target</dt><dd>{% if position.target_fees %}£{{ position.target_fees }}{% else %}Not set{% endif %}</dd></div>
+      {% if position.target_fees %}<div class="flex justify-between"><dt>Short of fee target</dt><dd>£{{ position.fees_gap_to_target }}{% if position.clients_needed_for_fee_target %} ({{ position.clients_needed_for_fee_target }} client{{ position.clients_needed_for_fee_target|pluralize }}){% endif %}</dd></div>{% endif %}
+      <div class="flex justify-between"><dt>Margin target</dt><dd>{% if position.target_margin_percent %}{{ position.target_margin_percent }}%{% else %}Not set{% endif %}</dd></div>
+      {% if position.fees_needed_for_margin %}<div class="flex justify-between"><dt>Fees that give that margin</dt><dd>£{{ position.fees_needed_for_margin }} ({{ position.clients_needed_for_margin }} more client{{ position.clients_needed_for_margin|pluralize }})</dd></div>{% endif %}
+    </dl>
+    <form method="get" class="mt-3 flex flex-wrap items-end gap-2">
+      <div><label class="label" for="pt">Try a profit target</label><input id="pt" name="target" class="input w-28" inputmode="decimal" placeholder="8000"></div>
+      <div><label class="label" for="pm">or a margin (%)</label><input id="pm" name="margin" class="input w-20" inputmode="decimal" placeholder="40"></div>
+      <button class="btn btn-secondary btn-sm" type="submit">Show</button>
+    </form>
+  </section>
+  <section class="card card-body" aria-labelledby="sc-h">
+    <h2 id="sc-h" class="text-base">What if</h2>
+    <form method="get" class="mt-2 flex flex-wrap items-end gap-2">
+      <div><label class="label" for="sc-n">New clients</label><input id="sc-n" name="clients" class="input w-20" inputmode="numeric" value="{{ scenario.new_clients|default:'' }}"></div>
+      <div><label class="label" for="sc-f">Fee each (£ a month)</label><input id="sc-f" name="fee" class="input w-28" inputmode="decimal" placeholder="{{ position.average_fee_new_clients|default:'' }}"></div>
+      <button class="btn btn-secondary btn-sm" type="submit">Work it out</button>
+    </form>
+    {% if scenario %}
+    <dl class="mt-3 space-y-1 text-sm">
+      <div class="flex justify-between"><dt>Added fees</dt><dd>£{{ scenario.added_monthly_fees }}</dd></div>
+      <div class="flex justify-between"><dt>Monthly fees after</dt><dd>£{{ scenario.monthly_fees_after }}</dd></div>
+      <div class="flex justify-between"><dt>Profit before → after</dt><dd class="font-semibold">£{{ scenario.monthly_profit_before|default:"—" }} → £{{ scenario.monthly_profit_after }}</dd></div>
+      <div class="flex justify-between"><dt>Margin after</dt><dd>{{ scenario.margin_percent_after }}%</dd></div>
+    </dl>
+    {% if not scenario.costs_known %}<p class="muted mt-2">Costs are not known yet, so profit equals fees.</p>{% endif %}
+    {% else %}<p class="muted mt-2">Enter a number of clients to see the effect on profit. Costs are treated as fixed.</p>{% endif %}
+  </section>
+  <section class="card card-body" aria-labelledby="cc-h">
+    <h2 id="cc-h" class="text-base">Largest clients</h2>
+    {% if concentration.clients %}
+    <table class="table mt-1 text-sm"><thead><tr><th scope="col">Client</th><th scope="col" class="text-right">£ a month</th><th scope="col" class="text-right">Share</th></tr></thead>
+      <tbody>{% for c in concentration.clients %}<tr><td>{{ c.client }}</td><td class="text-right">{{ c.monthly_fees }}</td><td class="text-right">{{ c.share_percent }}%</td></tr>{% endfor %}</tbody></table>
+    {% else %}<p class="muted">No live fees yet. Add fees on each client's Services panel.</p>{% endif %}
+  </section>
+</div>
+<section class="card card-body mt-6" aria-labelledby="fa-h">
+  <h2 id="fa-h" class="text-base">Forecast against actual</h2>
+  <div class="table-wrap mt-2"><table class="table text-sm">
+    <thead><tr><th scope="col">Month</th><th scope="col" class="text-right">Fee target</th><th scope="col" class="text-right">Forecast fees</th><th scope="col" class="text-right">Actual income</th><th scope="col" class="text-right">Profit target</th><th scope="col" class="text-right">Forecast profit</th><th scope="col" class="text-right">Actual profit</th><th scope="col" class="text-right">Margin target</th><th scope="col" class="text-right">Forecast margin</th><th scope="col" class="text-right">Actual margin</th></tr></thead>
+    <tbody>{% for r in rows %}<tr{% if r.past %} class="text-slate-600"{% endif %}><td>{{ r.month }}</td><td class="text-right">{{ r.target_fees|default:"—" }}</td><td class="text-right">{{ r.forecast_fees }}</td><td class="text-right">{{ r.actual_income|default:"—" }}</td><td class="text-right">{{ r.target_profit|default:"—" }}</td><td class="text-right">{{ r.forecast_profit|default:"—" }}</td><td class="text-right">{{ r.actual_profit|default:"—" }}</td><td class="text-right">{% if r.target_margin_percent %}{{ r.target_margin_percent }}%{% else %}—{% endif %}</td><td class="text-right">{% if r.forecast_margin_percent %}{{ r.forecast_margin_percent }}%{% else %}—{% endif %}</td><td class="text-right">{% if r.actual_margin_percent %}{{ r.actual_margin_percent }}%{% else %}—{% endif %}</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+<div class="mt-6 grid gap-4 lg:grid-cols-2">
+  <section class="card card-body" aria-labelledby="ptg-h">
+    <h2 id="ptg-h" class="text-base">Profit and margin targets</h2>
+    <p class="muted">Fee targets are on the <a href="{% url 'finance:targets' %}">Targets</a> tab.</p>
+    <ul class="text-sm">{% for t in profit_targets %}<li>{{ t.month|date:"m/Y" }}: {% if t.profit is not None %}£{{ t.profit }} profit{% endif %}{% if t.profit is not None and t.margin_percent is not None %}, {% endif %}{% if t.margin_percent is not None %}{{ t.margin_percent }}% margin{% endif %}</li>{% empty %}<li class="muted">No profit or margin targets set. Add one below.</li>{% endfor %}</ul>
+    <form method="post" class="mt-2 flex flex-wrap items-end gap-2">{% csrf_token %}<input type="hidden" name="action" value="target">
+      <div><label class="label" for="tg-m">Month</label><input id="tg-m" type="month" name="month" class="input" value="{{ this_month|date:'Y-m' }}"></div>
+      <div><label class="label" for="tg-p">Net profit (£)</label><input id="tg-p" name="profit" class="input w-28" inputmode="decimal"></div>
+      <div><label class="label" for="tg-g">Net margin (%)</label><input id="tg-g" name="margin" class="input w-20" inputmode="decimal"></div>
+      <button type="submit" class="btn btn-secondary btn-sm">Save</button>
+    </form>
+    <p class="muted mt-1">Leave both blank to remove that month's targets.</p>
+  </section>
+  <section class="card card-body" aria-labelledby="pl-h">
+    <h2 id="pl-h" class="text-base">Profit and loss by month</h2>
+    <table class="table text-sm"><thead><tr><th scope="col">Month</th><th scope="col" class="text-right">Income</th><th scope="col" class="text-right">Costs</th><th scope="col" class="text-right">Net profit</th><th scope="col">From</th></tr></thead>
+      <tbody>{% for r in results %}<tr><td>{{ r.month|date:"m/Y" }}</td><td class="text-right">{{ r.income }}</td><td class="text-right">{{ r.costs }}</td><td class="text-right">{{ r.net_profit }}</td><td>{{ r.get_source_display }}</td></tr>{% empty %}<tr><td colspan="5" class="muted">None yet. Xero fills this in on each sync, or type a month in below.</td></tr>{% endfor %}</tbody></table>
+    <details class="mt-2"><summary class="cursor-pointer text-sm font-medium">Type in a month</summary>
+      <form method="post" class="mt-2 flex flex-wrap items-end gap-2">{% csrf_token %}<input type="hidden" name="action" value="result">
+        <div><label class="label" for="pl-m">Month</label><input id="pl-m" type="month" name="month" class="input"></div>
+        <div><label class="label" for="pl-i">Income</label><input id="pl-i" name="income" class="input w-28" inputmode="decimal"></div>
+        <div><label class="label" for="pl-c">Cost of sales</label><input id="pl-c" name="cost_of_sales" class="input w-28" inputmode="decimal"></div>
+        <div><label class="label" for="pl-o">Overheads</label><input id="pl-o" name="overheads" class="input w-28" inputmode="decimal"></div>
+        <button type="submit" class="btn btn-secondary btn-sm">Save</button>
+      </form>
+    </details>
+  </section>
+</div>
+{% endif %}
+{% endblock %}

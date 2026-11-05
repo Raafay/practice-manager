@@ -3,13 +3,14 @@ import os
 
 from django.contrib.auth import password_validation
 from django.core.exceptions import ValidationError
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import CommandError
 
 from apps.accounts.models import User
 from apps.accounts.services import create_owner
+from apps.tenancy.commands import PracticeCommand
 
 
-class Command(BaseCommand):
+class Command(PracticeCommand):
     help = "Create the first owner. They set up two-factor when they first sign in."
 
     def add_arguments(self, parser):

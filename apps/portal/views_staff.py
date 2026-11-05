@@ -26,7 +26,7 @@ from .forms_staff import (
     SetClientForm,
     category_choices,
 )
-from .models import Request, RequestFile
+from .models import InfoRequest, Request, RequestFile
 
 FILTERS = [
     ("open", "Open"),
@@ -80,6 +80,11 @@ class InboxView(StaffRequiredMixin, View):
                 "filters": FILTERS,
                 "counts": counts,
                 "now": timezone.now(),
+                "info_open": InfoRequest.objects.filter(
+                    state__in=(InfoRequest.State.WAITING, InfoRequest.State.ANSWERED)
+                )
+                .select_related("client", "contact")
+                .order_by("state", "-sent_at")[:30],
             },
         )
 

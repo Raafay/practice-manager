@@ -33,6 +33,7 @@ class ClientRequestsView(ClientTabView):
             "requests": client.requests.select_related("task").order_by("-received_at")[:100],
             "request_url": url,
             "request_qr": qr,
+            "info_requests": client.info_requests.select_related("contact")[:50],
             "portal_items": client.portal_items.select_related("contact").order_by("-created_at")[
                 :20
             ],

@@ -6,13 +6,14 @@ The reset is recorded in the activity log.
 """
 
 from allauth.mfa.models import Authenticator
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import CommandError
 
 from apps import events
 from apps.accounts.models import User
+from apps.tenancy.commands import PracticeCommand
 
 
-class Command(BaseCommand):
+class Command(PracticeCommand):
     help = "Remove a staff member's authenticator app and recovery codes (logged)."
 
     def add_arguments(self, parser):

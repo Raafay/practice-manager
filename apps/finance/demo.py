@@ -167,11 +167,40 @@ def seed_targets(today: date) -> int:
     return len(months)
 
 
+def seed_profit(today: date) -> int:
+    """Six past months of made-up profit and loss, and a profit target for the next six."""
+    from .models import MonthlyResult, ProfitTarget
+
+    if MonthlyResult.objects.exists():
+        return 0
+    base = fees.summary().total or Decimal("12000")
+    this_month = today.replace(day=1)
+    for n in range(6, 0, -1):
+        income = (base * (Decimal("0.94") + Decimal(6 - n) / 100)).quantize(Decimal("0.01"))
+        cost_of_sales = (income * Decimal("0.08")).quantize(Decimal("0.01"))
+        overheads = (base * Decimal("0.55")).quantize(Decimal("0.01"))
+        MonthlyResult.objects.create(
+            month=add_months(this_month, -n),
+            income=income,
+            cost_of_sales=cost_of_sales,
+            overheads=overheads,
+            net_profit=income - cost_of_sales - overheads,
+            source=MonthlyResult.Source.MANUAL,
+        )
+    target = (base * Decimal("0.45")).quantize(Decimal("1"))
+    for n in range(0, 6):
+        ProfitTarget.objects.get_or_create(
+            month=add_months(this_month, n), defaults={"profit": target}
+        )
+    return 6
+
+
 def seed() -> dict:
     today = timezone.localdate()
     FinanceSettings.load()
     counts = {"time_entries": seed_time(today)}
     counts.update(seed_xero(today))
     counts["targets"] = seed_targets(today)
+    counts["profit_months"] = seed_profit(today)
     forecast.gather(today)  # fail here, not on the page, if the data cannot be read
     return counts

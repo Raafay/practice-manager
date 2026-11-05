@@ -55,6 +55,8 @@ class FakeXero:
             data["Contacts"][0]["Name"] = sent.get("Name", data["Contacts"][0]["Name"])
             data["Contacts"][0]["EmailAddress"] = sent.get("EmailAddress", "")
             return self._ok(data)
+        if name == "ProfitAndLoss":
+            return self._ok(self._file("profit_and_loss"))
         if name == "Contacts":
             return self._ok(self._file("contacts") if page == 1 else {"Contacts": []})
         if name == "Invoices":

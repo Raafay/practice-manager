@@ -199,6 +199,8 @@ companieshouse:sync                 staff
 companieshouse:fill_in              staff
 companieshouse:integrations         integrations.manage
 
+creditsafe:check                    clients.status
+
 services:list                       settings.manage
 services:add                        settings.manage
 services:edit                       settings.manage
@@ -206,6 +208,7 @@ services:move                       settings.manage
 services:toggle                     settings.manage
 services:panel                      staff
 services:switch_on                  staff
+services:quick_on                   staff
 services:settings                   staff
 services:switch_off                 staff
 services:fee                        get=staff post=fees.view
@@ -365,6 +368,7 @@ portal:item_everything              portal
 portal:item_approve                 portal
 portal:form                         portal
 portal:request_form                 public
+portal:info_form                    public
 portal:request_thanks               public
 portal:inbox                        staff
 portal:inbox_log                    staff
@@ -379,6 +383,12 @@ portal:inbox_client                 staff
 portal:inbox_file                   staff
 portal:client_requests              staff
 portal:replace_link                 staff
+portal:info_new                     staff
+portal:info_detail                  staff
+portal:info_apply                   staff
+portal:info_cancel                  staff
+portal:info_pdf                     staff
+portal:info_enter                   staff
 portal:invite                       staff
 portal:withdraw                     staff
 portal:item_cancel                  staff
@@ -402,6 +412,8 @@ finance:invoices                    finance.owner
 finance:chase                       finance.owner
 finance:targets                     finance.owner
 finance:forecast                    finance.owner
+finance:profit                      finance.owner
+finance:assistant                   finance.owner
 finance:summary                     finance.owner
 finance:settings                    finance.owner
 finance:matching                    finance.owner
@@ -523,7 +535,7 @@ class World:
             OnboardingItem,
         )
         from apps.pipeline.models import PipelineStage, Proposal
-        from apps.portal.models import PortalForm, PortalItem, Request, RequestFile
+        from apps.portal.models import InfoRequest, PortalForm, PortalItem, Request, RequestFile
         from apps.services.models import ClientService, Deadline, Service
         from apps.tasks.models import (
             Project,
@@ -587,6 +599,7 @@ class World:
             "SensitiveDocument": Document.objects.filter(sensitive=True, deleted_at__isnull=True),
             "Document": Document.objects.filter(deleted_at__isnull=True),
             "RequestFile": RequestFile,
+            "InfoRequest": InfoRequest,
             "TaskStep": TaskStep,
         }
         self.letter_part_key = getattr(LetterPart.objects.first(), "key", "x")
@@ -648,6 +661,7 @@ SUB_RECORDS = {
     "proposal_pk": "Proposal",
     "step_pk": "TaskStep",
     "template_pk": "TaskTemplate",
+    "info_pk": "InfoRequest",
 }
 BY_NAME = {
     "clients:link_remove": {"link_pk": "ClientLink"},

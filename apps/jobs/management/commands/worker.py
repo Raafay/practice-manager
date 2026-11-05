@@ -8,7 +8,10 @@ from apps.jobs import services
 
 
 class Command(BaseCommand):
-    help = "Run background jobs when they are due. Loops for ever; checks once a minute."
+    help = (
+        "Run background jobs when they are due, once in each active practice. "
+        "Loops for ever; checks once a minute."
+    )
 
     def add_arguments(self, parser):
         parser.add_argument("--once", action="store_true", help="Check once, then stop.")
@@ -16,8 +19,10 @@ class Command(BaseCommand):
     def handle(self, *args, once=False, **options):
         self.stdout.write("Worker started. Checking for due jobs once a minute.")
         while True:
-            for run in services.run_due():
-                self.stdout.write(f"{timezone.localtime():%d/%m/%Y %H:%M} {run.name}: {run.state}")
+            for schema_name, run in services.run_due_everywhere():
+                self.stdout.write(
+                    f"{timezone.localtime():%d/%m/%Y %H:%M} {schema_name} {run.name}: {run.state}"
+                )
             if once:
                 return
             close_old_connections()

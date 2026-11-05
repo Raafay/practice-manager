@@ -211,3 +211,72 @@ class XeroSyncLog(TimeStampedModel):
 
     class Meta:
         ordering = ["-started_at", "-id"]
+
+
+class ProfitTarget(TimeStampedModel):
+    """The net profit and margin the owner wants in one month (first day of the month).
+
+    The fee (revenue) target for the month is the separate Target row.
+    """
+
+    month = models.DateField(unique=True)
+    profit = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    margin_percent = models.DecimalField(
+        "net margin target (%)",
+        max_digits=4,
+        decimal_places=1,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(99)],
+    )
+
+    class Meta:
+        ordering = ["month"]
+
+    def __str__(self) -> str:
+        return f"{self.month:%m/%Y}: {self.profit}"
+
+
+class MonthlyResult(TimeStampedModel):
+    """One month's profit and loss: from Xero's report, or typed in. Pounds, excluding VAT."""
+
+    class Source(models.TextChoices):
+        XERO = "xero", "Xero"
+        MANUAL = "manual", "Typed in"
+
+    month = models.DateField(unique=True)
+    income = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    cost_of_sales = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    overheads = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    net_profit = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    source = models.CharField(max_length=6, choices=Source.choices, default=Source.XERO)
+
+    class Meta:
+        ordering = ["month"]
+
+    def __str__(self) -> str:
+        return f"{self.month:%m/%Y}: {self.net_profit}"
+
+    @property
+    def costs(self) -> Decimal:
+        return self.cost_of_sales + self.overheads
+
+
+class AssistantMessage(TimeStampedModel):
+    """One question to the finance assistant and its answer, with the API usage it cost."""
+
+    conversation = models.UUIDField(db_index=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+")
+    question = models.TextField()
+    answer = models.TextField(blank=True)
+    tools_used = models.JSONField(default=list, blank=True)
+    model = models.CharField(max_length=60, blank=True)
+    input_tokens = models.PositiveIntegerField(default=0)
+    output_tokens = models.PositiveIntegerField(default=0)
+    cache_read_tokens = models.PositiveIntegerField(default=0)
+    cache_write_tokens = models.PositiveIntegerField(default=0)
+    calls = models.PositiveSmallIntegerField(default=0)
+    failed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["created_at", "id"]

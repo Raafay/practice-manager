@@ -53,6 +53,14 @@ class PracticeSettings(TimeStampedModel):
     accent_colour = models.CharField(
         max_length=7, default="#2f5d8a", validators=[validate_hex_colour]
     )
+    brand_colour = models.CharField(
+        "top bar colour", max_length=7, default="#0f172a", validators=[validate_hex_colour]
+    )
+    email_footer = models.TextField(
+        blank=True,
+        help_text="Added under every email to clients, for example the registered office, "
+        "company number and regulator.",
+    )
     vat_registered = models.BooleanField("VAT registered", default=False)
     vat_rate = models.DecimalField(
         "VAT rate (%)",

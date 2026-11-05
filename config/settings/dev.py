@@ -12,7 +12,7 @@ from .base import *  # noqa: E402,F403
 
 DEBUG = True
 SECRET_KEY = env("SECRET_KEY", "django-insecure-development-only")
-ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,127.0.0.1,[::1]")
+ALLOWED_HOSTS = env_list("ALLOWED_HOSTS", "localhost,.localhost,127.0.0.1,[::1]")
 
 # Without a key in .env, derive a stable development key from the secret key.
 FIELD_ENCRYPTION_KEYS = env_list("FIELD_ENCRYPTION_KEYS") or [
@@ -24,3 +24,7 @@ FIELD_ENCRYPTION_KEYS = env_list("FIELD_ENCRYPTION_KEYS") or [
 MFA_TOTP_INSECURE_BYPASS_CODE = env("MFA_TOTP_INSECURE_BYPASS_CODE", "000000")
 
 ALLOW_DEMO_DATA = True
+
+# Links in emails: http://localhost:8000 and http://second.localhost:8000 (seed_demo).
+SITE_SCHEME = env("SITE_SCHEME", "http")
+SITE_PORT = env("SITE_PORT", "8000")
