@@ -82,6 +82,18 @@ Older stages are shortened to two lines each. Details are in git history and eac
 - 04/11: margin targets (all three targets, as Mati asked); theme in one place (`apps/core/theme.py`: accent and top bar colours as CSS variables, contrast checked, email footer under every client email). Xero stays read-only; AML stays recorded by hand (DECISIONS 14).
 - Multi-tenant designed, not built: `docs/MULTITENANT.md` (one PostgreSQL schema per practice, tried in a throwaway copy) and stage briefs 14 to 18. Start after the ownership agreement with Mati. Also not done: bills and repeating invoices from Xero.
 
+## Stage 14: one schema per practice (in progress, branch `claude/zealous-volta-50rlsl`)
+
+Plan, one commit and push per item, suite green at each push:
+1. `django-tenants==4.0.1`, `apps/tenancy` (Practice, Domain), SHARED_APPS/TENANT_APPS, tenant backend and router, practice middleware first; unknown address plain 404. Test fixture with two practices (A on `testserver`, B on `other.testserver`) so the suite runs inside A from item 1.
+2. `apps/core/siteurl.py` from the practice's primary domain; `SITE_URL` removed.
+3. Worker runs each due job once per active practice in `schema_context`; failures isolated.
+4. Storage folder per schema (refuses paths outside it); cache key includes the schema.
+5. `create_practice` and `move_into_schema` (backup in the last hour checked).
+6. Cross-practice tests (URL walk on B, files, cache, jobs, move); `seed_demo` makes two demo practices.
+7. DEPLOY, BETA, BACKUPS: wildcard DNS, per-practice backup and restore.
+Progress: (updated after each item)
+
 ## Assumptions
 
 Add one line each time a stage makes a choice that the specs and `docs/DECISIONS.md` did not cover. Give the stage number.
