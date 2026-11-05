@@ -4,7 +4,7 @@ The live connection can only be made once the site is deployed, or on a laptop w
 
 1. Sign in at developer.xero.com with the practice's Xero login and open My Apps, then New app.
 2. Name it (for example "Practice Manager"), choose "Web app", and give the company or application URL.
-3. Redirect URI: `{SITE_URL}/integrations/xero/callback`, for example `https://pm.example.co.uk/integrations/xero/callback`. For a laptop use `http://localhost:8000/integrations/xero/callback` and set `SITE_URL=http://localhost:8000`.
+3. Redirect URI: the practice's own address followed by `/integrations/xero/callback`, for example `https://fpas.pm.example.co.uk/integrations/xero/callback`. Add one for each practice that connects Xero. For a laptop use `http://localhost:8000/integrations/xero/callback`.
 4. Create the app, then Configuration, Generate a secret. Copy the client id and the secret.
 5. Put them in the server's environment as `XERO_CLIENT_ID` and `XERO_CLIENT_SECRET`, then restart the site. Never commit them.
 6. Sign in as the owner, open Settings, Integrations, and press Connect Xero. Choose the practice's organisation and allow access.

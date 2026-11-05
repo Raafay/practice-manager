@@ -4,6 +4,8 @@ This guide is for a **generic container host**, because no hosting company had b
 
 Hosts that fit, worth comparing on the day (prices and regions change): Render (Frankfurt), Fly.io (London), DigitalOcean App Platform (London), Railway (Amsterdam), and AWS in London for anyone comfortable with it.
 
+**Several practices, one installation.** Each practice has its own PostgreSQL schema (its own copy of every table), its own folder in the bucket and its own web address, such as `fpas.pm.yourdomain.co.uk`. The address decides which practice a visitor reaches; an address that belongs to no practice gets a plain "Not found". The public schema holds only the list of practices and their addresses. See `docs/MULTITENANT.md`.
+
 Allow an afternoon for the first time. Do the steps in order. **No real client data goes in until every line of `docs/GO-LIVE.md` is ticked.**
 
 ---
@@ -16,7 +18,7 @@ Allow an afternoon for the first time. Do the steps in order. **No real client d
 | PostgreSQL 16 | A managed database from the host or a separate company | Daily automatic backups kept at least 14 days, with point-in-time restore. UK or EEA |
 | A private file bucket | Any S3-compatible storage: AWS S3, DigitalOcean Spaces, Cloudflare R2 (EU jurisdiction), and so on | Private (no public access), encryption at rest, versioning on. UK or EEA |
 | Email sending | Amazon SES in London (`eu-west-2`) is the default. Postmark and Brevo also work | You need to be able to add DNS records for your domain |
-| A domain name | For example `pm.yourpractice.co.uk` | You need access to its DNS settings |
+| A domain name | For example `pm.yourdomain.co.uk`, with every practice at a subdomain of it (`fpas.pm.yourdomain.co.uk`) | You need access to its DNS settings, for a wildcard record (step 7) |
 | Companies House API key | Free, from developer.company-information.service.gov.uk | Optional at first. Needed for company lookups and the nightly sync |
 | Xero app | See `docs/XERO_SETUP.md` | Optional at first |
 
@@ -80,9 +82,8 @@ Set these on **both** processes (web and worker), and on the release command if 
 | `SECRET_KEY` | (from step 2) | Django's secret. 50 random characters |
 | `DATABASE_URL` | `postgres://user:pass@host:5432/pm` | The database address |
 | `FIELD_ENCRYPTION_KEYS` | (from step 2) | Keys for encrypted fields, newest first, separated by commas |
-| `ALLOWED_HOSTS` | `pm.yourpractice.co.uk` | The site's domain |
-| `CSRF_TRUSTED_ORIGINS` | `https://pm.yourpractice.co.uk` | The same, with `https://` |
-| `SITE_URL` | `https://pm.yourpractice.co.uk` | Used in links in emails. Must start with `https://` |
+| `ALLOWED_HOSTS` | `.pm.yourdomain.co.uk` | The leading dot allows every practice's subdomain. Add a practice's own domain after a comma if it has one. The list of practices then decides which address reaches which practice |
+| `CSRF_TRUSTED_ORIGINS` | `https://*.pm.yourdomain.co.uk` | The same, with `https://` |
 | `DEFAULT_FROM_EMAIL` | `Your Practice <office@yourpractice.co.uk>` | The sending address |
 | `EMAIL_PROVIDER` | `ses` | `ses`, `postmark` or `brevo` |
 | `EMAIL_WEBHOOK_SECRET` | (from step 2) | `name:password` the provider uses for delivery reports |
@@ -120,32 +121,38 @@ For Postmark or Brevo, set `EMAIL_API_KEY` instead.
 | `LOG_LEVEL` | Default `INFO` |
 | `STORAGE_SSE` | `false` only if the bucket provider rejects the server-side encryption header and encrypts at rest by itself |
 
-**Never set in production:** `DEBUG`, `MFA_TOTP_INSECURE_BYPASS_CODE` or `ALLOW_DEMO_DATA`. The app refuses to start if any of them is set.
+**Never set in production:** `DEBUG`, `MFA_TOTP_INSECURE_BYPASS_CODE` or `ALLOW_DEMO_DATA`. The app refuses to start if any of them is set. `SITE_URL` is no longer used (links in emails use each practice's own address) and the app refuses to start while it is still set.
 
 ---
 
-## 6. First release and the first owner
+## 6. First release, the first practice and its owner
 
-1. Deploy. The release command runs `migrate`, `createcachetable` and Django's deployment checks. Then the web process starts.
-2. Open `https://<host's temporary address>/healthz/`. It should say `ok`.
-3. Use the host's "run a command" or "console" feature on the web process to create the first owner:
+1. Deploy. The release command runs `migrate` (the list of practices first, then every practice's schema in turn), `createcachetable` and Django's deployment checks. Then the web process starts.
+2. Open `https://<host's temporary address>/healthz/`. It should say `ok`. Every other page on that address says "Not found": it belongs to no practice.
+3. Use the host's "run a command" or "console" feature on the web process to create the practice. It makes the practice's schema (about ten seconds) and emails its owner an invitation:
 
-       python manage.py create_owner --email you@yourpractice.co.uk --name "Your Name"
+       python manage.py create_practice "Your Practice" yourpractice yourpractice.pm.yourdomain.co.uk you@yourpractice.co.uk --owner-name "Your Name"
 
-   It asks for a password (at least 12 characters).
-4. Sign in at `/login/`. You are sent to set up two-factor with an authenticator app. Save the recovery codes somewhere safe.
+   The second word is the schema and folder name: lower-case letters, digits and underscores. The command also prints the invitation link, in case the email does not arrive yet. To give the owner a password straight away instead, use `python manage.py create_owner --practice yourpractice --email ... --name ...`.
+   **Moving the beta's data across instead?** Restore the beta's dump into the new database, then run `move_into_schema` as in `docs/BETA.md`, "Moving FPAS into its own schema".
+4. Sign in at `https://yourpractice.pm.yourdomain.co.uk/login/`. You are sent to set up two-factor with an authenticator app. Save the recovery codes somewhere safe.
 5. Open Settings, Practice details, and fill them in. Open Settings, Security and check the session times and retention years.
 
 ---
 
 ## 7. Point the domain at it
 
-1. In the host's settings, add the custom domain, for example `pm.yourpractice.co.uk`.
-2. The host shows a DNS record to add, usually a `CNAME`. Add it where the domain's DNS is managed.
+1. In the host's settings, add a **wildcard** custom domain, `*.pm.yourdomain.co.uk`. Most hosts need a DNS check record for a wildcard certificate; add what it shows.
+2. Add a wildcard `CNAME` record, `*.pm.yourdomain.co.uk`, pointing at the host's address, where the domain's DNS is managed. Every practice's subdomain then reaches the app with no further DNS work.
 3. Wait for the host to show the certificate as issued. Certificates renew by themselves.
-4. Check from any computer with the app installed:
+4. A practice with its own domain (for example `pm.fpas.co.uk`): add that domain on the host too, add its `CNAME`, add it to `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS`, then record it against the practice from the console (until the platform pages exist):
 
-       python manage.py check_headers https://pm.yourpractice.co.uk
+       python manage.py shell -c "from apps.tenancy.models import Domain, Practice; Domain.objects.create(domain='pm.fpas.co.uk', tenant=Practice.objects.get(schema_name='fpas'), is_primary=True)"
+
+   Then untick `is_primary` on its old address the same way, so links in emails use the new one.
+5. Check from any computer with the app installed:
+
+       python manage.py check_headers https://yourpractice.pm.yourdomain.co.uk
 
    It should finish with "All security headers are right".
 
@@ -183,7 +190,9 @@ For Postmark or Brevo, the webhook address is the same `https://NAME:PASSWORD@â€
 
 ## 9. The worker
 
-The worker runs every background job: the nightly Companies House and Xero syncs, deadline generation, reminders and the sending of approved emails. Run **exactly one** copy. Settings, System shows "Worker running" when it is alive.
+The worker runs every background job: the nightly Companies House and Xero syncs, deadline generation, reminders and the sending of approved emails. It runs each due job once in every **active** practice, inside that practice's schema, so each practice's Jobs page shows its own runs and its emails link to its own address. A failure in one practice is recorded on that practice's Jobs page and the others carry on. Read-only and closing practices run no jobs. Run **exactly one** copy. Settings, System shows "Worker running" when it is alive.
+
+**Commands that work on one practice** take `--practice SCHEMA`: `create_owner`, `reset_two_factor`, `run_job`, `dev_login`. `encrypt_files` and `rotate_encryption_keys` run in every practice unless one is named, because the keys are shared. Anything else, such as `shell`, runs in a practice with `python manage.py tenant_command shell --schema=fpas`.
 
 ---
 
@@ -198,7 +207,7 @@ The worker runs every background job: the nightly Companies House and Xero syncs
          python manage.py ch_check <company number>
 
      Use the number of a company you know, such as the practice's own. It should print the company's filing dates.
-- **Xero:** follow `docs/XERO_SETUP.md`. The redirect address is `https://pm.yourpractice.co.uk/integrations/xero/callback`.
+- **Xero:** follow `docs/XERO_SETUP.md`. Each practice connects its own Xero from its own address, so the Xero app needs one redirect address per practice, for example `https://fpas.pm.yourdomain.co.uk/integrations/xero/callback`.
 
 ---
 

@@ -10,6 +10,8 @@ What the beta mode (`config/settings/beta.py`) does:
 - The app listens on `127.0.0.1` only. Other devices on the office Wi-Fi cannot reach it. The only way in is through the tunnel.
 - It uses its own database (`pm_beta`) and its own settings file (`.env.beta`). `make dev` and `make seed` keep using `pm_dev` and `.env`, so they never touch real data.
 
+Since Stage 14 the app can hold several practices, each in its own schema of the database, chosen by the web address. The beta holds one: FPAS, in the schema `fpas`, at `app.fpas.co.uk`. A beta set up before Stage 14 must move its data across once (section 7).
+
 **Limits:** the site only works while the host laptop is on, awake and running `make beta`. Moving to another laptop or a server takes about an hour (see the last section).
 
 ---
@@ -59,9 +61,13 @@ Open `https://app.fpas.co.uk`. Cloudflare asks for your email and sends a code, 
 
 ## 5. Accounts
 
-1. Create the owner (asks for a password; use a long one from the password manager):
+1. Create the practice, once, after the first `make beta` (stop it again first with Ctrl+C):
 
-       DJANGO_SETTINGS_MODULE=config.settings.beta uv run python manage.py create_owner --email <owner email> --name "<owner name>"
+       DJANGO_SETTINGS_MODULE=config.settings.beta uv run python manage.py create_practice "FPAS" fpas app.fpas.co.uk <owner email> --owner-name "<owner name>"
+
+   The beta prints emails instead of sending them, so copy the invitation link the command prints. Or give the owner a password straight away (it asks for one; use a long one from the password manager):
+
+       DJANGO_SETTINGS_MODULE=config.settings.beta uv run python manage.py create_owner --practice fpas --email <owner email> --name "<owner name>"
 
 2. Sign in at `https://app.fpas.co.uk` and set up the authenticator app when asked.
 3. Invite the others from Settings → Users. The invitation email is **printed in the `make beta` terminal** instead of being sent. Copy the link from there and send it to the person yourself. It works once and lasts 72 hours.
@@ -79,7 +85,7 @@ Open `https://app.fpas.co.uk`. Cloudflare asks for your email and sends a code, 
 
        createdb -h localhost -U pm pm_restore_test
        pg_restore --no-owner -d postgres://pm:pm@localhost:5432/pm_restore_test ~/pm-beta/backups/db_<newest>.dump
-       psql postgres://pm:pm@localhost:5432/pm_restore_test -c "select count(*) from clients_client"
+       psql postgres://pm:pm@localhost:5432/pm_restore_test -c "select count(*) from fpas.clients_client"
        dropdb -h localhost -U pm pm_restore_test
 
 ## Everyday
@@ -87,6 +93,26 @@ Open `https://app.fpas.co.uk`. Cloudflare asks for your email and sends a code, 
 - **Updating the app:** stop it (Ctrl+C), `git pull`, then `make beta` again. Migrations run by themselves. Take a `make beta-backup` first.
 - **Reminder schedules** stay off. The owner switches them on only after go-live with real email sending.
 - **Never** run `make seed`, or any command with `DJANGO_SETTINGS_MODULE=config.settings.dev`, pointed at `pm_beta`. Never commit `.env.beta` (git ignores it).
+
+## 7. Moving FPAS into its own schema (once, when updating to Stage 14)
+
+Before Stage 14 every table sat in the database's `public` schema. This step moves them, with their data, into the schema `fpas`, in one transaction: if anything goes wrong nothing has changed. It takes under a minute.
+
+1. Stop the app (Ctrl+C in the `make beta` window), then take a backup: `make beta-backup`. The move refuses to run if the newest backup in `~/pm-beta/backups` is more than an hour old.
+2. `git pull`, then delete the `SITE_URL=` line from `.env.beta` (links now use the practice's own address; the app refuses to start while the line is there).
+3. Add the practice list to the database, then move FPAS into it:
+
+       DJANGO_SETTINGS_MODULE=config.settings.beta uv run python manage.py migrate
+       DJANGO_SETTINGS_MODULE=config.settings.beta uv run python manage.py move_into_schema fpas --domain app.fpas.co.uk
+
+   It asks you to type `yes`, then prints how many tables and rows it moved ("every count the same") and how many uploaded files it moved into `~/pm-beta/files/fpas/`.
+4. `make beta` and sign in as usual. Everything should look exactly as before.
+
+If step 3 stops with an error, nothing was changed: send the message to the developer. To undo after it finished, restore the backup from step 1 into a fresh `pm_beta` as in "Moving to another laptop" and check out the previous version of the code.
+
+## One practice's own backup
+
+`make beta-backup` copies the whole database (every practice). To copy or restore one practice only, see `docs/BACKUPS.md`, "One practice at a time".
 
 ## Moving to another laptop or a server
 

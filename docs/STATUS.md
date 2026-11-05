@@ -4,7 +4,7 @@ Keep this file under 150 lines. When it grows, shorten older stages to two lines
 
 ## Where things stand
 
-Next: choose a host, deploy (`docs/DEPLOY.md`) and work through `docs/GO-LIVE.md`. All thirteen stages are built.
+Next: choose a host, deploy (`docs/DEPLOY.md`) and work through `docs/GO-LIVE.md`. Stages 1 to 13 are built; Stage 14 (several practices) is built and waits for the agreement with Mati.
 
 | Stage | State | Merged on |
 |---|---|---|
@@ -22,6 +22,7 @@ Next: choose a host, deploy (`docs/DEPLOY.md`) and work through `docs/GO-LIVE.md
 | 11 Time, fees, Xero and forecast | Built, in review | |
 | 12 Import and reports | Built, in review | |
 | 13 Hardening and deployment | Built, in review | |
+| 14 One schema per practice | Built, in review (do not merge before the agreement) | |
 
 ## Stages 0 to 12 in short
 
@@ -82,77 +83,25 @@ Older stages are shortened to two lines each. Details are in git history and eac
 - 04/11: margin targets (all three targets, as Mati asked); theme in one place (`apps/core/theme.py`: accent and top bar colours as CSS variables, contrast checked, email footer under every client email). Xero stays read-only; AML stays recorded by hand (DECISIONS 14).
 - Multi-tenant designed, not built: `docs/MULTITENANT.md` (one PostgreSQL schema per practice, tried in a throwaway copy) and stage briefs 14 to 18. Start after the ownership agreement with Mati. Also not done: bills and repeating invoices from Xero.
 
-## Stage 14: one schema per practice (in progress, branch `claude/zealous-volta-50rlsl`)
+## Stage 14: one schema per practice (built 05/11/2026, branch `claude/zealous-volta-50rlsl`, not to merge before the agreement with Mati is signed)
 
-Plan, one commit and push per item, suite green at each push:
-1. `django-tenants==4.0.1`, `apps/tenancy` (Practice, Domain), SHARED_APPS/TENANT_APPS, tenant backend and router, practice middleware first; unknown address plain 404. Test fixture with two practices (A on `testserver`, B on `other.testserver`) so the suite runs inside A from item 1.
-2. `apps/core/siteurl.py` from the practice's primary domain; `SITE_URL` removed.
-3. Worker runs each due job once per active practice in `schema_context`; failures isolated.
-4. Storage folder per schema (refuses paths outside it); cache key includes the schema.
-5. `create_practice` and `move_into_schema` (backup in the last hour checked).
-6. Cross-practice tests (URL walk on B, files, cache, jobs, move); `seed_demo` makes two demo practices.
-7. DEPLOY, BETA, BACKUPS: wildcard DNS, per-practice backup and restore.
-Progress: (updated after each item)
+- New dependency `django-tenants` 4.0.1 (the design chosen in `docs/MULTITENANT.md`: one schema per practice, chosen by address). `apps/tenancy`: Practice (status active, read-only, closing) and Domain in `public`; everything else in each practice's schema. `PracticeMiddleware` gives an unknown or public address a plain 404; `/healthz/` answers on any address.
+- Links from the practice's primary address (`apps/core/siteurl.py`); `SITE_URL` removed (prod and beta refuse it). Worker: each due job once per active practice, failures kept to that practice. Files under `<schema>/` (disk or bucket), names outside refused; cache keys start with the schema.
+- `create_practice`, `move_into_schema` (backup under an hour old, counts compared, one transaction, then files); `--practice SCHEMA` on per-practice commands. `seed_demo`: `localhost` (full) and `second.localhost` (staff only).
+- Tests: practices A (`testserver`) and B (`other.testserver`); the whole suite runs in A. New: URL walk on B, files, cache, jobs, commands, the move of the demo data with every page visited.
+- Checked by hand: a database made and seeded by the pre-Stage 14 code, moved with the new code: 106 tables and 4,420 rows unchanged, 43 files moved, 349 pages visited as the owner with no errors.
 
 ## Assumptions
 
-Add one line each time a stage makes a choice that the specs and `docs/DECISIONS.md` did not cover. Give the stage number.
+Add one line each time a stage makes a choice that the specs and `docs/DECISIONS.md` did not cover. Give the stage number. Stages 1 to 13 are in `docs/ASSUMPTIONS.md`.
+- 14: Pushed to the session's required branch, not `stage-14-...`. ALLOWED_HOSTS stays an environment setting (a wildcard such as `.pm.example.co.uk` plus custom domains); the Domain table then decides the practice, so an allowed but unknown address still gets 404. Read-only and closing practices are served as normal and only skip jobs (behaviour for them comes with billing). Users and their sign-ins belong to one practice. The second demo practice has staff accounts only. A practice's extra domains are added from the shell until the platform pages exist. Query budget for the 2,000-task table raised from 32 to 35 (choosing the practice: two schema switches and the address lookup); `SET search_path` is sent only when the practice changes (`TENANT_LIMIT_SET_CALLS`). Bank holidays (national data) may be cached in memory from any practice's copy. Existing tests changed only where they wrote files at fixed disk paths, made a request without the database, or used threads (each thread must choose the practice).
 - Meeting: work on the session branch, one pull request for all items. Costs in the profit figures are a 3-month average and treated as fixed, so each new client adds its whole fee to profit. Clients who are people are sent to the Claude API as a reference, not a name. The default fee from Settings still fills in on instant switch-on. A credit check needs `clients.status` (owner and managers) because each report is charged. Information request links use the existing one-use action links; each reminder sends a fresh link to the same request.
-- 1: Work pushed to the session's required branch `claude/keen-planck-yz97j4`, not `stage-01-foundation`; the cloud session could push only there. Two-factor "done" means the user has an authenticator app; allauth finishes sign-in only after the code. `dev_login` adds one and does not count as a recent password. Practice details need `settings.manage`. Sign-in and session settings (trust this browser, idle minutes, maximum hours) sit on the same row and need `users.manage`.
-- 1: allauth registers its trust page only if the setting is on at start-up, so `config/urls.py` always registers it and `MFA_TRUST_ENABLED` reads the practice setting at run time. Password re-entry guards the change (the POST), not opening the page. allauth replays the POST after the password. A portal user on a staff page gets 403. `user.can()` raises on an unknown right name, so a typo never passes silently.
-- 1: An invitation creates the account only when accepted. Deactivated users are refused on their next request; no hand-over prompt yet (CORRECTIONS 2). `seed_demo` runs only with DEBUG or `ALLOW_DEMO_DATA=true`. Demo password `demo-password-2026`, dev two-factor code `000000`. Notifications live in the `events` app. The bell links to a list page; the triggers come in Stage 8.
-- 2: Branch is `claude/sharp-knuth-96f9y3` (the session's required branch), not `stage-02-clients`. New clients default to `active`. Prospects and onboarding come from Stages 7 and 9. Notes are plain text, shown with line breaks (no rich text, so nothing to clean). Pinned notes show on the Info tab.
-- 2: Status moves: prospect to onboarding or lost; onboarding to active, paused or former; active and paused to each other or former; former to active; lost to prospect. Delete for good is blocked only by the retention dates. A live client with no dates is not blocked, so owner-only and the typed name are the guard. Sensitive documents need `documents.sensitive`; only sensitive views and downloads are logged, plain ones are not.
-- 2: Filing dates are read-only once a company number is set, so until Stage 3 they can only be set by the demo seed. Contact changes are logged once on each linked client's timeline.
-- 3: Branch is `claude/nifty-knuth-isuax1` (the session's required branch), not `stage-03-companies-house`. A Companies House personal code is 11 letters or digits; Stage 2 had allowed six (that is the company authentication code). Fixed in the contact form. The sync never renames a client unless its name still equals the old registered name. New clients take the registered name as given.
-- 3: The sync also adds newly appointed people as contacts. A person who left before the company was added is listed on the tab but not made a contact. "Run now" and "Run sync now" ask the worker; only "Sync now" on one client runs straight away. Jobs runs need `system.view` (owner); Integrations needs `integrations.manage`. Calls go out without an Authorization header when `COMPANIES_HOUSE_API_KEY` is empty, so a network proxy that adds the key (as in cloud sessions) still works. The page then shows "No key".
-- 4: Periods due more than 60 days ago are not created (so a service started years ago gets no history). Spec only gave the start-date rule. Open calculated deadlines are re-calculated when inputs change (for example a new pay day); ones changed by hand are left alone. Reminder-only rules (ct_payment, paye_payment, sa_payment, p11d Class 1A) and tax-year rules with no horizon are created 60 days ahead (CORRECTIONS 10). "Created N days ahead" for payroll, CIS and regular work is counted before the due date; VAT and MTD before the period end.
-- 4: Going live (status Active) turns proposed services active, starting today. Paused clients keep active services but get nothing new. Reports live in `apps/services` with a small Reports index; Stage 12 can add to it. Two icons missing from the set were replaced by `calendar` and `rectangle-stack`.
-- 6: Branch `claude/trusting-feynman-fm97v2`. Item 12 left out (CORRECTIONS 4); sign-in emails go direct (CORRECTIONS 17). "Repeats N times" means N more after the first; a date missed by over 3 days is skipped. One message per client to the main contact and "receives reminders" contacts.
-- 6: "Stops when": a ticked "stops reminders" step on a linked task, or a done/not-required deadline. Only the owner sets a template to automatic; a blocked automatic message waits. nh3 drops inline styles, so link buttons arrive as plain links; sensitive documents are never attached.
-- 6: Hand-written messages to former or lost clients cannot be approved. Compose fills deadline fields from the nearest open deadline. `setup_fee` merges one-off fees. Log an email adds a note of kind "email".
-- 7: Branch is `claude/hopeful-gates-4pfqis` (the session's required branch). No pull request opened: the session rules say only on request.
-- 7: The register export needs `data.export` (CORRECTIONS 16), not "owner only" as the stage file says; the owner and managers hold it.
-- 7: Make live needs `clients.status`; going live with items open also needs `onboarding.override` and a reason.
-- 7: A signing link lasts 14 days. The engagement and signed-copy emails wait in Queued (hold), so nothing reaches a client unapproved. Engagement review date is 12 months after signing.
-- 7: "Verified" identity needs a method, a document type and an uploaded copy. A live client with no assessment and no checklist shows "Needs review (imported)".
-- 7: Higher-risk services that prompt a review are chosen on the AML bands page. HMRC row expires automatically once its link or code date passes while still waiting.
-- 7: Added h2 and h3 to the allowed rich-text tags (letters use them). Demo data adds 3 contacts and some notifications; two earlier demo-count tests were loosened.
-- 8: Branch is `claude/peaceful-cerf-16u8mo` (the session's required branch). No pull request opened.
-- 8: The board ignores "Show done" and always shows done work from the last 14 days. Dragging on the calendar works only while it shows target dates; in deadline mode cards are fixed. Dropping a task on the side list clears its target date.
-- 8: A board move to another client is refused for tasks that come from a deadline. A plain reorder writes no activity event.
-- 8: Workload counts open tasks by target date, else deadline, in the next 14 days (overdue work is in its own column, not in the hours). Overdue and this-week links use the same filters as the counts; "next week" is a hidden chip.
-- 8: The three email switches are overdue, due today and due this week. The daily email is sent straight to staff (not queued; it is not a client message) and leaves out tasks waiting on the client. Overview "my clients" means manager or partner. The system never notifies on generated tasks.
-- 8: A repeating task makes only the current period; periods missed while nothing ran are skipped. Its target date is the period start plus "days to finish"; no hard due date.
-- 8: Project templates have no editor in Settings yet.
-- 9: Source and referrer stay on the client (Internal panel), not copied to ProspectDetails. Moving a card to Won or Lost needs no `clients.status` right.
-- 9: Weighted pipeline value needs `finance.owner` (CORRECTIONS 15); open value and column totals need `fees.view`. Quiet prospects on Overview: your own, or all for `finance.owner`.
-- 9: VAT switches apply only if the practice is VAT registered; "inc. VAT" is added to amounts shown with VAT. A quarterly or annual fee shows as its own frequency with breakdown on; the monthly charge is the rounded monthly total. One-offs and the setup fee are shown apart.
-- 9: A proposal link lasts to the end of the valid-until day. Wrong, expired and cancelled links all give the same plain 404 page. Won cards cannot be dragged back. Accepting does not draft the engagement letter; staff prepare it on the Engagement tab. Link buttons in the email arrive as plain links (nh3).
-- 9: Board drops other than Lost and Won reload the page so column totals stay right.
-- 11: Hourly return uses today's agreed monthly fee times the months in the window (not Xero invoices). The window is N calendar months ending with this one.
-- 11: Check fee compares a client's whole month of invoiced net with the agreed fee (two invoices add up). Not invoiced counts any non-void invoice dated this month, once the set day (10) has passed.
-- 11: Contracted for past months uses today's records, so clients who have since left are missing. Ended services count up to their end date. A setup fee counts only for onboarding clients, in their expected start month.
-- 11: "Ending by month" counts services that end before the last day of that month. Proposed services of an onboarding client with no expected start start 60 days from today (setting).
-- 11: Time boxes holding several entries are read-only on the timesheet; edit them from the client Time tab. Time cannot be logged for a future day.
-- 11: Send to Xero, matching and the Xero buttons need `finance.owner`. The owner summary email is internal, not queued. One task-table query budget test raised from 30 to 32 for the timer lookup.
-- 12: Rows a person must fix are left out, never guessed. A client's type is needed for a new client. An import never changes an existing client's status, reference or company number, nor the year end of a client synced with Companies House.
-- 12: A UTR goes into the client's UTR field whatever the client type. The uploaded file is stored encrypted until imported, then cleared; failed rows are kept encrypted with tax references replaced by "(left out)".
-- 12: A service with no start date starts on the client's "client since" date, else today. Imported services of prospect or onboarding clients are proposed. Deadlines are generated straight after a services import.
-- 12: Undo counts a record as changed if it was saved after the import, or (for a client) if anyone worked on it since, or it has hand-made or completed tasks. Companies House fetch and generated deadlines and tasks do not count. People Companies House added go with the client if nothing else links to them.
-- 12: The migration helper lists all open deadlines overdue or due within 30 days (not only imported clients), and can also complete their open tasks (ticked by default).
-- 12: A practice-wide monthly total on the Services report needs `finance.owner`; each row's fee needs `fees.view`. Request "first action" is the first set client, convert, link, answer, close or spam. Time report defaults to this month and the two before.
-
-- 13: Branch is `claude/sharp-keller-d89e2x` (the session's required branch). No host was named, so DEPLOY.md is for a generic container host. Email defaults to Amazon SES in London (CORRECTIONS 28).
-- 13: The bucket and email keys are required in production; Companies House and Xero keys are optional (the System page shows "No key"). HSTS preload left off. Request bodies capped at 100 MB, 10 files.
-- 13: Proposals and engagement letters need `fees.view` (they show fees). Open pipeline value and column totals now need `finance.owner` (CORRECTIONS 15), replacing the Stage 9 choice.
-- 13: A person may be removed only when every client that holds anything about them is former or lost and past both dates. The removal event keeps no name. Retention "people" are those no live or in-date client keeps.
-- 13: Delivery reports keep delivered, bounced and complained only; opens and clicks are not tracked.
-- After 13: With DEBUG on and WeasyPrint's system libraries missing (a Mac without Pango), PDFs are a one-page stand-in so `seed_demo` and the site still run; a live site still stops with the error (`apps/core/pdf.py`).
 
 ## Known gaps
 
 Things a stage left unfinished or found broken, with the stage number. Remove a line when it is fixed.
+
+- 14: The email delivery webhook is per practice address; with one provider account for every practice, delivery reports reach only the practice whose address is registered with the provider (others are ignored). A platform-level webhook belongs with stage 15. Xero needs one redirect address per practice registered on the Xero app. Moving files in a bucket is left to the provider's tools (the command prints what to run); on disk it is done.
 
 - Meeting: Creditsafe and the Claude API were built against made-up samples and a fake client; neither was reachable from the cloud session. Check Creditsafe's field names (`apps/creditsafe/api.py`) against their documentation with the first real report. Xero needs Disconnect and Connect again for the new reports scope.
 - 13: In the cloud session Docker Hub (429), ghcr.io and the Debian mirror were blocked; the image was built from a mirrored base through the proxy without the WeasyPrint system libraries step. Build once on a normal machine or the host before go-live: `docker build -t practice-manager .`. Live SES, bucket, Companies House and Xero untested from here.
@@ -169,14 +118,7 @@ Things a stage left unfinished or found broken, with the stage number. Remove a 
 - 7: The practice owner must read the risk questions and score bands before they are relied on. Letter wording is starter text. The 30-day postal code expiry needs confirming with the practice.
 - 8: Project templates cannot be edited in Settings. The calendar's deadline markers follow the client (and fixed client) only, not the other filters. Drag and drop was checked through the endpoints and page markup, not in a live browser.
 - 9: Drag and drop was checked through the endpoints and markup, not in a live browser. The Prospects list has no CSV export.
-
-### Stage 10 assumptions and gaps
-- Portal sign-in is our own small code flow, not allauth's login by code, because that would also apply to staff at `/login/`. Sign-in and invitation emails go straight out (CORRECTIONS 17), not through the queue.
-- The details form never shows another person's date of birth, address, tax references or saved draft answers to a portal user; staff see everything on the review screen.
-- Items made by `upload_link`/`confirm_link` are created when the email is rendered, once per task. A recipient with no portal access cannot open them until invited. Rendering a preview also creates the item.
-- Request attachments stay as private `RequestFile`s until converted or linked, then become Documents. Requests closed by a done task become "closed". A reply to a request is queued and marks it "answered".
-- Demo data has three portal users (Copperleaf, Harbour Bakes, Wren and Finch) so every item kind is open. The portal code appears in the runserver console.
-- Known gaps: no email-in or WhatsApp-in (not in stage); portal items are not auto-withdrawn when a records task is cancelled.
+- 10: No email-in or WhatsApp-in (not in stage); portal items are not auto-withdrawn when a records task is cancelled.
 - 12: No real BrightManager export has been seen; the headings suggested are guesses and the owner checks the matching on screen. Live Companies House fetch was tested against the fake only.
 - 11: Live Xero connection untested (cloud cannot reach Xero); built and tested against the samples. Disconnect only forgets the tokens; remove the app in Xero too.
 - 13: Password reset pages use allauth's plain layout. Virus scanning, SNS signature checks and fully atomic rate-limit counters are accepted gaps (`docs/SECURITY-REVIEW.md`).
