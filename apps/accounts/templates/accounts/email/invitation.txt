@@ -1,7 +1,7 @@
 {% autoescape off %}
 Hello {{ invitation.name }},
 
-{{ invited_by.name }} has invited you to Practice Manager as {{ invitation.role }}.
+{% if invited_by %}{{ invited_by.name }} has invited you{% else %}You have been invited{% endif %} to Practice Manager as {{ invitation.role }}.
 
 Open this link to choose a password and set up two-factor sign-in:
 

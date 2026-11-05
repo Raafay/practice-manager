@@ -24,7 +24,6 @@ REQUIRED = (
     "FIELD_ENCRYPTION_KEYS",
     "ALLOWED_HOSTS",
     "CSRF_TRUSTED_ORIGINS",
-    "SITE_URL",
     "MEDIA_ROOT",
 )
 _missing = [name for name in REQUIRED if not env(name)]
@@ -41,8 +40,14 @@ if env("SECRET_KEY").startswith("django-insecure") or len(env("SECRET_KEY")) < 4
     raise ImproperlyConfigured("SECRET_KEY looks like a development key. Use 50 random characters.")
 if env_bool("ALLOW_DEMO_DATA"):
     raise ImproperlyConfigured("ALLOW_DEMO_DATA must be off in the beta.")
-if not env("SITE_URL").startswith("https://"):
-    raise ImproperlyConfigured("SITE_URL must start with https://.")
+if env("SITE_URL"):
+    raise ImproperlyConfigured(
+        "SITE_URL is no longer used: links use each practice's own address. Remove it."
+    )
+if env("SITE_SCHEME", "https") != "https" or env("SITE_PORT"):
+    raise ImproperlyConfigured(
+        "Links must use https with no port. Remove SITE_SCHEME and SITE_PORT."
+    )
 if env("EMAIL_BACKEND") or env("SMS_BACKEND"):
     raise ImproperlyConfigured(
         "The beta sends no email or text messages. Remove EMAIL_BACKEND and SMS_BACKEND."
@@ -52,7 +57,8 @@ DEBUG = False
 SECRET_KEY = env("SECRET_KEY")
 ALLOWED_HOSTS = env_list("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
-SITE_URL = env("SITE_URL").rstrip("/")
+SITE_SCHEME = "https"
+SITE_PORT = ""
 FIELD_ENCRYPTION_KEYS = env_list("FIELD_ENCRYPTION_KEYS")
 ALLOW_DEMO_DATA = False
 
@@ -76,6 +82,7 @@ CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.db.DatabaseCache",
         "LOCATION": "cache_table",
+        "KEY_FUNCTION": CACHE_KEY_FUNCTION,  # noqa: F405
     }
 }
 

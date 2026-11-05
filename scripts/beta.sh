@@ -17,5 +17,5 @@ uv run python manage.py worker &
 WORKER=$!
 trap 'kill $WORKER 2>/dev/null || true' EXIT INT TERM
 
-echo "Beta running. Open it at the address in SITE_URL. Ctrl+C stops it."
+echo "Beta running. Open it at the practice's address (docs/BETA.md). Ctrl+C stops it."
 uv run gunicorn config.wsgi:application -c gunicorn.conf.py --bind 127.0.0.1:8000

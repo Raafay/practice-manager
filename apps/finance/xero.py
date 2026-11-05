@@ -24,6 +24,8 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
+from apps.core.siteurl import absolute
+
 from .models import XeroConnection
 
 logger = logging.getLogger(__name__)
@@ -117,7 +119,7 @@ def default_transport() -> Transport:
 
 
 def redirect_uri() -> str:
-    return f"{settings.SITE_URL}/integrations/xero/callback"
+    return absolute("/integrations/xero/callback")
 
 
 def new_state() -> str:

@@ -14,10 +14,12 @@ FAKE_ENV = {
     "FIELD_ENCRYPTION_KEYS": Fernet.generate_key().decode(),
     "ALLOWED_HOSTS": "app.example.com",
     "CSRF_TRUSTED_ORIGINS": "https://app.example.com",
-    "SITE_URL": "https://app.example.com",
     "MEDIA_ROOT": "/srv/pm-beta-test/files",
 }
 CLEARED = (
+    "SITE_URL",
+    "SITE_SCHEME",
+    "SITE_PORT",
     "DEBUG",
     "MFA_TOTP_INSECURE_BYPASS_CODE",
     "ALLOW_DEMO_DATA",
@@ -54,7 +56,9 @@ def test_beta_settings_are_safe(monkeypatch):
     assert not hasattr(beta, "MFA_TOTP_INSECURE_BYPASS_CODE")
     assert beta.ALLOW_DEMO_DATA is False
     assert beta.ALLOWED_HOSTS == ["app.example.com"]
-    assert beta.SITE_URL == "https://app.example.com"
+    assert beta.SITE_SCHEME == "https"
+    assert beta.SITE_PORT == ""
+    assert not hasattr(beta, "SITE_URL")
     assert beta.SESSION_COOKIE_SECURE and beta.CSRF_COOKIE_SECURE
     assert beta.SECURE_HSTS_SECONDS >= 31536000
     assert beta.SECURE_PROXY_SSL_HEADER == ("HTTP_X_FORWARDED_PROTO", "https")
@@ -82,7 +86,9 @@ def test_beta_refuses_to_start_without_required_settings(monkeypatch, missing):
         {"SECRET_KEY": "django-insecure-something-long-enough-to-pass-the-length-check"},
         {"SECRET_KEY": "short"},
         {"ALLOW_DEMO_DATA": "true"},
-        {"SITE_URL": "http://app.example.com"},
+        {"SITE_URL": "https://app.example.com"},  # no longer used: links are per practice
+        {"SITE_SCHEME": "http"},
+        {"SITE_PORT": "8000"},
         {"EMAIL_BACKEND": "anymail.backends.amazon_ses.EmailBackend"},
         {"SMS_BACKEND": "apps.comms.sms.ConsoleSmsBackend"},
     ],

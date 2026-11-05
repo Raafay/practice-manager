@@ -35,7 +35,6 @@ def main() -> int:
         f"FIELD_ENCRYPTION_KEYS={field_key}\n"
         f"ALLOWED_HOSTS={domain}\n"
         f"CSRF_TRUSTED_ORIGINS=https://{domain}\n"
-        f"SITE_URL=https://{domain}\n"
         f"MEDIA_ROOT={data_dir / 'files'}\n"
         f"BACKUP_DIR={data_dir / 'backups'}\n"
         "COMPANIES_HOUSE_API_KEY=\n"

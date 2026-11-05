@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from apps import events
+from apps.core.siteurl import absolute
 from apps.events.services import changes
 
 from .models import Invitation, LastOwnerError, Role, Team, User
@@ -62,15 +63,37 @@ def invite_user(actor, *, email: str, name: str, role: Role, request=None) -> In
             role=role.name,
         )
     path = reverse("accounts:accept_invitation", args=[raw_token])
-    link = request.build_absolute_uri(path) if request else path
-    context = {"invitation": invitation, "link": link, "invited_by": actor}
+    link = request.build_absolute_uri(path) if request else absolute(path)
+    _send_invitation(invitation, link, actor)
+    return invitation
+
+
+def invite_first_owner(*, email: str, name: str) -> tuple[Invitation, str]:
+    """A new practice's first owner, invited from the command line. Returns the link too."""
+    role = Role.objects.get(slug=Role.OWNER)
+    with transaction.atomic():
+        invitation, raw_token = Invitation.issue(email=email, name=name, role=role, invited_by=None)
+        events.record(
+            None,
+            "user.invited",
+            f"{name} ({email}) was invited as {role} from the command line.",
+            target=invitation,
+            email=email,
+            role=role.name,
+        )
+    link = absolute(reverse("accounts:accept_invitation", args=[raw_token]))
+    _send_invitation(invitation, link, None)
+    return invitation, link
+
+
+def _send_invitation(invitation: Invitation, link: str, invited_by) -> None:
+    context = {"invitation": invitation, "link": link, "invited_by": invited_by}
     send_mail(
         subject="You have been invited to Practice Manager",
         message=render_to_string("accounts/email/invitation.txt", context),
         from_email=None,
         recipient_list=[invitation.email],
     )
-    return invitation
 
 
 def cancel_invitation(actor, invitation: Invitation) -> None:

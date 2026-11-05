@@ -5,6 +5,7 @@ from decimal import Decimal
 import pytest
 from django.db import connection as db_connection
 from django.utils import timezone
+from django_tenants.utils import schema_context
 
 from apps.accounts.tests.factories import owner, staff
 from apps.clients.tests.factories import ClientFactory
@@ -64,10 +65,12 @@ def test_two_refreshes_at_once_spend_the_token_once(fake):
     )
     fake.refresh_delay = 0.3
     seen, errors = [], []
+    schema = db_connection.schema_name  # each thread has its own connection: same practice
 
     def worker():
         try:
-            seen.append(xero.XeroClient().access_token()[0])
+            with schema_context(schema):
+                seen.append(xero.XeroClient().access_token()[0])
         except Exception as error:  # noqa: BLE001
             errors.append(error)
         finally:
@@ -98,11 +101,11 @@ def test_not_connected():
 
 
 def test_consent_address_asks_for_the_narrow_scopes(settings):
-    settings.SITE_URL = "https://pm.example.com"
+    settings.SITE_SCHEME = "https"
     url = xero.authorise_url("abc")
     assert "scope=offline_access+accounting.contacts+accounting.invoices.read" in url
     assert "accounting.payments.read" in url
-    assert "redirect_uri=https%3A%2F%2Fpm.example.com%2Fintegrations%2Fxero%2Fcallback" in url
+    assert "redirect_uri=https%3A%2F%2Ftestserver%2Fintegrations%2Fxero%2Fcallback" in url
     assert "state=abc" in url
 
 

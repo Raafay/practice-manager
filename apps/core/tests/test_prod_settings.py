@@ -14,7 +14,6 @@ FAKE_ENV = {
     "FIELD_ENCRYPTION_KEYS": Fernet.generate_key().decode(),
     "ALLOWED_HOSTS": "app.example.com",
     "CSRF_TRUSTED_ORIGINS": "https://app.example.com",
-    "SITE_URL": "https://app.example.com",
     "DEFAULT_FROM_EMAIL": "Example Practice <office@example.com>",
     "EMAIL_PROVIDER": "ses",
     "EMAIL_ACCESS_KEY": "made-up-access",
@@ -25,6 +24,9 @@ FAKE_ENV = {
     "STORAGE_SECRET_KEY": "made-up-storage-secret",
 }
 CLEARED = (
+    "SITE_URL",
+    "SITE_SCHEME",
+    "SITE_PORT",
     "DEBUG",
     "MFA_TOTP_INSECURE_BYPASS_CODE",
     "ALLOW_DEMO_DATA",
@@ -63,7 +65,9 @@ def test_production_settings_are_safe(monkeypatch):
     assert prod.DATABASES["default"]["HOST"] == "db.example.com"
     assert [FAKE_ENV["FIELD_ENCRYPTION_KEYS"]] == prod.FIELD_ENCRYPTION_KEYS
     assert prod.ALLOWED_HOSTS == ["app.example.com"]
-    assert prod.SITE_URL == "https://app.example.com"
+    assert prod.SITE_SCHEME == "https"
+    assert prod.SITE_PORT == ""
+    assert not hasattr(prod, "SITE_URL")
     # HTTPS only, HSTS for a year, secure HttpOnly cookies, SameSite Lax
     assert prod.SECURE_SSL_REDIRECT is True
     assert prod.SECURE_HSTS_SECONDS >= 31536000
@@ -103,7 +107,6 @@ def test_production_settings_are_safe(monkeypatch):
         "FIELD_ENCRYPTION_KEYS",
         "ALLOWED_HOSTS",
         "CSRF_TRUSTED_ORIGINS",
-        "SITE_URL",
         "DEFAULT_FROM_EMAIL",
         "EMAIL_PROVIDER",
         "EMAIL_WEBHOOK_SECRET",
@@ -126,7 +129,9 @@ def test_refuses_to_start_without_required_settings(monkeypatch, missing):
         {"SECRET_KEY": "django-insecure-something-long-enough-to-pass-the-length-check"},
         {"SECRET_KEY": "short"},
         {"ALLOW_DEMO_DATA": "true"},
-        {"SITE_URL": "http://app.example.com"},
+        {"SITE_URL": "https://app.example.com"},  # no longer used: links are per practice
+        {"SITE_SCHEME": "http"},
+        {"SITE_PORT": "8000"},
         {"EMAIL_PROVIDER": "console"},
         {"EMAIL_PROVIDER": "locmem"},
         {"EMAIL_WEBHOOK_SECRET": "no-colon-here"},
