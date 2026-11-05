@@ -42,6 +42,7 @@ def test_the_filter_rewrites_formatted_messages():
     assert "SECRET-TOKEN" not in record.getMessage()
 
 
+@pytest.mark.django_db  # every request looks up its practice by address
 def test_a_csrf_failure_on_a_request_link_does_not_log_the_token(client, caplog):
     from django.test import Client
 
